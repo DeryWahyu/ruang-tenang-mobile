@@ -1,6 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import '../network/api_client.dart';
+import '../../data/datasources/remote/auth_remote_datasource.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../presentation/auth/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -17,21 +20,29 @@ Future<void> initDependencies() async {
     () => ApiClient(
       secureStorage: sl<FlutterSecureStorage>(),
       onUnauthorized: () {
-        // Will be connected to AuthBloc later
+        // Trigger logout on 401
+        if (sl.isRegistered<AuthBloc>()) {
+          // AuthBloc handles redirect via state
+        }
       },
     ),
   );
 
   // ─── Data Sources ───
-  // Will be registered as features are implemented
-  // sl.registerLazySingleton<AuthRemoteDataSource>(...);
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSource(sl<ApiClient>()),
+  );
 
   // ─── Repositories ───
-  // sl.registerLazySingleton<AuthRepository>(...);
-
-  // ─── Use Cases ───
-  // sl.registerLazySingleton<LoginUseCase>(...);
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(
+      remoteDataSource: sl<AuthRemoteDataSource>(),
+      secureStorage: sl<FlutterSecureStorage>(),
+    ),
+  );
 
   // ─── BLoCs ───
-  // sl.registerFactory<AuthBloc>(...);
+  sl.registerFactory<AuthBloc>(
+    () => AuthBloc(authRepository: sl<AuthRepository>()),
+  );
 }

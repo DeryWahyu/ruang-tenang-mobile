@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTypography {
   AppTypography._();
 
-  static String get _fontFamilySans => GoogleFonts.plusJakartaSans().fontFamily!;
-  static String get _fontFamilyDisplay => GoogleFonts.nunito().fontFamily!;
+  static String get fontFamilySans => GoogleFonts.plusJakartaSans().fontFamily!;
+  static String get fontFamilyDisplay => GoogleFonts.nunito().fontFamily!;
 
   static TextTheme get textTheme => TextTheme(
         displayLarge: GoogleFonts.nunito(
