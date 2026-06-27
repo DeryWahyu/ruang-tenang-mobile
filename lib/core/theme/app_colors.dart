@@ -71,6 +71,13 @@ class AppColors {
   static const Color storyIcon = Color(0xFFD97706);
   static const Color storyHeading = Color(0xFF92400E);
 
+  // Streak
+  static const Color streakFrom = Color(0x33F97316); // 20% opacity of F97316
+  static const Color streakTo = Color(0x33EF4444);   // 20% opacity of EF4444
+  static const Color streakBorder = Color(0xFFFDBA74);
+  static const Color streakIconBg = Color(0xFFF97316);
+  static const Color streakText = Color(0xFF9A3412);
+
   // Gray scale (for convenience)
   static const Color gray50 = Color(0xFFF9FAFB);
   static const Color gray100 = Color(0xFFF3F4F6);

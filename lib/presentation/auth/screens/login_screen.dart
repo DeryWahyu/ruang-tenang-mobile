@@ -78,18 +78,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     // Logo
                     Center(
-                      child: Container(
+                      child: Image.asset(
+                        'assets/images/logo.webp',
                         width: 80,
                         height: 80,
-                        decoration: BoxDecoration(
-                          color: AppColors.red50,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.spa_rounded,
-                          size: 44,
-                          color: AppColors.primary,
-                        ),
                       ),
                     ),
                     const SizedBox(height: AppDimensions.spacingXl),

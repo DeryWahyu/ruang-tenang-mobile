@@ -86,6 +86,8 @@ import '../../presentation/breathing/bloc/breathing_bloc.dart';
 import '../../presentation/article/bloc/article_bloc.dart';
 import '../../presentation/forum/bloc/forum_bloc.dart';
 import '../../presentation/story/bloc/story_bloc.dart';
+import '../../presentation/music/bloc/music_bloc.dart';
+import '../../domain/usecases/music/music_usecases.dart';
 
 final sl = GetIt.instance;
 
@@ -228,6 +230,12 @@ Future<void> initDependencies() async {
         toggleDislikeMessage: ToggleDislikeMessageUseCase(sl()),
       ));
 
+  sl.registerLazySingleton(() => GetSongCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetSongsByCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => GetPublicPlaylistsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMyPlaylistsUseCase(sl()));
+  sl.registerLazySingleton(() => CreatePlaylistUseCase(sl()));
+
   // BLoCs
   sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(authUseCases: sl<AuthUseCases>()),
@@ -253,6 +261,16 @@ Future<void> initDependencies() async {
   );
   sl.registerFactory<StoryBloc>(
     () => StoryBloc(repository: sl<StoryRepository>()),
+  );
+  sl.registerFactory<MusicBloc>(
+    () => MusicBloc(
+      getCategories: sl<GetSongCategoriesUseCase>(),
+      getSongsByCategory: sl<GetSongsByCategoryUseCase>(),
+      getPublicPlaylists: sl<GetPublicPlaylistsUseCase>(),
+      getMyPlaylists: sl<GetMyPlaylistsUseCase>(),
+      createPlaylist: sl<CreatePlaylistUseCase>(),
+      uploadRepository: sl<UploadRepository>(),
+    ),
   );
 
   // === Phase 3: Gamification & Billing ===

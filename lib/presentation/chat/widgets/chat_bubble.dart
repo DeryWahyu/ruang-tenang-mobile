@@ -22,25 +22,32 @@ class ChatBubble extends StatelessWidget {
           if (!isUser) ...[
             Container(
               margin: const EdgeInsets.only(right: 8),
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.red50,
-                shape: BoxShape.circle,
+              child: Image.asset(
+                'assets/images/logo.webp',
+                width: 32,
+                height: 32,
               ),
-              child: const Icon(Icons.spa_rounded, size: 18, color: AppColors.primary),
             ),
           ],
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(AppDimensions.spacingMd),
               decoration: BoxDecoration(
-                color: isUser ? AppColors.primary : AppColors.red50,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusXl).copyWith(
-                  bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(AppDimensions.radiusXl),
-                  bottomLeft: !isUser ? const Radius.circular(4) : const Radius.circular(AppDimensions.radiusXl),
+                color: isUser ? null : AppColors.card,
+                gradient: isUser
+                    ? const LinearGradient(
+                        colors: [AppColors.primary, AppColors.destructive],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isUser ? 20 : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : 20),
                 ),
-                border: !isUser ? Border.all(color: AppColors.red100) : null,
+                border: !isUser ? Border.all(color: AppColors.border) : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

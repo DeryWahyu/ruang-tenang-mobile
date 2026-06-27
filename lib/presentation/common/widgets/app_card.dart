@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 
-class AppCard extends StatelessWidget {
+class AppCard extends StatefulWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -31,35 +31,68 @@ class AppCard extends StatelessWidget {
   });
 
   @override
+  State<AppCard> createState() => _AppCardState();
+}
+
+class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
+  bool _isPressed = false;
+
+  void _handleTapDown(TapDownDetails details) {
+    if (widget.onTap != null) {
+      setState(() => _isPressed = true);
+    }
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (widget.onTap != null) {
+      setState(() => _isPressed = false);
+      widget.onTap!();
+    }
+  }
+
+  void _handleTapCancel() {
+    if (widget.onTap != null) {
+      setState(() => _isPressed = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cardContent = Container(
-      width: width,
-      height: height,
-      padding: padding ?? const EdgeInsets.all(AppDimensions.spacingBase),
-      margin: margin,
+    final double translateY = _isPressed ? -2.0 : 0.0;
+    
+    final cardContent = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      transform: Matrix4.translationValues(0, translateY, 0),
+      width: widget.width,
+      height: widget.height,
+      padding: widget.padding ?? const EdgeInsets.all(AppDimensions.spacingBase),
+      margin: widget.margin,
       decoration: BoxDecoration(
-        color: gradient == null ? (color ?? AppColors.card) : null,
-        gradient: gradient,
+        color: widget.gradient == null ? (widget.color ?? AppColors.card) : null,
+        gradient: widget.gradient,
         borderRadius: BorderRadius.circular(
-          borderRadius ?? AppDimensions.radiusXl,
+          widget.borderRadius ?? AppDimensions.radiusXl,
         ),
-        border: border ??
+        border: widget.border ??
             Border.all(color: AppColors.border, width: 1),
-        boxShadow: boxShadow ??
+        boxShadow: widget.boxShadow ??
             [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 3,
-                offset: const Offset(0, 1),
+                color: Colors.black.withValues(alpha: _isPressed ? 0.1 : 0.04),
+                blurRadius: _isPressed ? 15 : 3,
+                offset: Offset(0, _isPressed ? 5 : 1),
               ),
             ],
       ),
-      child: child,
+      child: widget.child,
     );
 
-    if (onTap != null) {
+    if (widget.onTap != null) {
       return GestureDetector(
-        onTap: onTap,
+        onTapDown: _handleTapDown,
+        onTapUp: _handleTapUp,
+        onTapCancel: _handleTapCancel,
         child: cardContent,
       );
     }

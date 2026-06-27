@@ -159,14 +159,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            Image.asset(
+              'assets/images/logo.webp',
               width: 80,
               height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.red50,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.spa_rounded, size: 40, color: AppColors.primary),
             ),
             const SizedBox(height: AppDimensions.spacingXl),
             Text(
@@ -202,13 +198,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               children: [
                 Container(
                   margin: const EdgeInsets.only(right: 8),
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.red50,
-                    shape: BoxShape.circle,
+                  child: Image.asset(
+                    'assets/images/logo.webp',
+                    width: 32,
+                    height: 32,
                   ),
-                  child: const Icon(Icons.spa_rounded, size: 18, color: AppColors.primary),
                 ),
                 Container(
                   padding: const EdgeInsets.all(AppDimensions.spacingMd),
