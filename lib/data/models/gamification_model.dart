@@ -19,7 +19,7 @@ class UserLevelInfoModel extends Equatable {
       level: (json['level'] as num?)?.toInt() ?? 0,
       badgeName: json['badge_name'] as String? ?? '',
       badgeIcon: json['badge_icon'] as String? ?? '',
-      currentExp: (json['current_exp'] as num?)?.toInt() ?? 0,
+      currentExp: (json['exp'] as num?)?.toInt() ?? (json['current_exp'] as num?)?.toInt() ?? 0,
     );
   }
 

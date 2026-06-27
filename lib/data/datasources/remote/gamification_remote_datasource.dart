@@ -9,13 +9,13 @@ class GamificationRemoteDataSource {
 
   Future<UserLevelInfoModel> getUserLevelInfo() async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConstants.levelConfigs + '/user',
+      ApiConstants.me,
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success || response.data == null) {
       throw Exception(response.error ?? 'Gagal memuat level user');
     }
-    return UserLevelInfoModel.fromJson(response.data!);
+    return UserLevelInfoModel.fromJson(response.data!['user'] ?? response.data!);
   }
 
   Future<Map<String, dynamic>> getExpHistory({int page = 1, int limit = 10}) async {

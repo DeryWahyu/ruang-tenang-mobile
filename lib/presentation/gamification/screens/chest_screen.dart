@@ -24,42 +24,105 @@ class _ChestView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Peti Misteri'),
+        title: const Text('Peti Misteri', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
       body: BlocConsumer<GamificationBloc, GamificationState>(
         listener: (context, state) {
-          if (state.openChestResult != null) {
-            _showRewardDialog(context, state.openChestResult!);
+          if (state.status == GamificationStatus.success && state.openChestResult != null) {
+            _showRewardDialog(context, state.openChestResult);
+          } else if (state.status == GamificationStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage), backgroundColor: AppColors.destructive),
+            );
           }
         },
         builder: (context, state) {
           if (state.status == GamificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          final unopened = state.chests.where((c) => !c.isOpened).toList();
-          final opened = state.chests.where((c) => c.isOpened).toList();
-
-          if (state.chests.isEmpty) {
-            return const Center(child: Text('Belum ada peti. Selesaikan misi untuk mendapatkan peti!'));
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (unopened.isNotEmpty) ...[
-                const Text('Peti Tersedia', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                ...unopened.map((chest) => _buildChestItem(context, chest)),
-                const SizedBox(height: 24),
-              ],
-              if (opened.isNotEmpty) ...[
-                const Text('Peti Terbuka', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.mutedForeground)),
-                const SizedBox(height: 12),
-                ...opened.map((chest) => _buildChestItem(context, chest)),
-              ],
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.purple.withOpacity(0.1),
+                        ),
+                        child: const Icon(Icons.card_giftcard_rounded, size: 80, color: Colors.purple),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Peti Misteri Tersedia',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Peti misteri berisi hadiah acak mulai dari XP hingga Badge eksklusif.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: AppColors.mutedForeground.withOpacity(0.8)),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+              if (state.chests.isEmpty)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.mutedForeground),
+                          SizedBox(height: 16),
+                          Text('Tidak Ada Peti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          SizedBox(height: 8),
+                          Text(
+                            'Kamu belum memiliki peti misteri. Selesaikan misi untuk mendapatkannya!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: AppColors.mutedForeground),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.8,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final chest = state.chests[index];
+                        return _buildChestCard(context, chest, state.status == GamificationStatus.submitting);
+                      },
+                      childCount: state.chests.length,
+                    ),
+                  ),
+                ),
             ],
           );
         },
@@ -67,72 +130,112 @@ class _ChestView extends StatelessWidget {
     );
   }
 
-  Widget _buildChestItem(BuildContext context, chest) {
-    final isOpened = chest.isOpened;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: isOpened ? AppColors.muted : AppColors.warningLight,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              chest.rarityIcon.isNotEmpty ? chest.rarityIcon : (isOpened ? '🧳' : '🎁'),
-              style: TextStyle(
-                fontSize: 28,
-                foreground: isOpened ? (Paint()..colorFilter = const ColorFilter.matrix([
-                  0.2126, 0.7152, 0.0722, 0, 0,
-                  0.2126, 0.7152, 0.0722, 0, 0,
-                  0.2126, 0.7152, 0.0722, 0, 0,
-                  0,      0,      0,      0.5, 0,
-                ])) : null,
-              ),
+  Widget _buildChestCard(BuildContext context, chest, bool isOpening) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade50, Colors.purple.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.purple.shade200),
+        boxShadow: [
+          BoxShadow(color: Colors.purple.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isOpening ? null : () {
+            context.read<GamificationBloc>().add(GamificationChestOpened(chest.id.toString()));
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_rounded, color: Colors.purple, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  chest.chestType,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.purple),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade400,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Buka Peti',
+                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        title: Text('Peti ${chest.rarity}', style: TextStyle(fontWeight: FontWeight.bold, color: isOpened ? AppColors.mutedForeground : AppColors.foreground)),
-        subtitle: isOpened 
-          ? Text('Hadiah: ${chest.rewardLabel}')
-          : const Text('Tap untuk membuka!'),
-        trailing: isOpened ? null : ElevatedButton(
-          onPressed: () => context.read<GamificationBloc>().add(GamificationChestOpened(chest.id)),
-          child: const Text('Buka'),
         ),
       ),
     );
   }
 
-  void _showRewardDialog(BuildContext context, Map<String, dynamic> reward) {
+  void _showRewardDialog(BuildContext context, reward) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Selamat!', textAlign: TextAlign.center),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🎉', style: TextStyle(fontSize: 60)),
-            const SizedBox(height: 16),
-            const Text('Kamu mendapatkan:'),
-            const SizedBox(height: 8),
-            Text(reward['reward_label'] ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
-          ],
-        ),
-        actions: [
-          Center(
-            child: FilledButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Luar Biasa!'),
-            ),
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          contentPadding: const EdgeInsets.all(32),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.star_rounded, color: Colors.amber, size: 64),
+              ),
+              const SizedBox(height: 24),
+              const Text('Selamat!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Text(
+                'Kamu mendapatkan:\n${reward['reward_name']}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, color: AppColors.mutedForeground, height: 1.5),
+              ),
+              if (reward['reward_type'] == 'exp') ...[
+                const SizedBox(height: 16),
+                Text(
+                  '+${reward['reward_value']} XP',
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green),
+                ),
+              ],
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.read<GamificationBloc>().add(const GamificationChestsRequested());
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Klaim Hadiah', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

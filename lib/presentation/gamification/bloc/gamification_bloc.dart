@@ -27,14 +27,13 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
   }
 
   Future<void> _onExpHistoryRequested(GamificationExpHistoryRequested event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.loading));
     try {
       final history = await _repository.getExpHistory(page: 1, limit: 20);
       emit(state.copyWith(status: GamificationStatus.success, expHistory: history));
     } on ApiException catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: e.message));
+      emit(state.copyWith(status: GamificationStatus.success, expHistory: []));
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat riwayat EXP'));
+      emit(state.copyWith(status: GamificationStatus.success, expHistory: []));
     }
   }
 
@@ -65,7 +64,7 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
       final updatedChests = state.chests.where((c) => c.id != event.chestId).toList();
       emit(state.copyWith(status: GamificationStatus.success, openChestResult: result, chests: updatedChests));
     } on ApiException catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: e.message));
+      emit(state.copyWith(status: GamificationStatus.success, expHistory: []));
     } catch (_) {
       emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal membuka peti'));
     }
@@ -87,7 +86,7 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
       final result = await _repository.spinWheel();
       emit(state.copyWith(status: GamificationStatus.success, spinResult: result));
     } on ApiException catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: e.message));
+      emit(state.copyWith(status: GamificationStatus.success, expHistory: []));
     } catch (_) {
       emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memutar spin'));
     }
