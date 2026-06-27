@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import '../core/theme/app_colors.dart';
 import 'auth/bloc/auth_bloc.dart';
 import 'auth/bloc/auth_event.dart';
-import 'auth/bloc/auth_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,7 +28,8 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _animController.forward();
 
-    // Check auth after a short delay for splash effect
+    // Check auth after a short delay for splash effect.
+    // Navigation is handled by the declarative router guard in AppRouter.
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         context.read<AuthBloc>().add(const AuthCheckRequested());
@@ -46,61 +45,52 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state.isAuthenticated) {
-          context.go('/home');
-        } else if (state.isUnauthenticated) {
-          context.go('/login');
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: AppColors.red50,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.spa_rounded,
-                    size: 56,
-                    color: AppColors.primary,
-                  ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.red50,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Ruang Tenang',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                child: const Icon(
+                  Icons.spa_rounded,
+                  size: 56,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Platform Kesehatan Mental',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.mutedForeground,
-                      ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Ruang Tenang',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Platform Kesehatan Mental',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.mutedForeground,
+                    ),
+              ),
+              const SizedBox(height: 48),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 48),
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,10 +1,15 @@
+import '../config/app_environment.dart';
+
 class ApiConstants {
   ApiConstants._();
 
-  // Base URL - change this for different environments
-  static const String baseUrl = 'http://10.0.2.2:8080'; // Android emulator localhost
+  // Base URL - automatically configured from AppEnvironment
+  static String get baseUrl => AppEnvironment.baseUrl;
   static const String apiPrefix = '/api/v1';
   static String get apiBaseUrl => '$baseUrl$apiPrefix';
+
+  // Health check
+  static const String health = '/health';
 
   // Auth
   static const String login = '/auth/login';
@@ -32,9 +37,14 @@ class ApiConstants {
 
   // Journal
   static const String journals = '/journals';
+  static const String journalSearch = '/journals/search';
+  static const String journalPrompt = '/journals/prompt';
 
   // Mood
   static const String userMoods = '/user-moods';
+  static const String userMoodToday = '/user-moods/today';
+  static const String userMoodLatest = '/user-moods/latest';
+  static const String userMoodStats = '/user-moods/stats';
 
   // Music
   static const String songCategories = '/song-categories';
@@ -51,6 +61,13 @@ class ApiConstants {
 
   // Breathing
   static const String breathing = '/breathing';
+  static const String breathingTechniques = '/breathing/techniques';
+  static const String breathingSessions = '/breathing/sessions';
+  static const String breathingStats = '/breathing/stats';
+  static const String breathingPreferences = '/breathing/preferences';
+  static const String breathingFavorites = '/breathing/favorites';
+  static const String breathingCalendar = '/breathing/calendar';
+  static const String breathingRecommendations = '/breathing/recommendations';
 
   // Wellness
   static const String wellness = '/wellness';

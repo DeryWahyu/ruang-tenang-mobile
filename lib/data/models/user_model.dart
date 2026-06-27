@@ -1,6 +1,10 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/user.dart';
 
-class User extends Equatable {
+/// Data-layer model for [User] with JSON (de)serialization.
+///
+/// Maps to/from the pure-Dart [User] entity via [toEntity] / [fromEntity].
+class UserModel extends Equatable {
   final int id;
   final String name;
   final String email;
@@ -16,7 +20,7 @@ class User extends Equatable {
   final String profileTheme;
   final String? createdAt;
 
-  const User({
+  const UserModel({
     required this.id,
     required this.name,
     required this.email,
@@ -33,8 +37,8 @@ class User extends Equatable {
     this.createdAt,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
       id: json['id'] as int? ?? 0,
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
@@ -71,7 +75,7 @@ class User extends Equatable {
     };
   }
 
-  User copyWith({
+  UserModel copyWith({
     int? id,
     String? name,
     String? email,
@@ -87,7 +91,7 @@ class User extends Equatable {
     String? profileTheme,
     String? createdAt,
   }) {
-    return User(
+    return UserModel(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
@@ -104,6 +108,40 @@ class User extends Equatable {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  User toEntity() => User(
+        id: id,
+        name: name,
+        email: email,
+        avatar: avatar,
+        role: role,
+        exp: exp,
+        goldCoins: goldCoins,
+        isPremium: isPremium,
+        premiumUntil: premiumUntil,
+        level: level,
+        badgeName: badgeName,
+        badgeIcon: badgeIcon,
+        profileTheme: profileTheme,
+        createdAt: createdAt,
+      );
+
+  static UserModel fromEntity(User user) => UserModel(
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+        exp: user.exp,
+        goldCoins: user.goldCoins,
+        isPremium: user.isPremium,
+        premiumUntil: user.premiumUntil,
+        level: user.level,
+        badgeName: user.badgeName,
+        badgeIcon: user.badgeIcon,
+        profileTheme: user.profileTheme,
+        createdAt: user.createdAt,
+      );
 
   bool get isAdmin => role == 'admin';
   bool get isMitra => role == 'mitra';

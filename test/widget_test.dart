@@ -1,30 +1,28 @@
-// This is a basic Flutter widget test.
+// Smoke test: verifies the app can be constructed without errors.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// The default Flutter counter test was replaced because this app uses
+// RuangTenangApp (with DI + GoRouter), not the generated counter template.
+// DI must be initialised (as main() does) before the widget tree builds,
+// otherwise SplashScreen's GetIt lookups throw.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ruang_tenang_mobile/main.dart';
+import 'package:ruang_tenang_mobile/app.dart';
+import 'package:ruang_tenang_mobile/core/di/injection_container.dart';
+import 'package:ruang_tenang_mobile/core/utils/date_utils.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App smoke test — builds without throwing', (WidgetTester tester) async {
+    // Initialise dependencies the same way main() does.
+    await initDependencies();
+    await AppDateUtils.init();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(const RuangTenangApp());
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Allow the first frame (router redirect) to settle.
+    await tester.pump(const Duration(milliseconds: 100));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

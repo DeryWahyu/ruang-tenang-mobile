@@ -1,20 +1,27 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/constants/storage_keys.dart';
-import '../models/user_model.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../datasources/remote/auth_remote_datasource.dart';
+import '../models/user_model.dart';
 
-class AuthRepository {
+/// Data-layer implementation of [AuthRepository].
+///
+/// Handles secure token/user storage and caches the latest user. Maps
+/// [UserModel] (JSON-coupled) to the pure-Dart [User] entity at the
+/// boundary via [UserModel.toEntity].
+class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final FlutterSecureStorage _secureStorage;
 
-  AuthRepository({
+  AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
     required FlutterSecureStorage secureStorage,
   })  : _remoteDataSource = remoteDataSource,
         _secureStorage = secureStorage;
 
-  /// Login and save token
+  @override
   Future<User> login({
     required String email,
     required String password,
@@ -31,38 +38,37 @@ class AuthRepository {
       throw Exception('Response login tidak valid');
     }
 
-    // Save token
     await _secureStorage.write(key: StorageKeys.authToken, value: token);
 
-    // Save user data
-    final user = User.fromJson(userData);
+    final user = UserModel.fromJson(userData);
     await _secureStorage.write(
       key: StorageKeys.userData,
       value: jsonEncode(user.toJson()),
     );
 
-    return user;
+    return user.toEntity();
   }
 
-  /// Register new account
+  @override
   Future<User> register({
     required String name,
     required String email,
     required String password,
   }) async {
-    return await _remoteDataSource.register(
+    final user = await _remoteDataSource.register(
       name: name,
       email: email,
       password: password,
     );
+    return user.toEntity();
   }
 
-  /// Forgot password
+  @override
   Future<String> forgotPassword({required String email}) async {
     return await _remoteDataSource.forgotPassword(email: email);
   }
 
-  /// Reset password
+  @override
   Future<String> resetPassword({
     required String token,
     required String password,
@@ -75,20 +81,17 @@ class AuthRepository {
     );
   }
 
-  /// Get current user profile
+  @override
   Future<User> getProfile() async {
     final user = await _remoteDataSource.getProfile();
-
-    // Update cached user data
     await _secureStorage.write(
       key: StorageKeys.userData,
       value: jsonEncode(user.toJson()),
     );
-
-    return user;
+    return user.toEntity();
   }
 
-  /// Update profile
+  @override
   Future<User> updateProfile({
     String? name,
     String? avatar,
@@ -101,17 +104,14 @@ class AuthRepository {
       bio: bio,
       tagline: tagline,
     );
-
-    // Update cached user data
     await _secureStorage.write(
       key: StorageKeys.userData,
       value: jsonEncode(user.toJson()),
     );
-
-    return user;
+    return user.toEntity();
   }
 
-  /// Update password
+  @override
   Future<String> updatePassword({
     required String currentPassword,
     required String newPassword,
@@ -124,32 +124,32 @@ class AuthRepository {
     );
   }
 
-  /// Logout
+  @override
   Future<void> logout() async {
     await _secureStorage.delete(key: StorageKeys.authToken);
     await _secureStorage.delete(key: StorageKeys.userData);
   }
 
-  /// Check if user is authenticated
+  @override
   Future<bool> isAuthenticated() async {
     final token = await _secureStorage.read(key: StorageKeys.authToken);
     return token != null && token.isNotEmpty;
   }
 
-  /// Get cached user data (without network call)
+  @override
   Future<User?> getCachedUser() async {
     final userData = await _secureStorage.read(key: StorageKeys.userData);
     if (userData == null) return null;
 
     try {
       final json = jsonDecode(userData) as Map<String, dynamic>;
-      return User.fromJson(json);
+      return UserModel.fromJson(json).toEntity();
     } catch (_) {
       return null;
     }
   }
 
-  /// Get stored token
+  @override
   Future<String?> getToken() async {
     return await _secureStorage.read(key: StorageKeys.authToken);
   }

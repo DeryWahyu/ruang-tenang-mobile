@@ -29,7 +29,7 @@ class AuthRemoteDataSource {
   }
 
   /// POST /auth/register
-  Future<User> register({
+  Future<UserModel> register({
     required String name,
     required String email,
     required String password,
@@ -49,7 +49,7 @@ class AuthRemoteDataSource {
       throw Exception(response.error ?? 'Registrasi gagal');
     }
 
-    return User.fromJson(response.data!);
+    return UserModel.fromJson(response.data!);
   }
 
   /// POST /auth/forgot-password
@@ -81,7 +81,7 @@ class AuthRemoteDataSource {
   }
 
   /// GET /auth/me
-  Future<User> getProfile() async {
+  Future<UserModel> getProfile() async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       ApiConstants.me,
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
@@ -91,11 +91,11 @@ class AuthRemoteDataSource {
       throw Exception(response.error ?? 'Gagal memuat profil');
     }
 
-    return User.fromJson(response.data!);
+    return UserModel.fromJson(response.data!);
   }
 
   /// PUT /auth/profile
-  Future<User> updateProfile({
+  Future<UserModel> updateProfile({
     String? name,
     String? avatar,
     String? bio,
@@ -117,7 +117,7 @@ class AuthRemoteDataSource {
       throw Exception(response.error ?? 'Gagal update profil');
     }
 
-    return User.fromJson(response.data!);
+    return UserModel.fromJson(response.data!);
   }
 
   /// PUT /auth/password

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../data/models/user_model.dart';
+import '../../../domain/entities/user.dart';
 
 enum AuthStatus {
   initial,

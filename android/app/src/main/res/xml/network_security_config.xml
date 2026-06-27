@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext (HTTP) traffic to local development servers -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Android emulator loopback -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- Localhost -->
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <!-- Local network (physical device testing) -->
+        <domain includeSubdomains="true">192.168.0.0/16</domain>
+    </domain-config>
+</network-security-config>

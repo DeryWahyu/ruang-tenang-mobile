@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../domain/entities/mood.dart';
+import '../theme/app_colors.dart';
 
 /// String extensions
 extension StringExtension on String {
@@ -72,5 +74,29 @@ extension DateTimeExtension on DateTime {
   bool get isToday {
     final now = DateTime.now();
     return year == now.year && month == now.month && day == now.day;
+  }
+}
+
+/// MoodType UI extensions.
+///
+/// `color` requires Flutter's [Color], so it lives here (core, may import
+/// Flutter) rather than in the pure-Dart `MoodType` entity. Any file that
+/// accesses `someMoodType.color` must import this extensions file.
+extension MoodTypeColorX on MoodType {
+  Color get color {
+    switch (this) {
+      case MoodType.happy:
+        return const Color(0xFF22C55E);
+      case MoodType.neutral:
+        return AppColors.mutedForeground;
+      case MoodType.angry:
+        return AppColors.destructive;
+      case MoodType.disappointed:
+        return const Color(0xFF8B5CF6);
+      case MoodType.sad:
+        return const Color(0xFF6366F1);
+      case MoodType.crying:
+        return const Color(0xFF6366F1);
+    }
   }
 }

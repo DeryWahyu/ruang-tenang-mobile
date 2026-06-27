@@ -1,85 +1,300 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/storage_keys.dart';
+import '../../core/di/injection_container.dart';
+import '../../domain/entities/journal.dart';
+import '../../domain/entities/breathing.dart';
+import '../../presentation/auth/bloc/auth_bloc.dart';
+import '../../presentation/auth/bloc/auth_state.dart';
 import '../../presentation/auth/screens/login_screen.dart';
 import '../../presentation/auth/screens/register_screen.dart';
 import '../../presentation/auth/screens/forgot_password_screen.dart';
+import '../../presentation/auth/screens/reset_password_screen.dart';
+import '../../presentation/onboarding/screens/onboarding_screen.dart';
 import '../../presentation/home/screens/home_screen.dart';
 import '../../presentation/common/layouts/main_layout.dart';
 import '../../presentation/journal/screens/journal_list_screen.dart';
+import '../../presentation/journal/screens/journal_create_screen.dart';
+import '../../presentation/journal/screens/journal_detail_screen.dart';
+import '../../presentation/mood/screens/mood_tracker_screen.dart';
+import '../../presentation/mood/screens/mood_stats_screen.dart';
 import '../../presentation/chat/screens/chat_list_screen.dart';
+import '../../presentation/chat/screens/chat_detail_screen.dart';
 import '../../presentation/music/screens/music_home_screen.dart';
 import '../../presentation/profile/screens/profile_screen.dart';
 import '../../presentation/splash_screen.dart';
 
+import '../../presentation/breathing/screens/breathing_list_screen.dart';
+import '../../presentation/breathing/screens/breathing_session_screen.dart';
+import '../../presentation/forum/screens/forum_list_screen.dart';
+import '../../presentation/forum/screens/forum_detail_screen.dart';
+import '../../presentation/story/screens/story_list_screen.dart';
+import '../../presentation/story/screens/story_detail_screen.dart';
+import '../../presentation/article/screens/article_list_screen.dart';
+import '../../presentation/article/screens/article_detail_screen.dart';
+
+import '../../presentation/gamification/screens/game_hub_screen.dart';
+import '../../presentation/gamification/screens/badge_screen.dart';
+import '../../presentation/gamification/screens/chest_screen.dart';
+import '../../presentation/gamification/screens/daily_spin_screen.dart';
+import '../../presentation/billing/screens/premium_plans_screen.dart';
+import '../../presentation/wellness/screens/wellness_onboarding_screen.dart';
+import '../../presentation/wellness/screens/wellness_plan_screen.dart';
+import '../../presentation/search/screens/global_search_screen.dart';
 class AppRouter {
   AppRouter._();
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-  static GoRouter get router => _router;
+  static GoRouter createRouter({required Listenable refreshListenable}) {
+    return GoRouter(
+      navigatorKey: _rootNavigatorKey,
+      initialLocation: '/splash',
+      refreshListenable: refreshListenable,
+      redirect: (context, state) {
+        final authState = sl<AuthBloc>().state;
+        final loc = state.matchedLocation;
 
-  static final GoRouter _router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
-    initialLocation: '/splash',
-    routes: [
-      // Splash
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
+        if (authState.status == AuthStatus.initial) return '/splash';
 
-      // Auth routes (no bottom nav)
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: '/forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
-      ),
+        final isAuthenticated = authState.isAuthenticated;
 
-      // Main app with bottom navigation
-      ShellRoute(
-        navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) => MainLayout(child: child),
-        routes: [
-          GoRoute(
-            path: '/home',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: HomeScreen(),
+        if (loc == '/splash') {
+          if (isAuthenticated) return '/home';
+          final hasSeen = sl<SharedPreferences>().getBool(StorageKeys.hasSeenOnboarding) ?? false;
+          return hasSeen ? '/login' : '/onboarding';
+        }
+
+        if (loc == '/onboarding') {
+          if (isAuthenticated) return '/home';
+          return null;
+        }
+
+        final isPrivate = loc == '/home' ||
+            loc.startsWith('/journal') ||
+            loc == '/chat' ||
+            loc.startsWith('/music') ||
+            loc == '/profile' ||
+            loc.startsWith('/mood') ||
+            loc.startsWith('/breathing') ||
+            loc.startsWith('/forum') ||
+            loc.startsWith('/stories') ||
+            loc.startsWith('/articles');
+
+        final isAuthRoute = loc == '/login' ||
+            loc == '/register' ||
+            loc == '/forgot-password' ||
+            loc == '/reset-password';
+
+        if (isPrivate && !isAuthenticated) {
+          final hasSeen = sl<SharedPreferences>().getBool(StorageKeys.hasSeenOnboarding) ?? false;
+          return hasSeen ? '/login' : '/onboarding';
+        }
+
+        if (isAuthRoute && isAuthenticated) return '/home';
+
+        return null;
+      },
+      routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => const SplashScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/register',
+          builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
+          path: '/forgot-password',
+          builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        GoRoute(
+          path: '/reset-password',
+          builder: (context, state) {
+            final token = state.uri.queryParameters['token'] ?? '';
+            return ResetPasswordScreen(token: token);
+          },
+        ),
+        GoRoute(
+          path: '/mood',
+          builder: (context, state) => const MoodTrackerScreen(),
+        ),
+        GoRoute(
+          path: '/mood/stats',
+          builder: (context, state) => const MoodStatsScreen(),
+        ),
+
+        // Breathing
+        GoRoute(
+          path: '/breathing',
+          builder: (context, state) => const BreathingListScreen(),
+          routes: [
+            GoRoute(
+              path: 'session',
+              builder: (context, state) {
+                final technique = state.extra as BreathingTechnique?;
+                return BreathingSessionScreen(technique: technique);
+              },
             ),
-          ),
-          GoRoute(
-            path: '/journal',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: JournalListScreen(),
+          ],
+        ),
+
+        // Forum
+        GoRoute(
+          path: '/forum',
+          builder: (context, state) => const ForumListScreen(),
+          routes: [
+            GoRoute(
+              path: ':slug',
+              builder: (context, state) => ForumDetailScreen(
+                slug: state.pathParameters['slug']!,
+              ),
             ),
-          ),
-          GoRoute(
-            path: '/chat',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ChatListScreen(),
+          ],
+        ),
+
+        // Stories
+        GoRoute(
+          path: '/stories',
+          builder: (context, state) => const StoryListScreen(),
+          routes: [
+            GoRoute(
+              path: ':id',
+              builder: (context, state) => StoryDetailScreen(
+                id: state.pathParameters['id']!,
+              ),
             ),
-          ),
-          GoRoute(
-            path: '/music',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: MusicHomeScreen(),
+          ],
+        ),
+
+        // Articles
+        GoRoute(
+          path: '/articles',
+          builder: (context, state) => const ArticleListScreen(),
+          routes: [
+            GoRoute(
+              path: ':slug',
+              builder: (context, state) => ArticleDetailScreen(
+                slug: state.pathParameters['slug']!,
+              ),
             ),
-          ),
-          GoRoute(
-            path: '/profile',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProfileScreen(),
+          ],
+        ),
+
+        // Gamification & Premium
+        GoRoute(
+          path: '/gamification',
+          builder: (context, state) => const GameHubScreen(),
+          routes: [
+            GoRoute(
+              path: 'badges',
+              builder: (context, state) => const BadgeScreen(),
             ),
-          ),
-        ],
-      ),
-    ],
-  );
+            GoRoute(
+              path: 'chests',
+              builder: (context, state) => const ChestScreen(),
+            ),
+            GoRoute(
+              path: 'spin',
+              builder: (context, state) => const DailySpinScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/billing/premium',
+          builder: (context, state) => const PremiumPlansScreen(),
+        ),
+        // Wellness
+        GoRoute(
+          path: '/wellness/onboarding',
+          builder: (context, state) => const WellnessOnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/wellness/plan',
+          builder: (context, state) => const WellnessPlanScreen(),
+        ),
+        // Search
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const GlobalSearchScreen(),
+        ),
+        ShellRoute(
+          navigatorKey: _shellNavigatorKey,
+          builder: (context, state, child) => MainLayout(child: child),
+          routes: [
+            GoRoute(
+              path: '/home',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: HomeScreen(),
+              ),
+            ),
+            GoRoute(
+              path: '/journal',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: JournalListScreen(),
+              ),
+              routes: [
+                GoRoute(
+                  path: 'create',
+                  builder: (context, state) {
+                    final journal = state.extra as Journal?;
+                    return JournalCreateScreen(
+                      uuid: journal?.uuid,
+                      journal: journal,
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: ':uuid',
+                  builder: (context, state) => JournalDetailScreen(
+                    uuid: state.pathParameters['uuid']!,
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/chat',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: ChatListScreen(),
+              ),
+              routes: [
+                GoRoute(
+                  path: 'new',
+                  builder: (context, state) => const ChatDetailScreen(),
+                ),
+                GoRoute(
+                  path: ':uuid',
+                  builder: (context, state) => ChatDetailScreen(
+                    uuid: state.pathParameters['uuid']!,
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/music',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: MusicHomeScreen(),
+              ),
+            ),
+            GoRoute(
+              path: '/profile',
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: ProfileScreen(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }

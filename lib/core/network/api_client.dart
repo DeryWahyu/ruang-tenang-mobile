@@ -37,6 +37,44 @@ class ApiClient {
 
   Dio get dio => _dio;
 
+  /// Fetch raw JSON body (for endpoints that don't follow the
+  /// standard `{success, data}` envelope, e.g. Journal which returns
+  /// `{data: [...], total, page, limit}` directly). Throws the same
+  /// [ApiException]s as the wrapped methods on HTTP/network errors.
+  Future<Map<String, dynamic>> fetchBody(
+    String method,
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final Response<dynamic> response;
+      switch (method.toUpperCase()) {
+        case 'POST':
+          response = await _dio.post(path,
+              data: data, queryParameters: queryParameters);
+          break;
+        case 'PUT':
+          response = await _dio.put(path,
+              data: data, queryParameters: queryParameters);
+          break;
+        case 'PATCH':
+          response = await _dio.patch(path,
+              data: data, queryParameters: queryParameters);
+          break;
+        case 'DELETE':
+          response = await _dio.delete(path,
+              data: data, queryParameters: queryParameters);
+          break;
+        default:
+          response = await _dio.get(path, queryParameters: queryParameters);
+      }
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
+    }
+  }
+
   Future<ApiResponse<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
