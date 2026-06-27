@@ -69,18 +69,16 @@ class MusicRemoteDataSource {
         .toList();
   }
 
-  /// GET /playlists/public
-  Future<List<PlaylistListItemModel>> getPublicPlaylists() async {
-    final response = await _apiClient.get<List<dynamic>>(
+  /// GET /playlists/public (paginated response: {data:[...], pagination:{}})
+  Future<List<PlaylistListItemModel>> getPublicPlaylists({int page = 1, int limit = 20}) async {
+    final body = await _apiClient.fetchBody(
+      'GET',
       '${ApiConstants.playlists}/public',
-      fromJson: (json) => json as List<dynamic>,
+      queryParameters: {'page': page, 'limit': limit},
     );
 
-    if (!response.success || response.data == null) {
-      throw Exception(response.error ?? 'Gagal memuat playlist publik');
-    }
-
-    return response.data!
+    final list = (body['data'] as List<dynamic>?) ?? [];
+    return list
         .map((e) => PlaylistListItemModel.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }

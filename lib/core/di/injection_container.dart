@@ -87,6 +87,7 @@ import '../../presentation/article/bloc/article_bloc.dart';
 import '../../presentation/forum/bloc/forum_bloc.dart';
 import '../../presentation/story/bloc/story_bloc.dart';
 import '../../presentation/music/bloc/music_bloc.dart';
+import '../../presentation/music/bloc/playlist_detail_cubit.dart';
 import '../../domain/usecases/music/music_usecases.dart';
 
 final sl = GetIt.instance;
@@ -234,6 +235,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => GetSongsByCategoryUseCase(sl()));
   sl.registerLazySingleton(() => GetPublicPlaylistsUseCase(sl()));
   sl.registerLazySingleton(() => GetMyPlaylistsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPlaylistUseCase(sl()));
   sl.registerLazySingleton(() => CreatePlaylistUseCase(sl()));
 
   // BLoCs
@@ -262,7 +264,7 @@ Future<void> initDependencies() async {
   sl.registerFactory<StoryBloc>(
     () => StoryBloc(repository: sl<StoryRepository>()),
   );
-  sl.registerFactory<MusicBloc>(
+  sl.registerLazySingleton<MusicBloc>(
     () => MusicBloc(
       getCategories: sl<GetSongCategoriesUseCase>(),
       getSongsByCategory: sl<GetSongsByCategoryUseCase>(),
@@ -271,6 +273,10 @@ Future<void> initDependencies() async {
       createPlaylist: sl<CreatePlaylistUseCase>(),
       uploadRepository: sl<UploadRepository>(),
     ),
+  );
+  
+  sl.registerFactory<PlaylistDetailCubit>(
+    () => PlaylistDetailCubit(sl<GetPlaylistUseCase>()),
   );
 
   // === Phase 3: Gamification & Billing ===

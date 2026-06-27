@@ -29,6 +29,13 @@ class GetMyPlaylistsUseCase {
   Future<List<PlaylistListItem>> call() => repository.getMyPlaylists();
 }
 
+class GetPlaylistUseCase {
+  final MusicRepository repository;
+  GetPlaylistUseCase(this.repository);
+
+  Future<Playlist> call(String uuid) => repository.getPlaylist(uuid);
+}
+
 class CreatePlaylistUseCase {
   final MusicRepository repository;
   CreatePlaylistUseCase(this.repository);

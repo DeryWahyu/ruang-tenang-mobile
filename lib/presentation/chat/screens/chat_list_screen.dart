@@ -10,7 +10,7 @@ import '../../common/widgets/app_skeleton.dart';
 import '../bloc/chat_bloc.dart';
 import '../bloc/chat_event.dart';
 import '../bloc/chat_state.dart';
-import '../widgets/chat_session_tile.dart';
+import 'package:intl/intl.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -52,14 +52,23 @@ class _ChatListScreenState extends State<ChatListScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Konseling AI'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Konseling AI', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'Teman cerita virtual Anda',
+              style: TextStyle(fontSize: 12, color: AppColors.mutedForeground, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         centerTitle: false,
-        backgroundColor: AppColors.card,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Buka route 'new' untuk membuat obrolan baru
           context.push('/chat/new').then((_) {
             if (mounted) {
               context.read<ChatBloc>().add(const ChatSessionsRequested(refresh: true));
@@ -67,9 +76,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
           });
         },
         backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.primaryForeground,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.chat_bubble_rounded),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.maps_ugc_rounded),
+        label: const Text('Obrolan Baru', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
@@ -87,7 +98,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 5,
                 (_) => const Padding(
                   padding: EdgeInsets.only(bottom: AppDimensions.spacingMd),
-                  child: AppSkeleton(height: 72, borderRadius: AppDimensions.radiusLg),
+                  child: AppSkeleton(height: 85, borderRadius: AppDimensions.radiusLg),
                 ),
               ),
             );
@@ -95,40 +106,108 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
           if (state.sessions.isEmpty) {
             return AppEmptyState(
-              icon: Icons.chat_rounded,
-              title: 'Belum ada obrolan',
-              subtitle: 'Mulai konseling dengan AI dengan mengetuk tombol (+)',
-              actionLabel: 'Mulai Obrolan',
-              onAction: () => context.push('/chat/new'),
+              icon: Icons.forum_rounded,
+              title: 'Mulai Cerita Anda',
+              subtitle: 'Ruang Tenang AI siap mendengarkan tanpa menghakimi. Mulai percakapan sekarang.',
             );
           }
 
           return RefreshIndicator(
             color: AppColors.primary,
+            backgroundColor: AppColors.card,
             onRefresh: () async {
               context.read<ChatBloc>().add(const ChatSessionsRequested(refresh: true));
             },
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(AppDimensions.spacingBase),
+              padding: const EdgeInsets.all(16),
               itemCount: state.sessions.length + (state.hasNextPage ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= state.sessions.length) {
                   return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppDimensions.spacingBase),
+                    padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(child: AppLoadingIndicator(size: 24)),
                   );
                 }
                 final session = state.sessions[index];
-                return ChatSessionTile(
-                  session: session,
-                  onTap: () {
-                    context.push('/chat/${session.uuid}').then((_) {
-                      if (mounted) {
-                        context.read<ChatBloc>().add(const ChatSessionsRequested(refresh: true));
-                      }
-                    });
-                  },
+                final dateStr = DateFormat('dd MMM yyyy, HH:mm').format(session.createdAt);
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: InkWell(
+                    onTap: () {
+                      context.push('/chat/${session.uuid}').then((_) {
+                        if (mounted) {
+                          context.read<ChatBloc>().add(const ChatSessionsRequested(refresh: true));
+                        }
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  session.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.access_time_rounded, size: 12, color: AppColors.mutedForeground),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      dateStr,
+                                      style: TextStyle(
+                                        color: AppColors.mutedForeground,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               },
             ),

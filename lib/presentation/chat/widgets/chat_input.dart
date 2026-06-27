@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 
 class ChatInput extends StatefulWidget {
-  final ValueChanged<String> onSend;
+  final Function(String) onSend;
   final bool isLoading;
 
   const ChatInput({
@@ -17,14 +16,17 @@ class ChatInput extends StatefulWidget {
 }
 
 class _ChatInputState extends State<ChatInput> {
-  final _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
+  bool _hasText = false;
 
-  void _submit() {
-    final text = _controller.text.trim();
-    if (text.isNotEmpty && !widget.isLoading) {
-      widget.onSend(text);
-      _controller.clear();
-    }
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      setState(() {
+        _hasText = _controller.text.trim().isNotEmpty;
+      });
+    });
   }
 
   @override
@@ -33,61 +35,84 @@ class _ChatInputState extends State<ChatInput> {
     super.dispose();
   }
 
+  void _handleSend() {
+    if (_hasText && !widget.isLoading) {
+      widget.onSend(_controller.text.trim());
+      _controller.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppDimensions.spacingBase,
-        AppDimensions.spacingSm,
-        AppDimensions.spacingBase,
-        MediaQuery.paddingOf(context).bottom + AppDimensions.spacingSm,
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 12,
+        bottom: MediaQuery.of(context).padding.bottom + 12,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: TextField(
-              controller: _controller,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _submit(),
-              minLines: 1,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Ketik pesan...',
-                filled: true,
-                fillColor: AppColors.muted,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.spacingMd,
-                  vertical: AppDimensions.spacingMd,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              ),
+              child: TextField(
+                controller: _controller,
+                minLines: 1,
+                maxLines: 5,
+                textInputAction: TextInputAction.newline,
+                decoration: const InputDecoration(
+                  hintText: 'Tulis pesan Anda...',
+                  hintStyle: TextStyle(color: AppColors.mutedForeground),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radius2xl),
-                  borderSide: BorderSide.none,
-                ),
+                style: const TextStyle(fontSize: 15),
               ),
             ),
           ),
-          const SizedBox(width: AppDimensions.spacingSm),
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
+          const SizedBox(width: 12),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              color: _hasText ? AppColors.primary : AppColors.secondary,
               shape: BoxShape.circle,
             ),
-            child: IconButton(
-              icon: widget.isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primaryForeground,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _hasText ? _handleSend : null,
+                customBorder: const CircleBorder(),
+                child: widget.isLoading
+                    ? const Padding(
+                        padding: EdgeInsets.all(14.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Icon(
+                        Icons.arrow_upward_rounded,
+                        color: _hasText ? Colors.white : AppColors.mutedForeground,
                       ),
-                    )
-                  : const Icon(Icons.send_rounded, color: AppColors.primaryForeground),
-              onPressed: _submit,
+              ),
             ),
           ),
         ],

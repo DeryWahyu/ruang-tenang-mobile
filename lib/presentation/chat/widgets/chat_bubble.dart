@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
-import '../../../core/utils/date_utils.dart';
 import '../../../domain/entities/chat.dart';
+import 'package:intl/intl.dart';
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
@@ -11,68 +10,79 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUser = message.isUser;
+    final isUser = message.role == 'user';
+    final timeStr = DateFormat('HH:mm').format(message.createdAt);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppDimensions.spacingBase),
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
         mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
             Container(
-              margin: const EdgeInsets.only(right: 8),
-              child: Image.asset(
-                'assets/images/logo.webp',
-                width: 32,
-                height: 32,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.auto_awesome, color: Colors.white, size: 16),
               ),
             ),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.all(AppDimensions.spacingMd),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser ? null : AppColors.card,
-                gradient: isUser
-                    ? const LinearGradient(
-                        colors: [AppColors.primary, AppColors.destructive],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isUser ? 20 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 20),
+                color: isUser ? AppColors.primary : AppColors.card,
+                borderRadius: BorderRadius.circular(20).copyWith(
+                  bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(20),
+                  bottomLeft: !isUser ? const Radius.circular(4) : const Radius.circular(20),
                 ),
-                border: !isUser ? Border.all(color: AppColors.border) : null,
+                border: isUser ? null : Border.all(color: AppColors.border.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: isUser 
+                        ? AppColors.primary.withOpacity(0.2) 
+                        : Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   Text(
                     message.content,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: isUser ? AppColors.primaryForeground : AppColors.foreground,
-                          height: 1.5,
-                        ),
+                    style: TextStyle(
+                      color: isUser ? AppColors.primaryForeground : AppColors.foreground,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppDateUtils.formatTime(message.createdAt),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isUser
-                              ? AppColors.primaryForeground.withValues(alpha: 0.7)
-                              : AppColors.mutedForeground,
-                        ),
+                    timeStr,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isUser ? Colors.white70 : AppColors.mutedForeground,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          if (isUser) const SizedBox(width: 40),
+          if (isUser) const SizedBox(width: 28), // Spacer to balance AI avatar width on the left
         ],
       ),
     );

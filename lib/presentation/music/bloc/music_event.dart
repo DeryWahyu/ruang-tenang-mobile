@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:equatable/equatable.dart';
 
+import '../../../domain/entities/music.dart';
+
 abstract class MusicEvent extends Equatable {
   const MusicEvent();
 
@@ -21,11 +23,11 @@ class MusicCategorySelected extends MusicEvent {
 }
 
 class MusicPlaySongRequested extends MusicEvent {
-  final int songId;
-  const MusicPlaySongRequested(this.songId);
+  final Song song;
+  const MusicPlaySongRequested(this.song);
 
   @override
-  List<Object?> get props => [songId];
+  List<Object?> get props => [song];
 }
 
 class MusicPauseSongRequested extends MusicEvent {

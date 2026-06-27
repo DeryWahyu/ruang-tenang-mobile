@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../domain/entities/journal.dart';
-import '../../common/widgets/app_chip.dart';
-import '../../common/widgets/app_skeleton.dart';
 
-/// A single journal entry tile used in the list / search results.
 class JournalCard extends StatelessWidget {
   final JournalListItem journal;
   final VoidCallback? onTap;
@@ -16,107 +13,128 @@ class JournalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.spacingMd),
-      padding: const EdgeInsets.all(AppDimensions.spacingBase),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        border: Border.all(color: AppColors.border, width: 1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          borderRadius: BorderRadius.circular(24),
           onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (journal.moodEmoji != null && journal.moodEmoji!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: AppDimensions.spacingSm, top: 2),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
                       child: Text(
-                        journal.moodEmoji!,
-                        style: const TextStyle(fontSize: 20),
+                        journal.title.isEmpty ? 'Tanpa Judul' : journal.title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.foreground,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              height: 1.3,
+                            ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  Expanded(
-                    child: Text(
-                      journal.title.isEmpty ? 'Tanpa Judul' : journal.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.foreground,
-                            fontWeight: FontWeight.w600,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              if (journal.preview.isNotEmpty) ...[
-                const SizedBox(height: AppDimensions.spacingXs),
-                Text(
-                  journal.preview,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.mutedForeground,
-                        height: 1.4,
+                    if (journal.moodEmoji != null && journal.moodEmoji!.isNotEmpty) ...[
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          journal.moodEmoji!,
+                          style: const TextStyle(fontSize: 22),
+                        ),
                       ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                    ],
+                  ],
                 ),
-              ],
-              if (journal.tags.isNotEmpty) ...[
-                const SizedBox(height: AppDimensions.spacingSm),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: journal.tags
-                      .take(3)
-                      .map((tag) => AppChip(
-                            label: '#$tag',
-                            isSelected: false,
-                          ))
-                      .toList(),
-                ),
-              ],
-              const SizedBox(height: AppDimensions.spacingSm),
-              Row(
-                children: [
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 14,
-                    color: AppColors.mutedForeground,
+                if (journal.preview.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    journal.preview,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.mutedForeground,
+                          height: 1.5,
+                          fontSize: 14,
+                        ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      AppDateUtils.formatRelative(journal.createdAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.mutedForeground,
-                          ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (journal.wordCount > 0)
-                    Text(
-                      '${journal.wordCount} kata',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.mutedForeground,
-                          ),
-                    ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: AppColors.mutedForeground,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            AppDateUtils.formatRelative(journal.createdAt),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    if (journal.tags.isNotEmpty)
+                      Wrap(
+                        spacing: 4,
+                        children: journal.tags.take(2).map((tag) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                          ),
+                          child: Text(
+                            '#$tag',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -124,28 +142,61 @@ class JournalCard extends StatelessWidget {
   }
 }
 
-/// Skeleton placeholder for [JournalCard] while loading.
 class JournalCardSkeleton extends StatelessWidget {
   const JournalCardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.spacingMd),
-      padding: const EdgeInsets.all(AppDimensions.spacingBase),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSkeleton(height: 18, width: 200, borderRadius: 4),
-          SizedBox(height: 8),
-          AppSkeleton(height: 14, borderRadius: 4),
-          SizedBox(height: 6),
-          AppSkeleton(height: 14, width: 150, borderRadius: 4),
+          Container(
+            height: 20,
+            width: MediaQuery.of(context).size.width * 0.5,
+            decoration: BoxDecoration(
+              color: AppColors.muted,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 14,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.muted.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 14,
+            width: MediaQuery.of(context).size.width * 0.7,
+            decoration: BoxDecoration(
+              color: AppColors.muted.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Container(
+                height: 24,
+                width: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -3,21 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
-import '../../../core/utils/validators.dart';
 import '../../../domain/entities/journal.dart';
-import '../../common/widgets/app_button.dart';
-import '../../common/widgets/app_input.dart';
 import '../bloc/journal_bloc.dart';
 import '../bloc/journal_event.dart';
 import '../bloc/journal_state.dart';
 
-/// Create / edit journal screen.
-///
-/// Pass an existing [Journal] to edit it; omit it (or pass uuid only) to
-/// create a new entry.
 class JournalCreateScreen extends StatefulWidget {
-  final String? uuid;
-  final Journal? journal;
+  final String? uuid; // If null, creates new. If provided, edits existing.
+  final Journal? journal; // Optional initial data
 
   const JournalCreateScreen({super.key, this.uuid, this.journal});
 
@@ -26,92 +19,144 @@ class JournalCreateScreen extends StatefulWidget {
 }
 
 class _JournalCreateScreenState extends State<JournalCreateScreen> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _titleController;
-  late final TextEditingController _contentController;
-  late final TextEditingController _tagController;
-  List<String> _tags = [];
-
-  bool get _isEditing => widget.journal != null;
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
+  late TextEditingController _tagsController;
+  String _selectedMoodEmoji = '';
+  
+  final List<String> _moodOptions = ['??', '??', '??', '??', '??', '??', '??', '??', '??', '??'];
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.journal?.title ?? '');
     _contentController = TextEditingController(text: widget.journal?.content ?? '');
-    _tagController = TextEditingController();
-    _tags = List<String>.from(widget.journal?.tags ?? []);
+    _tagsController = TextEditingController(text: widget.journal?.tags.join(', ') ?? '');
+    _selectedMoodEmoji = widget.journal?.moodEmoji ?? '';
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
-    _tagController.dispose();
+    _tagsController.dispose();
     super.dispose();
   }
 
-  void _addTag() {
-    final tag = _tagController.text.trim().replaceAll(RegExp(r'\s+'), '_');
-    if (tag.isEmpty) return;
-    if (!_tags.contains(tag)) {
-      setState(() => _tags.add(tag));
-    }
-    _tagController.clear();
-  }
-
-  void _removeTag(String tag) {
-    setState(() => _tags.remove(tag));
-  }
-
-  void _onSubmit() {
+  void _onSave() {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
+    final tagsStr = _tagsController.text.trim();
 
-    if (!(_formKey.currentState?.validate() ?? false)) return;
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Isi jurnal tidak boleh kosong.'),
-          backgroundColor: AppColors.destructive,
-        ),
+        const SnackBar(content: Text('Isi jurnal tidak boleh kosong')),
       );
       return;
     }
 
-    final bloc = context.read<JournalBloc>();
-    if (_isEditing) {
-      bloc.add(JournalUpdateRequested(
-        uuid: widget.uuid!,
-        title: title,
-        content: content,
-        tags: _tags,
-      ));
+    final tags = tagsStr.isEmpty
+        ? <String>[]
+        : tagsStr.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+    if (widget.uuid == null) {
+      context.read<JournalBloc>().add(
+            JournalCreateRequested(
+              title: title,
+              content: content,
+              
+              tags: tags,
+            ),
+          );
     } else {
-      bloc.add(JournalCreateRequested(
-        title: title,
-        content: content,
-        tags: _tags,
-      ));
+      context.read<JournalBloc>().add(
+            JournalUpdateRequested(
+              uuid: widget.uuid!,
+              title: title,
+              content: content,
+              
+              tags: tags,
+            ),
+          );
     }
+  }
+
+  void _showMoodPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pilih Suasana Hati',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Bagaimana perasaan Anda saat menulis ini?',
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: _moodOptions.map((emoji) {
+                  final isSelected = _selectedMoodEmoji == emoji;
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedMoodEmoji = isSelected ? '' : emoji;
+                      });
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.secondary,
+                        shape: BoxShape.circle,
+                        border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
+                      ),
+                      child: Text(emoji, style: const TextStyle(fontSize: 32)),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<JournalBloc, JournalState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
-        final isSaved = state.status == JournalStatus.success ||
-            (state.status == JournalStatus.detailSuccess && _isEditing);
-        if (isSaved && state.successMessage != null) {
+        if (state.status == JournalStatus.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.successMessage!),
-              backgroundColor: AppColors.success,
+              content: Text(
+                widget.uuid == null ? 'Jurnal berhasil disimpan' : 'Jurnal berhasil diperbarui',
+              ),
+              backgroundColor: AppColors.primary,
             ),
           );
-          context.pop(true);
-        }
-        if (state.status == JournalStatus.failure && state.errorMessage != null) {
+          context.pop();
+        } else if (state.status == JournalStatus.failure && state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
@@ -123,154 +168,158 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text(_isEditing ? 'Edit Jurnal' : 'Tulis Jurnal'),
-          centerTitle: false,
-          backgroundColor: AppColors.card,
+          backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: const Icon(Icons.close_rounded, color: AppColors.foreground),
             onPressed: () => context.pop(),
           ),
-        ),
-        body: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(AppDimensions.spacingBase),
-              children: [
-                AppInput(
-                  label: 'Judul',
-                  hint: 'Beri judul untuk jurnalmu (opsional)',
-                  controller: _titleController,
-                  prefixIcon: Icons.title_rounded,
-                  textInputAction: TextInputAction.next,
-                  validator: (v) =>
-                      v != null && v.trim().length > 120 ? 'Judul maksimal 120 karakter' : null,
-                ),
-                const SizedBox(height: AppDimensions.spacingBase),
-                AppInput(
-                  label: 'Cerita & Pikiran',
-                  hint: 'Tulis apa yang kamu rasakan hari ini...',
-                  controller: _contentController,
-                  maxLines: 12,
-                  minLines: 8,
-                  textInputAction: TextInputAction.newline,
-                  keyboardType: TextInputType.multiline,
-                  validator: (v) =>
-                      Validators.minLength(v, 1, 'Isi jurnal'),
-                ),
-                const SizedBox(height: AppDimensions.spacingBase),
-                _buildTagInput(),
-                const SizedBox(height: AppDimensions.spacing2xl),
-              ],
-            ),
-          ),
-        ),
-        bottomNavigationBar: _buildBottomBar(),
-      ),
-    );
-  }
-
-  Widget _buildTagInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Tag',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppColors.foreground,
-                fontWeight: FontWeight.w500,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: BlocBuilder<JournalBloc, JournalState>(
+                builder: (context, state) {
+                  final isLoading = state.status == JournalStatus.loading;
+                  return ElevatedButton(
+                    onPressed: isLoading ? null : _onSave,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : Text(
+                            widget.uuid == null ? 'Simpan' : 'Perbarui',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                  );
+                },
               ),
-        ),
-        const SizedBox(height: AppDimensions.spacingSm),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _tagController,
-                decoration: InputDecoration(
-                  hintText: 'Tambah tag lalu Enter',
-                  prefixIcon: const Icon(Icons.tag_rounded, color: AppColors.mutedForeground),
-                  filled: true,
-                  fillColor: AppColors.card,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                    borderSide: const BorderSide(color: AppColors.input),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                    borderSide: const BorderSide(color: AppColors.input),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                  ),
-                ),
-                onFieldSubmitted: (_) => _addTag(),
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spacingSm),
-            IconButton(
-              onPressed: _addTag,
-              icon: const Icon(Icons.add_circle_rounded),
-              color: AppColors.primary,
-              iconSize: 32,
             ),
           ],
         ),
-        if (_tags.isNotEmpty) ...[
-          const SizedBox(height: AppDimensions.spacingSm),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _tags
-                .map((tag) => Chip(
-                      label: Text('#$tag'),
-                      onDeleted: () => _removeTag(tag),
-                      backgroundColor: AppColors.red50,
-                      labelStyle: const TextStyle(color: AppColors.red700, fontSize: 13),
-                      deleteIconColor: AppColors.red700,
-                      side: BorderSide.none,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Meta bar (Tags & Mood)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _tagsController,
+                        decoration: InputDecoration(
+                          hintText: 'Tambah tag (pisahkan dengan koma)',
+                          hintStyle: TextStyle(color: AppColors.mutedForeground.withOpacity(0.5), fontSize: 13),
+                          border: InputBorder.none,
+                          icon: Icon(Icons.sell_rounded, size: 18, color: AppColors.mutedForeground.withOpacity(0.5)),
+                        ),
+                        style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
                       ),
-                    ))
-                .toList(),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: _showMoodPicker,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _selectedMoodEmoji.isNotEmpty 
+                              ? AppColors.card 
+                              : AppColors.secondary,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _selectedMoodEmoji.isNotEmpty 
+                                ? AppColors.border 
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _selectedMoodEmoji.isNotEmpty ? _selectedMoodEmoji : '??',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _selectedMoodEmoji.isNotEmpty ? 'Mood' : 'Pilih Mood',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: _selectedMoodEmoji.isNotEmpty ? AppColors.foreground : AppColors.mutedForeground,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.border),
+              
+              // Editor Area
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _titleController,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.foreground,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Judul Jurnal...',
+                          hintStyle: TextStyle(
+                            color: AppColors.mutedForeground.withOpacity(0.5),
+                            fontWeight: FontWeight.bold,
+                          ),
+                          border: InputBorder.none,
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _contentController,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.8,
+                          color: AppColors.foreground,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Apa yang sedang Anda pikirkan atau rasakan hari ini?',
+                          hintStyle: TextStyle(
+                            color: AppColors.mutedForeground.withOpacity(0.6),
+                            height: 1.8,
+                          ),
+                          border: InputBorder.none,
+                        ),
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 100), // Scrolling padding
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildBottomBar() {
-    return BlocBuilder<JournalBloc, JournalState>(
-      buildWhen: (prev, curr) => prev.isSubmitting != curr.isSubmitting,
-      builder: (context, state) {
-        return SafeArea(
-          top: false,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(
-              AppDimensions.spacingBase,
-              AppDimensions.spacingSm,
-              AppDimensions.spacingBase,
-              AppDimensions.spacingSm,
-            ),
-            decoration: const BoxDecoration(
-              color: AppColors.card,
-              border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-            ),
-            child: AppButton.primary(
-              label: _isEditing ? 'Simpan Perubahan' : 'Simpan Jurnal',
-              isLoading: state.isSubmitting,
-              onPressed: _onSubmit,
-              suffixIcon: Icons.check_rounded,
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

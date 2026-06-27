@@ -22,6 +22,7 @@ import '../../presentation/mood/screens/mood_stats_screen.dart';
 import '../../presentation/chat/screens/chat_list_screen.dart';
 import '../../presentation/chat/screens/chat_detail_screen.dart';
 import '../../presentation/music/screens/music_home_screen.dart';
+import '../../presentation/music/screens/playlist_detail_screen.dart';
 import '../../presentation/profile/screens/profile_screen.dart';
 import '../../presentation/splash_screen.dart';
 
@@ -285,6 +286,14 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: MusicHomeScreen(),
               ),
+              routes: [
+                GoRoute(
+                  path: 'playlist/:uuid',
+                  builder: (context, state) => PlaylistDetailScreen(
+                    uuid: state.pathParameters['uuid']!,
+                  ),
+                ),
+              ],
             ),
             GoRoute(
               path: '/profile',
