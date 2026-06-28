@@ -249,6 +249,169 @@ class DailySpinWheelModel extends Equatable {
   List<Object?> get props => [slots, hasSpunToday];
 }
 
+// ==========================================
+// Personal Journey
+// ==========================================
+class PersonalJourneyModel {
+  static PersonalJourney fromJson(Map<String, dynamic> json) {
+    return PersonalJourney(
+      userId: (json['user_id'] as num?)?.toInt() ?? 0,
+      currentLevel: (json['current_level'] as num?)?.toInt() ?? 1,
+      currentExp: (json['current_exp'] as num?)?.toInt() ?? 0,
+      expToNextLevel: (json['exp_to_next_level'] as num?)?.toInt() ?? 0,
+      progressPercent: (json['progress_percent'] as num?)?.toDouble() ?? 0.0,
+      tierName: json['tier_name'] as String? ?? '',
+      tierColor: json['tier_color'] as String? ?? '',
+      badgeName: json['badge_name'] as String? ?? '',
+      badgeIcon: json['badge_icon'] as String? ?? '',
+      monthlyXp: (json['monthly_xp'] as num?)?.toInt() ?? 0,
+      monthlyActivities: (json['monthly_activities'] as num?)?.toInt() ?? 0,
+      newBadgesCount: (json['new_badges_count'] as num?)?.toInt() ?? 0,
+      rankInLevel: (json['rank_in_level'] as num?)?.toInt() ?? 0,
+      totalInLevel: (json['total_in_level'] as num?)?.toInt() ?? 0,
+      percentile: (json['percentile'] as num?)?.toDouble() ?? 0.0,
+      currentStreak: (json['current_streak'] as num?)?.toInt() ?? 0,
+      longestStreak: (json['longest_streak'] as num?)?.toInt() ?? 0,
+      totalActivities: (json['total_activities'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+// ==========================================
+// Daily Tasks
+// ==========================================
+class DailyTaskModel {
+  static DailyTask fromJson(Map<String, dynamic> json) {
+    return DailyTask(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      taskType: json['task_type'] as String? ?? '',
+      taskName: json['task_name'] as String? ?? '',
+      taskDescription: json['task_description'] as String? ?? '',
+      taskIcon: json['task_icon'] as String? ?? '🎯',
+      premiumOnly: json['premium_only'] as bool? ?? false,
+      xpReward: (json['xp_reward'] as num?)?.toInt() ?? 0,
+      coinReward: (json['coin_reward'] as num?)?.toInt() ?? 0,
+      targetCount: (json['target_count'] as num?)?.toInt() ?? 1,
+      currentCount: (json['current_count'] as num?)?.toInt() ?? 0,
+      isCompleted: json['is_completed'] as bool? ?? false,
+      isClaimed: json['is_claimed'] as bool? ?? false,
+    );
+  }
+}
+
+class DailyTaskSummaryModel {
+  static DailyTaskSummary fromJson(Map<String, dynamic> json) {
+    return DailyTaskSummary(
+      totalTasks: (json['total_tasks'] as num?)?.toInt() ?? 0,
+      completedTasks: (json['completed_tasks'] as num?)?.toInt() ?? 0,
+      claimedTasks: (json['claimed_tasks'] as num?)?.toInt() ?? 0,
+      totalXpEarned: (json['total_xp_earned'] as num?)?.toInt() ?? 0,
+      totalXpPossible: (json['total_xp_possible'] as num?)?.toInt() ?? 0,
+      totalCoinsEarned: (json['total_coins_earned'] as num?)?.toInt() ?? 0,
+      totalCoinsPossible: (json['total_coins_possible'] as num?)?.toInt() ?? 0,
+      loginStreak: (json['login_streak'] as num?)?.toInt() ?? 0,
+      tasks: (json['tasks'] as List<dynamic>?)
+              ?.map((e) => DailyTaskModel.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+// ==========================================
+// Progress Map
+// ==========================================
+class MapLandmarkModel {
+  static MapLandmark fromJson(Map<String, dynamic> json) {
+    return MapLandmark(
+      id: json['id']?.toString() ?? '',
+      landmarkKey: json['landmark_key'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      icon: json['icon'] as String? ?? '📍',
+      xpReward: (json['xp_reward'] as num?)?.toInt() ?? 0,
+      coinReward: (json['coin_reward'] as num?)?.toInt() ?? 0,
+      isUnlocked: json['is_unlocked'] as bool? ?? false,
+      currentValue: (json['current_value'] as num?)?.toInt() ?? 0,
+      unlockValue: (json['unlock_value'] as num?)?.toInt() ?? 0,
+      progressPercent: (json['progress_percent'] as num?)?.toDouble() ?? 0.0,
+      rewardClaimed: json['reward_claimed'] as bool? ?? false,
+    );
+  }
+}
+
+class MapRegionModel {
+  static MapRegion fromJson(Map<String, dynamic> json) {
+    return MapRegion(
+      id: json['id']?.toString() ?? '',
+      regionKey: json['region_key'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      icon: json['icon'] as String? ?? '🗺️',
+      isUnlocked: json['is_unlocked'] as bool? ?? false,
+      totalLandmarks: (json['total_landmarks'] as num?)?.toInt() ?? 0,
+      unlockedLandmarks: (json['unlocked_landmarks'] as num?)?.toInt() ?? 0,
+      landmarks: (json['landmarks'] as List<dynamic>?)
+              ?.map((e) => MapLandmarkModel.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class ProgressMapModel {
+  static ProgressMap fromJson(Map<String, dynamic> json) {
+    return ProgressMap(
+      regions: (json['regions'] as List<dynamic>?)
+              ?.map((e) => MapRegionModel.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          [],
+      totalRegions: (json['total_regions'] as num?)?.toInt() ?? 0,
+      unlockedRegions: (json['unlocked_regions'] as num?)?.toInt() ?? 0,
+      totalLandmarks: (json['total_landmarks'] as num?)?.toInt() ?? 0,
+      unlockedLandmarks: (json['unlocked_landmarks'] as num?)?.toInt() ?? 0,
+      overallProgress: (json['overall_progress'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+// ==========================================
+// Hall of Fame
+// ==========================================
+class HallOfFameEntryModel {
+  static HallOfFameEntry fromJson(Map<String, dynamic> json) {
+    return HallOfFameEntry(
+      rank: (json['rank'] as num?)?.toInt() ?? 0,
+      userId: (json['user_id'] as num?)?.toInt() ?? 0,
+      userName: json['user_name'] as String? ?? 'Anonim',
+      avatar: json['avatar'] as String? ?? '',
+      monthlyXp: (json['monthly_xp'] as num?)?.toInt() ?? 0,
+      message: json['message'] as String? ?? '',
+      tierName: json['tier_name'] as String? ?? '',
+      tierColor: json['tier_color'] as String? ?? '',
+    );
+  }
+}
+
+// ==========================================
+// Reward
+// ==========================================
+class RewardModel {
+  static Reward fromJson(Map<String, dynamic> json) {
+    return Reward(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      image: json['image'] as String? ?? '',
+      coinCost: (json['coin_cost'] as num?)?.toInt() ?? 0,
+      stock: (json['stock'] as num?)?.toInt() ?? -1,
+      isActive: json['is_active'] as bool? ?? true,
+      rewardType: json['reward_type'] as String? ?? 'general',
+      rewardValue: json['reward_value']?.toString() ?? '',
+    );
+  }
+}
+
 DateTime? _parseDate(dynamic value) {
   if (value == null) return null;
   if (value is! String || value.isEmpty) return null;

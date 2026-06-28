@@ -39,6 +39,17 @@ import '../../presentation/gamification/screens/game_hub_screen.dart';
 import '../../presentation/gamification/screens/badge_screen.dart';
 import '../../presentation/gamification/screens/chest_screen.dart';
 import '../../presentation/gamification/screens/daily_spin_screen.dart';
+import '../../presentation/gamification/screens/daily_tasks_screen.dart';
+import '../../presentation/gamification/screens/exp_history_screen.dart';
+import '../../presentation/gamification/screens/leaderboard_screen.dart';
+import '../../presentation/gamification/screens/progress_map_screen.dart';
+import '../../presentation/gamification/screens/rewards_screen.dart';
+import '../../presentation/gamification/screens/guild_screen.dart';
+import '../../presentation/gamification/screens/streak_society_screen.dart';
+import '../../presentation/gamification/screens/timed_challenge_screen.dart';
+import '../../presentation/gamification/screens/xp_boost_screen.dart';
+import '../../presentation/gamification/screens/friend_quest_screen.dart';
+import '../../presentation/gamification/screens/weekly_league_screen.dart';
 import '../../presentation/billing/screens/premium_plans_screen.dart';
 import '../../presentation/wellness/screens/wellness_onboarding_screen.dart';
 import '../../presentation/wellness/screens/wellness_plan_screen.dart';
@@ -209,7 +220,57 @@ class AppRouter {
               path: 'spin',
               builder: (context, state) => const DailySpinScreen(),
             ),
+            GoRoute(
+              path: 'daily-tasks',
+              builder: (context, state) => const DailyTasksScreen(),
+            ),
+            GoRoute(
+              path: 'exp-history',
+              builder: (context, state) => const ExpHistoryScreen(),
+            ),
+            GoRoute(
+              path: 'leaderboard',
+              builder: (context, state) => const LeaderboardScreen(),
+            ),
+            GoRoute(
+              path: 'progress-map',
+              builder: (context, state) => const ProgressMapScreen(),
+            ),
+            GoRoute(
+              path: 'rewards',
+              builder: (context, state) => const RewardsScreen(),
+            ),
+            GoRoute(
+              path: 'guild',
+              builder: (context, state) => const GuildScreen(),
+            ),
+            GoRoute(
+              path: 'streak-society',
+              builder: (context, state) => const StreakSocietyScreen(),
+            ),
+            GoRoute(
+              path: 'timed-challenge',
+              builder: (context, state) => const TimedChallengeScreen(),
+            ),
+            GoRoute(
+              path: 'xp-boost',
+              builder: (context, state) => const XpBoostScreen(),
+            ),
+            GoRoute(
+              path: 'friend-quest',
+              builder: (context, state) => const FriendQuestScreen(),
+            ),
+            GoRoute(
+              path: 'weekly-league',
+              builder: (context, state) => const WeeklyLeagueScreen(),
+            ),
           ],
+        ),
+        GoRoute(
+          path: '/music/playlist/:uuid',
+          builder: (context, state) => PlaylistDetailScreen(
+            uuid: state.pathParameters['uuid']!,
+          ),
         ),
         GoRoute(
           path: '/billing/premium',
@@ -286,14 +347,6 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: MusicHomeScreen(),
               ),
-              routes: [
-                GoRoute(
-                  path: 'playlist/:uuid',
-                  builder: (context, state) => PlaylistDetailScreen(
-                    uuid: state.pathParameters['uuid']!,
-                  ),
-                ),
-              ],
             ),
             GoRoute(
               path: '/profile',

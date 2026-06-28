@@ -10,11 +10,15 @@ import '../../domain/repositories/upload_repository.dart';
 import '../../data/repositories/upload_repository_impl.dart';
 import '../../data/datasources/remote/gamification_remote_datasource.dart';
 import '../../data/datasources/remote/billing_remote_datasource.dart';
+import '../../data/datasources/remote/secondary_gamification_remote_datasource.dart';
 import '../../domain/repositories/gamification_repository.dart';
 import '../../domain/repositories/billing_repository.dart';
+import '../../domain/repositories/secondary_gamification_repository.dart';
 import '../../data/repositories/gamification_repository_impl.dart';
 import '../../data/repositories/billing_repository_impl.dart';
+import '../../data/repositories/secondary_gamification_repository_impl.dart';
 import '../../presentation/gamification/bloc/gamification_bloc.dart';
+import '../../presentation/gamification/cubit/secondary_cubits.dart';
 import '../../presentation/billing/bloc/billing_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
@@ -303,6 +307,20 @@ Future<void> initDependencies() async {
   sl.registerFactory<BillingBloc>(
     () => BillingBloc(repository: sl<BillingRepository>()),
   );
+
+  // === Secondary Gamification (Guild, Streak Society, Timed Challenge, XP Boost, Friend Quest, Weekly League) ===
+  sl.registerLazySingleton<SecondaryGamificationRemoteDataSource>(
+    () => SecondaryGamificationRemoteDataSource(sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<SecondaryGamificationRepository>(
+    () => SecondaryGamificationRepositoryImpl(remote: sl<SecondaryGamificationRemoteDataSource>()),
+  );
+  sl.registerFactory<GuildCubit>(() => GuildCubit(sl<SecondaryGamificationRepository>()));
+  sl.registerFactory<StreakSocietyCubit>(() => StreakSocietyCubit(sl<SecondaryGamificationRepository>()));
+  sl.registerFactory<TimedChallengeCubit>(() => TimedChallengeCubit(sl<SecondaryGamificationRepository>()));
+  sl.registerFactory<XpBoostCubit>(() => XpBoostCubit(sl<SecondaryGamificationRepository>()));
+  sl.registerFactory<FriendQuestCubit>(() => FriendQuestCubit(sl<SecondaryGamificationRepository>()));
+  sl.registerFactory<WeeklyLeagueCubit>(() => WeeklyLeagueCubit(sl<SecondaryGamificationRepository>()));
 
   // === Phase 4: Polish & Advanced ===
   // Remote Data Sources

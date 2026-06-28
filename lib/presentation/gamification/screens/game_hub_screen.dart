@@ -15,6 +15,7 @@ class GameHubScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => sl<GamificationBloc>()
         ..add(const GamificationLevelRequested())
+        ..add(const GamificationJourneyRequested())
         ..add(const GamificationExpHistoryRequested()),
       child: const _GameHubView(),
     );
@@ -87,7 +88,7 @@ class _GameHubView extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      if (state.levelInfo != null) _buildLevelCard(context, state),
+                      if (state.journey != null || state.levelInfo != null) _buildLevelCard(context, state),
                       const SizedBox(height: 32),
                       
                       const Text(
@@ -104,6 +105,14 @@ class _GameHubView extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       _buildExplorationList(context),
+
+                      const SizedBox(height: 32),
+                      const Text(
+                        'Komunitas & Kompetisi',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSecondaryList(context),
 
                       if (state.expHistory.isNotEmpty) ...[
                         const SizedBox(height: 32),
@@ -146,10 +155,28 @@ class _GameHubView extends StatelessWidget {
   }
 
   Widget _buildLevelCard(BuildContext context, GamificationState state) {
-    final info = state.levelInfo!;
-    // Fake target exp for now, assuming next level is (level+1)*1000
-    final targetExp = (info.level + 1) * 1000;
-    final progress = (info.currentExp / targetExp).clamp(0.0, 1.0);
+    final journey = state.journey;
+    final info = state.levelInfo;
+
+    // Prefer real journey data; fall back to /auth/me level info.
+    final level = journey?.currentLevel ?? info?.level ?? 1;
+    final badgeName = (journey?.badgeName.isNotEmpty ?? false)
+        ? journey!.badgeName
+        : (info?.badgeName.isNotEmpty ?? false ? info!.badgeName : 'Pemula');
+    final badgeIcon = (journey?.badgeIcon.isNotEmpty ?? false)
+        ? journey!.badgeIcon
+        : (info?.badgeIcon.isNotEmpty ?? false ? info!.badgeIcon : '🌟');
+    final currentExp = journey?.currentExp ?? info?.currentExp ?? 0;
+
+    // Progress comes from the backend (progress_percent + exp_to_next_level).
+    final double progress = journey != null
+        ? (journey.progressPercent / 100).clamp(0.0, 1.0)
+        : 0.0;
+    final String progressLabel = journey != null
+        ? (journey.expToNextLevel > 0
+            ? '${journey.expToNextLevel} XP lagi ke Level ${level + 1}'
+            : 'Level maksimum tercapai')
+        : '$currentExp XP';
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -185,7 +212,7 @@ class _GameHubView extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    info.badgeIcon.isNotEmpty ? info.badgeIcon : '🌟',
+                    badgeIcon,
                     style: const TextStyle(fontSize: 32),
                   ),
                 ),
@@ -196,10 +223,10 @@ class _GameHubView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Level ${info.level}', 
+                      'Level $level',
                       style: const TextStyle(
-                        color: Colors.white, 
-                        fontSize: 28, 
+                        color: Colors.white,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
                         letterSpacing: -0.5,
                       ),
@@ -212,13 +239,28 @@ class _GameHubView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        info.badgeName.isNotEmpty ? info.badgeName : 'Pemula', 
+                        badgeName,
                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
                 ),
               ),
+              if (journey != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 4),
+                        Text('${journey.currentStreak}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ],
+                    ),
+                    const Text('streak', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  ],
+                ),
             ],
           ),
           const SizedBox(height: 28),
@@ -240,12 +282,12 @@ class _GameHubView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${info.currentExp} XP', 
+                '$currentExp XP',
                 style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
               ),
               Text(
-                '$targetExp XP', 
-                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w500),
+                progressLabel,
+                style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -264,7 +306,7 @@ class _GameHubView extends StatelessWidget {
             subtitle: 'Selesaikan misi',
             icon: Icons.checklist_rounded,
             color: Colors.teal,
-            onTap: () {},
+            onTap: () => context.push('/gamification/daily-tasks'),
           ),
         ),
         const SizedBox(width: 16),
@@ -305,20 +347,89 @@ class _GameHubView extends StatelessWidget {
         const SizedBox(height: 12),
         _buildListCard(
           context,
-          title: 'Peta Progress',
-          subtitle: 'Perjalanan kesehatan mentalmu',
-          icon: Icons.map_rounded,
-          color: Colors.blue,
-          onTap: () {},
+          title: 'Toko Hadiah',
+          subtitle: 'Tukar koin emas dengan hadiah',
+          icon: Icons.storefront_rounded,
+          color: AppColors.accentOrange,
+          onTap: () => context.push('/gamification/rewards'),
         ),
         const SizedBox(height: 12),
         _buildListCard(
           context,
-          title: 'Guild & Komunitas',
-          subtitle: 'Bergabung dan tumbuh bersama',
-          icon: Icons.shield_rounded,
+          title: 'Peta Progress',
+          subtitle: 'Perjalanan kesehatan mentalmu',
+          icon: Icons.map_rounded,
+          color: Colors.blue,
+          onTap: () => context.push('/gamification/progress-map'),
+        ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'Papan Peringkat',
+          subtitle: 'Lihat pencapaian komunitas',
+          icon: Icons.leaderboard_rounded,
           color: AppColors.primary,
-          onTap: () {},
+          onTap: () => context.push('/gamification/leaderboard'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSecondaryList(BuildContext context) {
+    return Column(
+      children: [
+        _buildListCard(
+          context,
+          title: 'Guild',
+          subtitle: 'Bergabung & tumbuh bersama komunitas',
+          icon: Icons.shield_rounded,
+          color: Colors.indigo,
+          onTap: () => context.push('/gamification/guild'),
+        ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'Liga Mingguan',
+          subtitle: 'Berkompetisi & naik divisi setiap pekan',
+          icon: Icons.emoji_events_rounded,
+          color: Colors.amber.shade700,
+          onTap: () => context.push('/gamification/weekly-league'),
+        ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'Quest Kilat',
+          subtitle: 'Tantangan berbatas waktu untuk XP ekstra',
+          icon: Icons.bolt_rounded,
+          color: Colors.deepPurple,
+          onTap: () => context.push('/gamification/timed-challenge'),
+        ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'Streak Society',
+          subtitle: 'Klub eksklusif berdasarkan streak harian',
+          icon: Icons.local_fire_department_rounded,
+          color: Colors.deepOrange,
+          onTap: () => context.push('/gamification/streak-society'),
+        ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'XP Boost & Combo',
+          subtitle: 'Pacu perolehan XP dengan multiplier',
+          icon: Icons.flash_on_rounded,
+          color: AppColors.accentOrange,
+          onTap: () => context.push('/gamification/xp-boost'),
+        ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'Friend Quest',
+          subtitle: 'Selesaikan misi bersama teman',
+          icon: Icons.handshake_rounded,
+          color: Colors.teal,
+          onTap: () => context.push('/gamification/friend-quest'),
         ),
       ],
     );

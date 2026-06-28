@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../gamification/widgets/daily_task_fab.dart';
+import '../../mood/widgets/mood_checkin_gate.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -44,7 +46,23 @@ class MainLayout extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: child,
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            Positioned.fill(child: child),
+            // One-per-day mood check-in popup (renders nothing until needed).
+            const MoodCheckinGate(),
+            // Floating daily-task button (mirrors the web FAB). Hidden on
+            // Journal, Chat & Music which have their own bottom-right controls.
+            Positioned.fill(
+              child: DailyTaskFab(
+                bottomOffset: 16,
+                visible: selectedIndex != 1 && selectedIndex != 2 && selectedIndex != 3,
+              ),
+            ),
+          ],
+        ),
+      ),
       extendBody: false, // Prevents nested FABs and lists from overlapping with the navbar
       bottomNavigationBar: Container(
         margin: EdgeInsets.only(

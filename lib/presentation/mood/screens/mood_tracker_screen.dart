@@ -1,13 +1,10 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 import '../../../core/utils/date_utils.dart';
-import '../../../core/utils/extensions.dart';
 import '../../../domain/entities/mood.dart';
-import '../../common/widgets/app_empty_state.dart';
-import '../../common/widgets/app_loading.dart';
 import '../bloc/mood_bloc.dart';
 import '../bloc/mood_event.dart';
 import '../bloc/mood_state.dart';
@@ -21,293 +18,165 @@ class MoodTrackerScreen extends StatefulWidget {
 }
 
 class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
+  MoodType? _selectedMood;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MoodBloc>().add(const MoodTodayRequested());
-      context.read<MoodBloc>().add(const MoodHistoryRequested());
     });
+  }
+
+  void _onSave() {
+    if (_selectedMood != null) {
+      context.read<MoodBloc>().add(MoodRecordRequested(_selectedMood!));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Mood Tracker'),
-        centerTitle: false,
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart_rounded),
-            tooltip: 'Statistik',
-            onPressed: () => context.push('/mood/stats'),
-          ),
-        ],
-      ),
-      body: BlocConsumer<MoodBloc, MoodState>(
-        listenWhen: (prev, curr) =>
-            prev.successMessage != curr.successMessage ||
-            (curr.errorMessage != null && curr.status == MoodStatus.failure),
-        listener: (context, state) {
-          if (state.successMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.successMessage!),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-          if (state.errorMessage != null && state.status == MoodStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage!),
-                backgroundColor: AppColors.destructive,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () async {
-              context.read<MoodBloc>().add(const MoodTodayRequested());
-              context.read<MoodBloc>().add(const MoodHistoryRequested());
-            },
-            child: ListView(
-              padding: const EdgeInsets.all(AppDimensions.spacingBase),
-              children: [
-                _buildCheckInCard(state),
-                const SizedBox(height: AppDimensions.spacingBase),
-                _buildHistorySection(state),
-              ],
+    return BlocConsumer<MoodBloc, MoodState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
+      listener: (context, state) {
+        if (state.status == MoodStatus.recorded) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Mood berhasil disimpan! Terima kasih sudah berbagi.'),
+              backgroundColor: AppColors.primary,
             ),
           );
-        },
-      ),
-    );
-  }
+          // Pop the screen after successful save
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) context.pop();
+          });
+        } else if (state.status == MoodStatus.failure && state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!), backgroundColor: AppColors.destructive),
+          );
+        }
+      },
+      builder: (context, state) {
+        final hasCheckedToday = (state.today ?? const TodayMood()).hasChecked;
+        final savedMood = (state.today ?? const TodayMood()).mood?.mood;
+        
+        // Auto-select if already saved today
+        if (hasCheckedToday && savedMood != null && _selectedMood == null) {
+          _selectedMood = savedMood;
+        }
 
-  Widget _buildCheckInCard(MoodState state) {
-    final today = state.today;
-    final hasChecked = today?.hasChecked ?? false;
-    final todaysMood = today?.mood;
+        final canSave = _selectedMood != null && (!hasCheckedToday || _selectedMood != savedMood);
+        final isLoading = state.status == MoodStatus.recording || state.status == MoodStatus.loading;
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.spacingBase),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.red50,
-            AppColors.card,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppDimensions.radius2xl),
-        border: Border.all(color: AppColors.red100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text('✨', style: TextStyle(fontSize: 24)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Bagaimana perasaanmu hari ini?',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.foreground,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close_rounded, color: AppColors.foreground),
+              onPressed: () => context.pop(),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.analytics_rounded, color: AppColors.primary),
+                tooltip: 'Statistik Mood',
+                onPressed: () => context.push('/mood/stats'),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            AppDateUtils.formatWithDay(DateTime.now()),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.mutedForeground,
-                ),
-          ),
-          const SizedBox(height: AppDimensions.spacingBase),
-          if (hasChecked && todaysMood != null)
-            _buildRecordedState(todaysMood)
-          else if (state.isLoading && today == null)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: AppDimensions.spacingBase),
-              child: Center(child: AppLoadingIndicator(size: 28)),
-            )
-          else
-            MoodPicker(
-              selectedMood: todaysMood?.mood,
-              onMoodSelected: state.isRecording
-                  ? null
-                  : (mood) => context.read<MoodBloc>().add(MoodRecordRequested(mood)),
-            ),
-          if (state.isRecording)
-            const Padding(
-              padding: EdgeInsets.only(top: AppDimensions.spacingBase),
-              child: Center(child: AppLoadingIndicator(size: 24)),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecordedState(UserMood mood) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingBase, vertical: AppDimensions.spacingSm),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(color: mood.mood.color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Text(mood.displayEmoji, style: const TextStyle(fontSize: 32)),
-          const SizedBox(width: AppDimensions.spacingSm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mood hari ini: ${mood.mood.label}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppColors.foreground,
-                        fontWeight: FontWeight.w600,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      DateFormat('dd MMMM yyyy').format(DateTime.now()),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                ),
-                Text(
-                  'Dicatat ${AppDateUtils.formatRelative(mood.createdAt)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.mutedForeground,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              // Allow re-recording (server upserts).
-              context.read<MoodBloc>().add(const MoodTodayRequested());
-            },
-            icon: const Icon(Icons.edit_rounded, size: 18),
-            label: const Text('Ubah'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHistorySection(MoodState state) {
-    final history = state.history;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Riwayat',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.foreground,
-                    fontWeight: FontWeight.w600,
+                    ),
                   ),
-            ),
-            if (history != null && history.totalCount > 0)
-              Text(
-                '${history.totalCount} catatan',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.mutedForeground,
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Bagaimana perasaanmu\nhari ini?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.foreground,
+                      height: 1.3,
+                      letterSpacing: -0.5,
                     ),
-              ),
-          ],
-        ),
-        const SizedBox(height: AppDimensions.spacingSm),
-        if (state.status == MoodStatus.historyLoading && history == null)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppDimensions.spacing2xl),
-            child: Center(child: AppLoadingIndicator(size: 24)),
-          )
-        else if (history == null || history.moods.isEmpty)
-          AppEmptyState(
-            icon: Icons.history_rounded,
-            title: 'Belum ada riwayat',
-            subtitle: 'Catat mood pertamamu untuk melihatnya di sini.',
-            iconSize: 48,
-          )
-        else
-          _buildHistoryList(history.moods),
-      ],
-    );
-  }
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    hasCheckedToday 
+                        ? 'Kamu sudah mencatat mood hari ini. Merasa berbeda?' 
+                        : 'Pilih satu ikon yang paling mewakili kondisimu.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.mutedForeground.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  
+                  // Central Picker Grid
+                  Expanded(
+                    child: MoodPicker(
+                      selectedMood: _selectedMood,
+                      onMoodSelected: (mood) {
+                        setState(() {
+                          _selectedMood = mood;
+                        });
+                      },
+                      isGrid: true,
+                    ),
+                  ),
 
-  Widget _buildHistoryList(List<UserMood> moods) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: moods.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppDimensions.spacingSm),
-      itemBuilder: (context, index) {
-        final mood = moods[index];
-        final isToday = AppDateUtils.isToday(mood.createdAt);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingBase, vertical: AppDimensions.spacingSm),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: mood.mood.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-                child: Center(
-                  child: Text(mood.displayEmoji, style: const TextStyle(fontSize: 22)),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacingSm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      mood.mood.label,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: AppColors.foreground,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  // Bottom Action
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 32, top: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: canSave && !isLoading ? _onSave : null,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.muted,
+                          elevation: canSave ? 8 : 0,
+                          shadowColor: AppColors.primary.withOpacity(0.4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                              )
+                            : Text(
+                                hasCheckedToday ? 'Perbarui Mood' : 'Simpan Mood',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+                              ),
+                      ),
                     ),
-                    Text(
-                      isToday
-                          ? 'Hari ini • ${AppDateUtils.formatTime(mood.createdAt)}'
-                          : AppDateUtils.formatDateTime(mood.createdAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.mutedForeground,
-                          ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

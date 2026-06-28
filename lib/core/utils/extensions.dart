@@ -99,4 +99,38 @@ extension MoodTypeColorX on MoodType {
         return const Color(0xFF6366F1);
     }
   }
+
+  String get activeImagePath {
+    switch (this) {
+      case MoodType.happy:
+        return 'assets/images/moods/1-happy-active.png';
+      case MoodType.neutral:
+        return 'assets/images/moods/2-netral-active.png';
+      case MoodType.angry:
+        return 'assets/images/moods/3-angry-active.png';
+      case MoodType.disappointed:
+        return 'assets/images/moods/4-disappointed-active.png';
+      case MoodType.sad:
+        return 'assets/images/moods/5-sad-active.png';
+      case MoodType.crying:
+        return 'assets/images/moods/6-cry-active.png';
+    }
+  }
+
+  String get inactiveImagePath {
+    switch (this) {
+      case MoodType.happy:
+        return 'assets/images/moods/1-smile.png';
+      case MoodType.neutral:
+        return 'assets/images/moods/2-netral.png';
+      case MoodType.angry:
+        return 'assets/images/moods/3-angry.png';
+      case MoodType.disappointed:
+        return 'assets/images/moods/4-disappointed.png';
+      case MoodType.sad:
+        return 'assets/images/moods/5-sad.png';
+      case MoodType.crying:
+        return 'assets/images/moods/6-cry.png';
+    }
+  }
 }

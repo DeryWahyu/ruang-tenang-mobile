@@ -15,10 +15,19 @@ class GamificationRepositoryImpl implements GamificationRepository {
   }
 
   @override
-  Future<List<ExpHistory>> getExpHistory({int page = 1, int limit = 10}) async {
+  Future<PersonalJourney> getPersonalJourney() => _remote.getPersonalJourney();
+
+  @override
+  Future<Map<String, dynamic>> getExpHistory({int page = 1, int limit = 10}) async {
     final result = await _remote.getExpHistory(page: page, limit: limit);
-    final items = result['items'] as List<ExpHistoryModel>;
-    return items.map((e) => e.toEntity()).toList();
+    final items = (result['items'] as List<ExpHistoryModel>).map((e) => e.toEntity()).toList();
+    return {
+      'items': items,
+      'total': result['total'],
+      'page': result['page'],
+      'limit': result['limit'],
+      'total_pages': result['total_pages'],
+    };
   }
 
   @override
@@ -28,15 +37,48 @@ class GamificationRepositoryImpl implements GamificationRepository {
   }
 
   @override
+  Future<DailyTaskSummary> getDailyTasks() => _remote.getDailyTasks();
+
+  @override
+  Future<Map<String, dynamic>> claimDailyTask(int taskId) => _remote.claimDailyTask(taskId);
+
+  @override
+  Future<Map<String, dynamic>> claimAllDailyTasks() => _remote.claimAllDailyTasks();
+
+  @override
+  Future<Map<String, dynamic>> claimDailyLogin() => _remote.claimDailyLogin();
+
+  @override
+  Future<ProgressMap> getProgressMap() => _remote.getProgressMap();
+
+  @override
+  Future<Map<String, dynamic>> claimLandmark(String landmarkId) => _remote.claimLandmark(landmarkId);
+
+  @override
+  Future<List<HallOfFameEntry>> getMonthlyHallOfFame({required int month, required int year, String? category}) =>
+      _remote.getMonthlyHallOfFame(month: month, year: year, category: category);
+
+  @override
+  Future<List<HallOfFameEntry>> getLevelHallOfFame(int level, {int limit = 10}) =>
+      _remote.getLevelHallOfFame(level, limit: limit);
+
+  @override
+  Future<List<Reward>> getRewards() => _remote.getRewards();
+
+  @override
+  Future<int> getCoinBalance() => _remote.getCoinBalance();
+
+  @override
+  Future<Map<String, dynamic>> claimReward(int rewardId) => _remote.claimReward(rewardId);
+
+  @override
   Future<List<MysteryChest>> getChests() async {
     final models = await _remote.getChests();
     return models.map((e) => e.toEntity()).toList();
   }
 
   @override
-  Future<Map<String, dynamic>> openChest(String chestId) async {
-    return _remote.openChest(chestId);
-  }
+  Future<Map<String, dynamic>> openChest(String chestId) => _remote.openChest(chestId);
 
   @override
   Future<DailySpinWheel> getSpinWheel() async {
@@ -45,7 +87,5 @@ class GamificationRepositoryImpl implements GamificationRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> spinWheel() async {
-    return _remote.spinWheel();
-  }
+  Future<Map<String, dynamic>> spinWheel() => _remote.spinWheel();
 }

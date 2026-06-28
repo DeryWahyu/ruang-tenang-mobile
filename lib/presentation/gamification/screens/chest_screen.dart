@@ -156,10 +156,13 @@ class _ChestView extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock_rounded, color: Colors.purple, size: 48),
+                Text(
+                  chest.rarityIcon.isNotEmpty ? chest.rarityIcon : '📦',
+                  style: const TextStyle(fontSize: 48),
+                ),
                 const SizedBox(height: 16),
                 Text(
-                  chest.chestType,
+                  'Peti ${_rarityLabel(chest.rarity)}',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.purple),
                   textAlign: TextAlign.center,
                 ),
@@ -170,9 +173,9 @@ class _ChestView extends StatelessWidget {
                     color: Colors.purple.shade400,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'Buka Peti',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  child: Text(
+                    isOpening ? 'Membuka...' : 'Buka Peti',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -206,14 +209,14 @@ class _ChestView extends StatelessWidget {
               const Text('Selamat!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Text(
-                'Kamu mendapatkan:\n${reward['reward_name']}',
+                'Kamu mendapatkan:\n${(reward['reward_label'] as String?)?.isNotEmpty == true ? reward['reward_label'] : _rewardText(reward)}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 16, color: AppColors.mutedForeground, height: 1.5),
               ),
-              if (reward['reward_type'] == 'exp') ...[
+              if ((reward['reward_value'] as num?) != null && (reward['reward_value'] as num) > 0) ...[
                 const SizedBox(height: 16),
                 Text(
-                  '+${reward['reward_value']} XP',
+                  '+${reward['reward_value']} ${_rewardUnit(reward['reward_type']?.toString())}',
                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
               ],
@@ -237,5 +240,48 @@ class _ChestView extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _rarityLabel(String rarity) {
+    switch (rarity) {
+      case 'legendary':
+        return 'Legendaris';
+      case 'epic':
+        return 'Epik';
+      case 'rare':
+        return 'Langka';
+      case 'common':
+        return 'Biasa';
+      default:
+        return rarity.isEmpty ? 'Misteri' : '${rarity[0].toUpperCase()}${rarity.substring(1)}';
+    }
+  }
+
+  String _rewardText(reward) {
+    final type = reward['reward_type']?.toString() ?? '';
+    final value = reward['reward_value'] ?? 0;
+    switch (type) {
+      case 'xp':
+        return '$value XP';
+      case 'coins':
+        return '$value Koin Emas';
+      case 'streak_freeze':
+        return 'Streak Freeze';
+      case 'xp_boost':
+        return 'XP Boost';
+      default:
+        return 'Hadiah misteri';
+    }
+  }
+
+  String _rewardUnit(String? type) {
+    switch (type) {
+      case 'xp':
+        return 'XP';
+      case 'coins':
+        return 'Koin';
+      default:
+        return '';
+    }
   }
 }

@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../domain/entities/mood.dart';
 
-/// Horizontal / grid picker for the 6 backend-supported moods.
+/// Horizontal / grid picker for the 6 backend-supported moods using modern web assets.
 class MoodPicker extends StatelessWidget {
   final MoodType? selectedMood;
   final ValueChanged<MoodType>? onMoodSelected;
@@ -16,7 +16,7 @@ class MoodPicker extends StatelessWidget {
     this.selectedMood,
     this.onMoodSelected,
     this.isGrid = true,
-    this.emojiSize = 40,
+    this.emojiSize = 48, // Slightly larger for images
   });
 
   @override
@@ -29,30 +29,47 @@ class MoodPicker extends StatelessWidget {
         onTap: onMoodSelected == null ? null : () => onMoodSelected!(mood),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
           decoration: BoxDecoration(
             color: isSelected
-                ? mood.color.withValues(alpha: 0.12)
+                ? mood.color.withOpacity(0.08)
                 : AppColors.card,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? mood.color : AppColors.border,
+              color: isSelected ? mood.color : AppColors.border.withOpacity(0.5),
               width: isSelected ? 2 : 1,
             ),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: mood.color.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ] : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                mood.emoji,
-                style: TextStyle(fontSize: emojiSize),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
+                child: Image.asset(
+                  isSelected ? mood.activeImagePath : mood.inactiveImagePath,
+                  key: ValueKey<bool>(isSelected),
+                  width: emojiSize,
+                  height: emojiSize,
+                  fit: BoxFit.contain,
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
               Text(
                 mood.label,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                   color: isSelected ? mood.color : AppColors.mutedForeground,
                 ),
               ),
@@ -67,9 +84,9 @@ class MoodPicker extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
-        mainAxisSpacing: AppDimensions.spacingSm,
-        crossAxisSpacing: AppDimensions.spacingSm,
-        childAspectRatio: 1.1,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.85,
         children: items,
       );
     }
@@ -79,8 +96,11 @@ class MoodPicker extends StatelessWidget {
       child: Row(
         children: items
             .map((item) => Padding(
-                  padding: const EdgeInsets.only(right: AppDimensions.spacingSm),
-                  child: item,
+                  padding: const EdgeInsets.only(right: 16),
+                  child: SizedBox(
+                    width: 100, // Fixed width for horizontal items
+                    child: item,
+                  ),
                 ))
             .toList(),
       ),
