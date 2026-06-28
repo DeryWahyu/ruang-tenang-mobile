@@ -5,6 +5,7 @@ import 'core/di/injection_container.dart';
 import 'core/router/app_router.dart';
 import 'core/router/go_router_refresh_stream.dart';
 import 'core/theme/app_theme.dart';
+import 'presentation/common/widgets/gradient_background.dart';
 import 'presentation/auth/bloc/auth_bloc.dart';
 import 'presentation/journal/bloc/journal_bloc.dart';
 import 'presentation/mood/bloc/mood_bloc.dart';
@@ -58,6 +59,7 @@ class _RuangTenangAppState extends State<RuangTenangApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _router,
+        builder: (context, child) => GradientBackground(child: child ?? const SizedBox.shrink()),
       ),
     );
   }

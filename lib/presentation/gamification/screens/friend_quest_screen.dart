@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../../../domain/entities/secondary_gamification.dart';
 import '../cubit/secondary_cubits.dart';
 import '../cubit/view_state.dart';
@@ -24,7 +26,7 @@ class _FriendQuestView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Friend Quest', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -175,14 +177,11 @@ class _FriendQuestView extends StatelessWidget {
     return Expanded(
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 14,
+          AppAvatar(
+            imageUrl: resolveMediaUrl(u.avatar),
+            name: u.username,
+            size: 28,
             backgroundColor: AppColors.secondary,
-            backgroundImage: u.avatar.isNotEmpty ? NetworkImage(u.avatar) : null,
-            child: u.avatar.isEmpty
-                ? Text(u.username.isNotEmpty ? u.username[0].toUpperCase() : '?',
-                    style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold))
-                : null,
           ),
           const SizedBox(width: 6),
           Expanded(

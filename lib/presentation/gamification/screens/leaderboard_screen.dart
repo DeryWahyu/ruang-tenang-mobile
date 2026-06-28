@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../../../domain/entities/gamification.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
@@ -25,7 +27,7 @@ class _LeaderboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Papan Peringkat', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -74,13 +76,64 @@ class _LeaderboardView extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                _headerBanner(entries.length),
+                const SizedBox(height: 24),
                 if (podium.isNotEmpty) _podium(podium),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
+                if (rest.isNotEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('Peringkat Lainnya',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.mutedForeground)),
+                  ),
                 ...rest.map(_row),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _headerBanner(int total) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final now = DateTime.now();
+    final monthLabel = '${months[now.month - 1]} ${now.year}';
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFB300), Color(0xFFFF7043)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 18, offset: const Offset(0, 8))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+            child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 30),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Hall of Fame',
+                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text('$monthLabel • $total peserta',
+                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -107,16 +160,44 @@ class _LeaderboardView extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          CircleAvatar(
-            radius: place == 1 ? 32 : 26,
-            backgroundColor: color.withOpacity(0.2),
-            backgroundImage: e.avatar.isNotEmpty ? NetworkImage(e.avatar) : null,
-            child: e.avatar.isEmpty
-                ? Text(e.userName.isNotEmpty ? e.userName[0].toUpperCase() : '?',
-                    style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: place == 1 ? 24 : 18))
-                : null,
+          if (place == 1)
+            const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 28)
+          else
+            const SizedBox(height: 28),
+          const SizedBox(height: 4),
+          Stack(
+            alignment: Alignment.bottomCenter,
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+                child: AppAvatar(
+                  imageUrl: resolveMediaUrl(e.avatar),
+                  name: e.userName,
+                  size: place == 1 ? 64 : 52,
+                  backgroundColor: AppColors.card,
+                ),
+              ),
+              Positioned(
+                bottom: -8,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.card, width: 2),
+                  ),
+                  child: Center(
+                    child: Text('$place',
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
           Text(e.userName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -155,19 +236,23 @@ class _LeaderboardView extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.secondary,
+              shape: BoxShape.circle,
+            ),
             child: Text('${e.rank}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.mutedForeground)),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.foreground)),
           ),
-          CircleAvatar(
-            radius: 18,
+          const SizedBox(width: 12),
+          AppAvatar(
+            imageUrl: resolveMediaUrl(e.avatar),
+            name: e.userName,
+            size: 36,
             backgroundColor: AppColors.secondary,
-            backgroundImage: e.avatar.isNotEmpty ? NetworkImage(e.avatar) : null,
-            child: e.avatar.isEmpty
-                ? Text(e.userName.isNotEmpty ? e.userName[0].toUpperCase() : '?',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold))
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

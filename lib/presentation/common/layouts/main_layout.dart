@@ -45,19 +45,19 @@ class MainLayout extends StatelessWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SizedBox.expand(
         child: Stack(
           children: [
             Positioned.fill(child: child),
             // One-per-day mood check-in popup (renders nothing until needed).
             const MoodCheckinGate(),
-            // Floating daily-task button (mirrors the web FAB). Hidden on
-            // Journal, Chat & Music which have their own bottom-right controls.
+            // Floating daily-task button (mirrors the web FAB). Shown only on
+            // Home — other tabs have their own controls or no room for it.
             Positioned.fill(
               child: DailyTaskFab(
                 bottomOffset: 16,
-                visible: selectedIndex != 1 && selectedIndex != 2 && selectedIndex != 3,
+                visible: selectedIndex == 0,
               ),
             ),
           ],
@@ -66,66 +66,61 @@ class MainLayout extends StatelessWidget {
       extendBody: false, // Prevents nested FABs and lists from overlapping with the navbar
       bottomNavigationBar: Container(
         margin: EdgeInsets.only(
-          left: 20, 
-          right: 20, 
-          bottom: bottomPadding > 0 ? bottomPadding + 10 : 20,
+          left: 16,
+          right: 16,
+          bottom: bottomPadding > 0 ? bottomPadding + 8 : 16,
         ),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.border.withOpacity(0.6), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-              spreadRadius: 2,
-            ),
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+              spreadRadius: 0,
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _NavBarItem(
-                  icon: Icons.home_rounded,
-                  label: 'Home',
-                  isSelected: selectedIndex == 0,
-                  onTap: () => _onItemTapped(context, 0),
-                ),
-                _NavBarItem(
-                  icon: Icons.book_rounded,
-                  label: 'Jurnal',
-                  isSelected: selectedIndex == 1,
-                  onTap: () => _onItemTapped(context, 1),
-                ),
-                _NavBarItem(
-                  icon: Icons.chat_rounded,
-                  label: 'Chat',
-                  isSelected: selectedIndex == 2,
-                  onTap: () => _onItemTapped(context, 2),
-                ),
-                _NavBarItem(
-                  icon: Icons.music_note_rounded,
-                  label: 'Musik',
-                  isSelected: selectedIndex == 3,
-                  onTap: () => _onItemTapped(context, 3),
-                ),
-                _NavBarItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profil',
-                  isSelected: selectedIndex == 4,
-                  onTap: () => _onItemTapped(context, 4),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _NavBarItem(
+                iconOutline: Icons.home_outlined,
+                iconFilled: Icons.home_rounded,
+                label: 'Home',
+                isSelected: selectedIndex == 0,
+                onTap: () => _onItemTapped(context, 0),
+              ),
+              _NavBarItem(
+                iconOutline: Icons.auto_stories_outlined,
+                iconFilled: Icons.auto_stories_rounded,
+                label: 'Jurnal',
+                isSelected: selectedIndex == 1,
+                onTap: () => _onItemTapped(context, 1),
+              ),
+              _ChatNavButton(
+                isSelected: selectedIndex == 2,
+                onTap: () => _onItemTapped(context, 2),
+              ),
+              _NavBarItem(
+                iconOutline: Icons.headphones_outlined,
+                iconFilled: Icons.headphones_rounded,
+                label: 'Musik',
+                isSelected: selectedIndex == 3,
+                onTap: () => _onItemTapped(context, 3),
+              ),
+              _NavBarItem(
+                iconOutline: Icons.person_outline_rounded,
+                iconFilled: Icons.person_rounded,
+                label: 'Profil',
+                isSelected: selectedIndex == 4,
+                onTap: () => _onItemTapped(context, 4),
+              ),
+            ],
           ),
         ),
       ),
@@ -134,13 +129,15 @@ class MainLayout extends StatelessWidget {
 }
 
 class _NavBarItem extends StatelessWidget {
-  final IconData icon;
+  final IconData iconOutline;
+  final IconData iconFilled;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _NavBarItem({
-    required this.icon,
+    required this.iconOutline,
+    required this.iconFilled,
     required this.label,
     required this.isSelected,
     required this.onTap,
@@ -148,55 +145,83 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = isSelected ? AppColors.primary : AppColors.mutedForeground;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16.0 : 12.0,
-          vertical: 12.0,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              transitionBuilder: (child, animation) {
-                return ScaleTransition(scale: animation, child: child);
-              },
-              child: Icon(
-                icon,
-                key: ValueKey<bool>(isSelected),
-                color: isSelected ? AppColors.primary : AppColors.mutedForeground.withOpacity(0.8),
-                size: 24,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary.withOpacity(0.10) : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
             ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              child: SizedBox(
-                width: isSelected ? null : 0,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
+            child: Icon(
+              isSelected ? iconFilled : iconOutline,
+              color: color,
+              size: 24,
             ),
-          ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              height: 1,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// The hero Chat button in the center of the bottom navigation bar.
+///
+/// The AI chatbot is the app's flagship feature, so this item is rendered as a
+/// clean elevated gradient circle that stands out from the flat side items.
+class _ChatNavButton extends StatelessWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ChatNavButton({required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedScale(
+        scale: isSelected ? 1.06 : 1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        child: Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFB7185), Color(0xFFEF4444), Color(0xFFDC2626)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(isSelected ? 0.50 : 0.35),
+                blurRadius: isSelected ? 18 : 12,
+                spreadRadius: isSelected ? 1 : 0,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 24),
         ),
       ),
     );

@@ -50,7 +50,7 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Riwayat EXP', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,

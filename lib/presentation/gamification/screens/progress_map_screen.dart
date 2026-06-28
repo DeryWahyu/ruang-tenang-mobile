@@ -25,7 +25,7 @@ class _ProgressMapView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Peta Progress', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -201,15 +201,16 @@ class _ProgressMapView extends StatelessWidget {
 
   Widget _landmarkTrailing(BuildContext context, MapLandmark l) {
     if (l.canClaim) {
-      return ElevatedButton(
-        onPressed: () => context.read<GamificationBloc>().add(GamificationLandmarkClaimed(l.id)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accentOrange,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      return GestureDetector(
+        onTap: () => context.read<GamificationBloc>().add(GamificationLandmarkClaimed(l.id)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.accentOrange,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Text('Klaim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
         ),
-        child: const Text('Klaim'),
       );
     }
     if (l.isUnlocked) {

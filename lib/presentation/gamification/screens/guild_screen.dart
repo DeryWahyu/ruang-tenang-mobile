@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../../../domain/entities/secondary_gamification.dart';
 import '../cubit/secondary_cubits.dart';
 import '../cubit/view_state.dart';
@@ -24,7 +26,7 @@ class _GuildView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Guild', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -85,7 +87,7 @@ class _GuildView extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                  child: Center(child: Text(guild.icon, style: const TextStyle(fontSize: 30))),
+                  child: Center(child: _guildIcon(guild.icon, 44)),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -210,14 +212,11 @@ class _GuildView extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
+          AppAvatar(
+            imageUrl: resolveMediaUrl(m.avatar),
+            name: m.name.isNotEmpty ? m.name : m.username,
+            size: 36,
             backgroundColor: AppColors.secondary,
-            backgroundImage: m.avatar.isNotEmpty ? NetworkImage(m.avatar) : null,
-            child: m.avatar.isEmpty
-                ? Text(m.name.isNotEmpty ? m.name[0].toUpperCase() : '?',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold))
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -309,7 +308,7 @@ class _GuildView extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(12)),
-            child: Center(child: Text(g.icon, style: const TextStyle(fontSize: 22))),
+            child: Center(child: _guildIcon(g.icon, 34)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -352,7 +351,7 @@ class _GuildView extends StatelessWidget {
             child: Text('#${e.rank}',
                 style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.mutedForeground)),
           ),
-          Text(e.icon, style: const TextStyle(fontSize: 22)),
+          _guildIcon(e.icon, 28),
           const SizedBox(width: 10),
           Expanded(
             child: Text(e.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
@@ -390,6 +389,34 @@ class _GuildView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _guildIcon(String icon, double size) {
+    final isImage = icon.startsWith('http') ||
+        icon.startsWith('/') ||
+        icon.contains('/uploads') ||
+        icon.endsWith('.png') ||
+        icon.endsWith('.jpg') ||
+        icon.endsWith('.jpeg') ||
+        icon.endsWith('.webp');
+    if (isImage) {
+      final url = resolveMediaUrl(icon);
+      if (url != null) {
+        return ClipOval(
+          child: Image.network(
+            url,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Icon(Icons.shield_rounded, size: size * 0.75, color: AppColors.primary),
+          ),
+        );
+      }
+    }
+    if (icon.isNotEmpty) {
+      return Text(icon, style: TextStyle(fontSize: size * 0.6));
+    }
+    return Icon(Icons.shield_rounded, size: size * 0.75, color: AppColors.primary);
   }
 
   void _snack(BuildContext context, String msg, Color color) {

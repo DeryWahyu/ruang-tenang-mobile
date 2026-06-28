@@ -69,7 +69,7 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
         final isLoading = state.status == MoodStatus.recording || state.status == MoodStatus.loading;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,

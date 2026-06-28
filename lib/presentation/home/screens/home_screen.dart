@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/di/injection_container.dart';
+import '../../../domain/entities/gamification.dart';
+import '../../../domain/repositories/gamification_repository.dart';
+import '../../common/widgets/level_badge.dart';
 import '../../auth/bloc/auth_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -13,58 +17,45 @@ class HomeScreen extends StatelessWidget {
     final userName = user?.name.split(' ').first ?? 'Sahabat';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
-          // Elegant Header
-          SliverAppBar(
-            expandedHeight: 120,
-            pinned: true,
-            backgroundColor: AppColors.background,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 24, bottom: 16, right: 24),
-              title: Text(
-                'Halo, $userName! ✨',
-                style: const TextStyle(
-                  color: AppColors.foreground,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
+          // Greeting header — scrolls naturally with the content.
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 16, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Halo, $userName! ✨',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.foreground,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Semoga harimu menyenangkan 🌿',
+                          style: TextStyle(color: AppColors.mutedForeground, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _circleIconButton(Icons.search_rounded, () => context.push('/search')),
+                  const SizedBox(width: 8),
+                  _circleIconButton(Icons.notifications_none_rounded, () {}),
+                ],
               ),
             ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.search_rounded, color: AppColors.foreground),
-                  onPressed: () => context.push('/search'),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(right: 24),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded, color: AppColors.foreground),
-                  onPressed: () {},
-                ),
-              ),
-            ],
           ),
 
           // Dashboard Content
@@ -81,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Gamification / XP Progress Mini
-                  _buildGamificationWidget(context),
+                  const _HomeXpCard(),
                   const SizedBox(height: 24),
 
                   // Quick Actions Grid (Mood & Journal)
@@ -129,7 +120,7 @@ class HomeScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.foreground),
                       ),
                       TextButton(
-                        onPressed: () => context.push('/articles'),
+                        onPressed: () => context.push('/explore'),
                         child: const Text('Lihat Semua', style: TextStyle(color: AppColors.primary)),
                       ),
                     ],
@@ -184,6 +175,20 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _circleIconButton(IconData icon, VoidCallback onTap) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        shape: BoxShape.circle,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: AppColors.foreground),
+        onPressed: onTap,
+      ),
+    );
+  }
+
   Widget _buildWellnessBanner(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -231,57 +236,6 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGamificationWidget(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: InkWell(
-        onTap: () => context.push('/gamification'),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.amber.withOpacity(0.15), shape: BoxShape.circle),
-              child: const Icon(Icons.military_tech_rounded, color: Colors.amber, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Level 3: Penjelajah', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text('450 XP', style: TextStyle(color: AppColors.mutedForeground, fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: 0.6,
-                      backgroundColor: Colors.amber.withOpacity(0.2),
-                      color: Colors.amber,
-                      minHeight: 6,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
-          ],
         ),
       ),
     );
@@ -456,3 +410,125 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+
+
+/// Real-data XP / level mini card on the home dashboard. Pulls the user's
+/// level journey (level, exp, progress) from the backend, falling back to the
+/// cached auth user while loading.
+class _HomeXpCard extends StatefulWidget {
+  const _HomeXpCard();
+
+  @override
+  State<_HomeXpCard> createState() => _HomeXpCardState();
+}
+
+class _HomeXpCardState extends State<_HomeXpCard> {
+  PersonalJourney? _journey;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final journey = await sl<GamificationRepository>().getPersonalJourney();
+      if (mounted) setState(() => _journey = journey);
+    } catch (_) {
+      // Keep auth-user fallback.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context.select((AuthBloc b) => b.state.user);
+    final journey = _journey;
+
+    final level = journey?.currentLevel ?? user?.level ?? 1;
+    final exp = journey?.currentExp ?? user?.exp ?? 0;
+    final badgeName = (journey != null && journey.badgeName.isNotEmpty)
+        ? journey.badgeName
+        : ((user?.badgeName.isNotEmpty ?? false) ? user!.badgeName : 'Pemula');
+    final badgeIcon = (journey != null && journey.badgeIcon.isNotEmpty)
+        ? journey.badgeIcon
+        : (user?.badgeIcon ?? '');
+    final progress = journey != null ? (journey.progressPercent / 100).clamp(0.0, 1.0) : null;
+    final toNext = journey?.expToNextLevel ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/gamification'),
+          borderRadius: BorderRadius.circular(20),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.15), shape: BoxShape.circle),
+                child: LevelBadge(icon: badgeIcon, size: 36),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Level $level: $badgeName',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('$exp XP',
+                            style: const TextStyle(
+                                color: AppColors.mutedForeground, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.amber.withOpacity(0.2),
+                        color: Colors.amber.shade600,
+                        minHeight: 6,
+                      ),
+                    ),
+                    if (journey != null && toNext > 0) ...[
+                      const SizedBox(height: 6),
+                      Text('$toNext XP lagi menuju Level ${level + 1}',
+                          style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11)),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// A soft, modern gradient backdrop is now provided globally via
+/// `GradientBackground` (see app.dart builder), so the home screen no longer
+/// needs its own backdrop widget.

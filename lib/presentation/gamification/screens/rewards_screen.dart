@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../domain/entities/gamification.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
@@ -25,7 +26,7 @@ class _RewardsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Toko Hadiah', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -139,10 +140,12 @@ class _RewardsView extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: AspectRatio(
               aspectRatio: 16 / 10,
-              child: reward.image.isNotEmpty
-                  ? Image.network(reward.image, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder())
-                  : _placeholder(),
+              child: Builder(builder: (_) {
+                final url = resolveMediaUrl(reward.image);
+                return url != null
+                    ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholder())
+                    : _placeholder();
+              }),
             ),
           ),
           Padding(

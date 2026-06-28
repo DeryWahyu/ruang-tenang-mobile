@@ -7,7 +7,7 @@
         <!-- Localhost -->
         <domain includeSubdomains="false">localhost</domain>
         <domain includeSubdomains="false">127.0.0.1</domain>
-        <!-- Local network (physical device testing) -->
-        <domain includeSubdomains="true">192.168.0.0/16</domain>
+        <!-- Local network (physical device testing) - use your machine's LAN IP -->
+        <domain includeSubdomains="false">192.168.18.189</domain>
     </domain-config>
 </network-security-config>

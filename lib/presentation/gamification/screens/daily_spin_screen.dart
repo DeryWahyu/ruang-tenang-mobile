@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/gamification.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
 import '../bloc/gamification_state.dart';
@@ -27,241 +28,195 @@ class _DailySpinView extends StatefulWidget {
 }
 
 class _DailySpinViewState extends State<_DailySpinView> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  late final AnimationController _controller;
+  Animation<double> _animation = const AlwaysStoppedAnimation(0);
   bool _isSpinning = false;
+  bool _handledResult = false;
+
+  // Palette for the wheel sectors.
+  static const _sectorColors = [
+    Color(0xFFFB923C), // orange
+    Color(0xFFFBBF24), // amber
+    Color(0xFFF472B6), // pink
+    Color(0xFF60A5FA), // blue
+    Color(0xFF34D399), // emerald
+    Color(0xFFA78BFA), // violet
+    Color(0xFFF87171), // red
+    Color(0xFF22D3EE), // cyan
+  ];
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    );
-
-    _animationController.addStatusListener((status) {
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200));
+    _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() => _isSpinning = false);
-        final state = context.read<GamificationBloc>().state;
-        if (state.spinResult != null) {
-          _showRewardDialog(state.spinResult);
-        }
+        final result = context.read<GamificationBloc>().state.spinResult;
+        if (result != null) _showRewardDialog(result);
       }
     });
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  void _startSpin() {
+  void _spin() {
     if (_isSpinning) return;
-    setState(() => _isSpinning = true);
-    // Add extra rotations plus random
-    final randomRotations = Random().nextDouble() + 5.0; 
-    _animationController.reset();
-    _animation = Tween<double>(begin: 0, end: randomRotations).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
-    );
-    _animationController.forward();
+    setState(() {
+      _isSpinning = true;
+      _handledResult = false;
+    });
     context.read<GamificationBloc>().add(const GamificationSpinRequested());
   }
 
-  void _showRewardDialog(reward) {
+  void _animateToResult(int slotIndex, int slotCount) {
+    if (slotCount <= 0) {
+      setState(() => _isSpinning = false);
+      return;
+    }
+    // 5 full turns + bring the winning slot to the top pointer.
+    final endTurns = 5 + (slotCount - slotIndex) / slotCount;
+    _animation = Tween<double>(begin: 0, end: endTurns)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _controller
+      ..reset()
+      ..forward();
+  }
+
+  void _showRewardDialog(Map<String, dynamic> reward) {
+    final name = (reward['reward_name'] as String?) ?? 'Hadiah';
+    final type = (reward['reward_type'] as String?) ?? '';
+    final value = (reward['reward_value'] as num?)?.toInt() ?? 0;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          contentPadding: const EdgeInsets.all(32),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.celebration_rounded, color: Colors.orange, size: 64),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        contentPadding: const EdgeInsets.all(28),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFFB923C), Color(0xFFF59E0B)]),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.4), blurRadius: 20)],
               ),
-              const SizedBox(height: 24),
-              const Text('Hore!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              Text(
-                'Kamu mendapatkan:\n${reward['reward_name']}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: AppColors.mutedForeground, height: 1.5),
-              ),
-              if (reward['reward_type'] == 'exp') ...[
-                const SizedBox(height: 16),
-                Text(
-                  '+${reward['reward_value']} XP',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green),
-                ),
-              ],
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    context.read<GamificationBloc>().add(const GamificationSpinWheelRequested());
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Tutup', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ),
-              ),
+              child: const Icon(Icons.celebration_rounded, color: Colors.white, size: 56),
+            ),
+            const SizedBox(height: 20),
+            const Text('Selamat! 🎉', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Kamu mendapatkan:', style: TextStyle(color: AppColors.mutedForeground, fontSize: 13)),
+            const SizedBox(height: 4),
+            Text(name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            if (value > 0) ...[
+              const SizedBox(height: 8),
+              Text('+$value ${_unit(type)}',
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF22C55E))),
             ],
-          ),
-        );
-      },
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.read<GamificationBloc>().add(const GamificationSpinWheelRequested());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Mantap!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  String _unit(String type) {
+    switch (type) {
+      case 'xp':
+        return 'XP';
+      case 'coins':
+        return 'Koin';
+      default:
+        return '';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Spin Harian', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: BlocBuilder<GamificationBloc, GamificationState>(
+      body: BlocConsumer<GamificationBloc, GamificationState>(
+        listenWhen: (p, c) => p.spinResult != c.spinResult,
+        listener: (context, state) {
+          if (state.spinResult != null && _isSpinning && !_handledResult) {
+            _handledResult = true;
+            final slots = state.spinWheel?.slots ?? const [];
+            final idx = (state.spinResult!['slot_index'] as num?)?.toInt() ?? 0;
+            _animateToResult(idx, slots.length);
+          }
+        },
         builder: (context, state) {
-          if (state.status == GamificationStatus.loading) {
+          if (state.spinWheel == null && state.status == GamificationStatus.loading) {
             return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
-
-          final canSpin = !(state.spinWheel?.hasSpunToday ?? true);
+          final slots = state.spinWheel?.slots ?? const [];
+          final canSpin = !(state.spinWheel?.hasSpunToday ?? true) && slots.isNotEmpty;
 
           return SafeArea(
-            child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Putar & Menangkan!',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                  const SizedBox(height: 8),
+                  const Text('Putar & Menangkan!',
+                      style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.foreground)),
+                  const SizedBox(height: 8),
+                  Text(
+                    canSpin
+                        ? 'Kamu punya 1 putaran gratis hari ini 🎁'
+                        : (slots.isEmpty ? 'Roda belum tersedia.' : 'Sudah diputar hari ini. Kembali besok ya!'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: AppColors.mutedForeground, height: 1.4),
                   ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      canSpin
-                          ? 'Kamu memiliki 1 kesempatan putaran gratis hari ini.'
-                          : 'Kamu sudah memutar hari ini. Kembali lagi besok!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, color: AppColors.mutedForeground.withOpacity(0.8), height: 1.4),
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  
-                  // Wheel Graphic
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 320,
-                        height: 320,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.card,
-                          boxShadow: [
-                            BoxShadow(color: Colors.orange.withOpacity(0.2), blurRadius: 40, spreadRadius: 10),
-                          ],
-                        ),
-                        child: AnimatedBuilder(
-                          animation: _animation,
-                          builder: (context, child) {
-                            return Transform.rotate(
-                              angle: _animation.value * 2 * pi,
-                              child: child,
-                            );
-                          },
-                          child: Stack(
-                            children: [
-                              // Background slices
-                              ...List.generate(6, (index) {
-                                return Transform.rotate(
-                                  angle: index * (pi / 3),
-                                  child: Align(
-                                    alignment: Alignment.topCenter,
-                                    child: ClipPath(
-                                      clipper: _SliceClipper(),
-                                      child: Container(
-                                        width: 160,
-                                        height: 160,
-                                        color: index % 2 == 0 ? Colors.orange.shade400 : Colors.amber.shade300,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }),
-                              // Center peg
-                              Center(
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
-                                  ),
-                                  child: const Icon(Icons.star_rounded, color: Colors.orange),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                  const SizedBox(height: 32),
+                  _wheel(slots),
+                  const SizedBox(height: 36),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (!canSpin || _isSpinning || state.status == GamificationStatus.submitting) ? null : _spin,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: AppColors.muted,
+                        elevation: canSpin ? 8 : 0,
+                        shadowColor: AppColors.primary.withOpacity(0.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      // Top Pointer Indicator
-                      Positioned(
-                        top: -10,
-                        child: Transform.rotate(
-                          angle: pi,
-                          child: const Icon(Icons.navigation_rounded, size: 48, color: AppColors.primary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 64),
-                  
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: (!canSpin || _isSpinning || state.status == GamificationStatus.submitting)
-                            ? null
-                            : _startSpin,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.muted,
-                          elevation: canSpin ? 8 : 0,
-                          shadowColor: AppColors.primary.withOpacity(0.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        ),
-                        child: Text(
-                          _isSpinning ? 'MEMUTAR...' : 'PUTAR SEKARANG',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                        ),
-                      ),
+                      child: Text(_isSpinning ? 'MEMUTAR...' : 'PUTAR SEKARANG',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                     ),
                   ),
                 ],
@@ -272,19 +227,128 @@ class _DailySpinViewState extends State<_DailySpinView> with SingleTickerProvide
       ),
     );
   }
+
+  Widget _wheel(List<DailySpinSlot> slots) {
+    const dim = 300.0;
+    return SizedBox(
+      width: dim + 24,
+      height: dim + 24,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Glow base
+          Container(
+            width: dim + 16,
+            height: dim + 16,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.card,
+              boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.25), blurRadius: 40, spreadRadius: 6)],
+            ),
+          ),
+          // Rotating wheel
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) => Transform.rotate(angle: _animation.value * 2 * pi, child: child),
+            child: slots.isEmpty
+                ? const SizedBox(width: dim, height: dim)
+                : CustomPaint(
+                    size: const Size(dim, dim),
+                    painter: _WheelPainter(slots, _sectorColors),
+                  ),
+          ),
+          // Hub
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10)],
+              border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 2),
+            ),
+            child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 26),
+          ),
+          // Pointer at top
+          Positioned(
+            top: -4,
+            child: Transform.rotate(
+              angle: pi,
+              child: Icon(Icons.navigation_rounded, size: 44, color: AppColors.primary,
+                  shadows: [Shadow(color: Colors.black.withOpacity(0.2), blurRadius: 4)]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _SliceClipper extends CustomClipper<Path> {
+class _WheelPainter extends CustomPainter {
+  final List<DailySpinSlot> slots;
+  final List<Color> palette;
+
+  _WheelPainter(this.slots, this.palette);
+
   @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(size.width / 2, size.height);
-    path.lineTo(size.width, 0);
-    path.lineTo(0, 0);
-    path.close();
-    return path;
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final n = slots.length;
+    final sweep = 2 * pi / n;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    final divider = Paint()
+      ..color = Colors.white.withOpacity(0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    for (var i = 0; i < n; i++) {
+      // Slot i centered at top (-pi/2), spanning ±sweep/2.
+      final start = -pi / 2 - sweep / 2 + i * sweep;
+      final paintFill = Paint()..color = palette[i % palette.length];
+      canvas.drawArc(rect, start, sweep, true, paintFill);
+      // Divider line
+      final edge = Offset(center.dx + radius * cos(start), center.dy + radius * sin(start));
+      canvas.drawLine(center, edge, divider);
+
+      // Label (emoji icon + value) along the bisector.
+      final mid = -pi / 2 + i * sweep;
+      _drawLabel(canvas, center, radius, mid, slots[i]);
+    }
+
+    // Outer ring
+    canvas.drawCircle(center, radius - 1,
+        Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 4);
+  }
+
+  void _drawLabel(Canvas canvas, Offset center, double radius, double angle, DailySpinSlot slot) {
+    final pos = Offset(center.dx + cos(angle) * radius * 0.6, center.dy + sin(angle) * radius * 0.6);
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.rotate(angle + pi / 2); // text points outward
+
+    final icon = slot.icon.isNotEmpty ? slot.icon : '🎁';
+    final iconTp = TextPainter(
+      text: TextSpan(text: icon, style: const TextStyle(fontSize: 26)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    iconTp.paint(canvas, Offset(-iconTp.width / 2, -iconTp.height - 2));
+
+    final label = slot.rewardValue > 0 ? '${slot.rewardValue}' : slot.name;
+    final labelTp = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: 70);
+    labelTp.paint(canvas, Offset(-labelTp.width / 2, 4));
+
+    canvas.restore();
   }
 
   @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+  bool shouldRepaint(covariant _WheelPainter oldDelegate) => oldDelegate.slots != slots;
 }

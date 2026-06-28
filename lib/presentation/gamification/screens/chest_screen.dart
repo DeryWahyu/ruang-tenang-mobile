@@ -24,7 +24,7 @@ class _ChestView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Peti Misteri', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -32,8 +32,11 @@ class _ChestView extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       body: BlocConsumer<GamificationBloc, GamificationState>(
+        listenWhen: (p, c) =>
+            (c.openChestResult != null && p.openChestResult != c.openChestResult) ||
+            (c.status == GamificationStatus.failure && p.status != c.status),
         listener: (context, state) {
-          if (state.status == GamificationStatus.success && state.openChestResult != null) {
+          if (state.openChestResult != null && state.status == GamificationStatus.success) {
             _showRewardDialog(context, state.openChestResult);
           } else if (state.status == GamificationStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../../../domain/entities/secondary_gamification.dart';
 import '../cubit/secondary_cubits.dart';
 import '../cubit/view_state.dart';
@@ -24,7 +26,7 @@ class _WeeklyLeagueView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Liga Mingguan', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -161,14 +163,11 @@ class _WeeklyLeagueView extends StatelessWidget {
             child: Text('#${p.rank}',
                 style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.mutedForeground)),
           ),
-          CircleAvatar(
-            radius: 16,
+          AppAvatar(
+            imageUrl: resolveMediaUrl(p.avatar),
+            name: p.username,
+            size: 32,
             backgroundColor: AppColors.muted,
-            backgroundImage: p.avatar.isNotEmpty ? NetworkImage(p.avatar) : null,
-            child: p.avatar.isEmpty
-                ? Text(p.username.isNotEmpty ? p.username[0].toUpperCase() : '?',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

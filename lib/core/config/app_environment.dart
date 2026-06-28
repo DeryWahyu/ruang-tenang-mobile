@@ -29,7 +29,11 @@ class AppEnvironment {
   // │   Windows: ipconfig
   // │   Mac/Linux: ifconfig | grep inet
   // └──────────────────────────────────────────────────────────
-  static const String _localDeviceIp = '192.168.1.100';
+  static const String _localDeviceIp = '192.168.18.189';
+
+  /// Set to TRUE when running on a PHYSICAL device (uses your machine's LAN IP).
+  /// Set to FALSE when running on the Android emulator (uses 10.0.2.2).
+  static const bool usePhysicalDevice = true;
 
   /// Port the Go backend runs on
   static const int _apiPort = 8080;
@@ -49,11 +53,13 @@ class AppEnvironment {
   static String get _developmentUrl {
     try {
       if (Platform.isAndroid) {
-        // Android emulator maps 10.0.2.2 to host machine's localhost
-        return 'http://10.0.2.2:$_apiPort';
+        // Physical device uses the host machine's LAN IP; emulator uses 10.0.2.2
+        return usePhysicalDevice
+            ? physicalDeviceUrl
+            : 'http://10.0.2.2:$_apiPort';
       } else if (Platform.isIOS) {
-        // iOS simulator can use localhost directly
-        return 'http://localhost:$_apiPort';
+        // iOS simulator can use localhost directly; physical device uses LAN IP
+        return usePhysicalDevice ? physicalDeviceUrl : 'http://localhost:$_apiPort';
       } else {
         // Desktop or other platforms
         return 'http://localhost:$_apiPort';

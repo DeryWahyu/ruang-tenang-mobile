@@ -25,7 +25,7 @@ class _DailyTasksView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Tugas Harian', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,

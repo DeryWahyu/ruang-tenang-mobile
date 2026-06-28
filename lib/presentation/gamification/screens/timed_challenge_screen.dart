@@ -24,7 +24,7 @@ class _TimedChallengeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Quest Kilat', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -204,17 +204,21 @@ class _TimedChallengeView extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: (hasActive || state.submitting)
+          GestureDetector(
+            onTap: (hasActive || state.submitting)
                 ? null
                 : () => context.read<TimedChallengeCubit>().start(t.id),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: AppColors.muted,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(
+                color: (hasActive || state.submitting) ? AppColors.muted : AppColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text('Mulai',
+                  style: TextStyle(
+                      color: (hasActive || state.submitting) ? AppColors.mutedForeground : Colors.white,
+                      fontWeight: FontWeight.bold)),
             ),
-            child: const Text('Mulai'),
           ),
         ],
       ),

@@ -51,10 +51,10 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Musik Relaksasi', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         bottom: TabBar(
           controller: _tabController,

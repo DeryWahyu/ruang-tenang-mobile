@@ -24,6 +24,9 @@ import '../../presentation/chat/screens/chat_detail_screen.dart';
 import '../../presentation/music/screens/music_home_screen.dart';
 import '../../presentation/music/screens/playlist_detail_screen.dart';
 import '../../presentation/profile/screens/profile_screen.dart';
+import '../../presentation/profile/screens/edit_profile_screen.dart';
+import '../../presentation/profile/screens/change_password_screen.dart';
+import '../../presentation/profile/screens/settings_screen.dart';
 import '../../presentation/splash_screen.dart';
 
 import '../../presentation/breathing/screens/breathing_list_screen.dart';
@@ -54,6 +57,7 @@ import '../../presentation/billing/screens/premium_plans_screen.dart';
 import '../../presentation/wellness/screens/wellness_onboarding_screen.dart';
 import '../../presentation/wellness/screens/wellness_plan_screen.dart';
 import '../../presentation/search/screens/global_search_screen.dart';
+import '../../presentation/explore/screens/explore_screen.dart';
 class AppRouter {
   AppRouter._();
 
@@ -88,7 +92,7 @@ class AppRouter {
             loc.startsWith('/journal') ||
             loc == '/chat' ||
             loc.startsWith('/music') ||
-            loc == '/profile' ||
+            loc.startsWith('/profile') ||
             loc.startsWith('/mood') ||
             loc.startsWith('/breathing') ||
             loc.startsWith('/forum') ||
@@ -290,6 +294,22 @@ class AppRouter {
           path: '/search',
           builder: (context, state) => const GlobalSearchScreen(),
         ),
+        GoRoute(
+          path: '/explore',
+          builder: (context, state) => const ExploreScreen(),
+        ),
+        GoRoute(
+          path: '/profile/edit',
+          builder: (context, state) => const EditProfileScreen(),
+        ),
+        GoRoute(
+          path: '/profile/password',
+          builder: (context, state) => const ChangePasswordScreen(),
+        ),
+        GoRoute(
+          path: '/profile/settings',
+          builder: (context, state) => const SettingsScreen(),
+        ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,
           builder: (context, state, child) => MainLayout(child: child),
@@ -332,7 +352,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (context, state) => const ChatDetailScreen(),
+                  builder: (context, state) => ChatDetailScreen(initialPrompt: state.extra as String?),
                 ),
                 GoRoute(
                   path: ':uuid',

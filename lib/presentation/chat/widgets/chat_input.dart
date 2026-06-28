@@ -4,11 +4,13 @@ import '../../../core/theme/app_colors.dart';
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
   final bool isLoading;
+  final String? initialText;
 
   const ChatInput({
     super.key,
     required this.onSend,
     this.isLoading = false,
+    this.initialText,
   });
 
   @override
@@ -16,16 +18,19 @@ class ChatInput extends StatefulWidget {
 }
 
 class _ChatInputState extends State<ChatInput> {
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller;
   bool _hasText = false;
 
   @override
   void initState() {
     super.initState();
+    _controller = TextEditingController(text: widget.initialText ?? '');
+    _hasText = _controller.text.trim().isNotEmpty;
     _controller.addListener(() {
-      setState(() {
-        _hasText = _controller.text.trim().isNotEmpty;
-      });
+      final has = _controller.text.trim().isNotEmpty;
+      if (has != _hasText) {
+        setState(() => _hasText = has);
+      }
     });
   }
 

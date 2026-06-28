@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/extensions.dart';
 import '../../../domain/entities/mood.dart';
 import '../../../domain/repositories/mood_repository.dart';
 
@@ -144,7 +145,12 @@ class _MoodCheckinGateState extends State<MoodCheckinGate> {
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Text(m.emoji, style: const TextStyle(fontSize: 30)),
+                                          Image.asset(
+                                            m.activeImagePath,
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.contain,
+                                          ),
                                           const SizedBox(height: 6),
                                           Text(m.label,
                                               style: const TextStyle(

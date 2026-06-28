@@ -46,7 +46,13 @@ class WellnessBloc extends Bloc<WellnessEvent, WellnessState> {
       final plan = await _repository.getCurrentPlan();
       emit(state.copyWith(status: WellnessStatus.success, plan: plan));
     } on ApiException catch (e) {
-      emit(state.copyWith(status: WellnessStatus.failure, errorMessage: e.message));
+      // No profile/plan yet (404) or onboarding required (400) → show the
+      // "start personalization" empty state instead of an error.
+      if (e.statusCode == 404 || e.statusCode == 400) {
+        emit(state.copyWith(status: WellnessStatus.success));
+      } else {
+        emit(state.copyWith(status: WellnessStatus.failure, errorMessage: e.message));
+      }
     } catch (_) {
       emit(state.copyWith(status: WellnessStatus.failure, errorMessage: 'Gagal memuat rencana kesehatan'));
     }

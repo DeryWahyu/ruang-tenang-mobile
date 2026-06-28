@@ -24,7 +24,7 @@ class AppTheme {
         onError: AppColors.destructiveForeground,
         outline: AppColors.border,
       ),
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         elevation: 0,

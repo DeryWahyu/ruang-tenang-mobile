@@ -86,7 +86,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
       builder: (context, state) {
         if (state.isDetailLoading) {
           return const Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             body: Center(child: AppLoadingIndicator()),
           );
         }
@@ -94,7 +94,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
         final journal = state.detail;
         if (journal == null) {
           return Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: Colors.transparent,
             appBar: AppBar(backgroundColor: Colors.transparent),
             body: AppErrorWidget(
               message: state.errorMessage ?? 'Gagal memuat jurnal',
@@ -104,13 +104,13 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
                 expandedHeight: 80,
                 pinned: true,
-                backgroundColor: AppColors.background,
+                backgroundColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
                 leading: Padding(
                   padding: const EdgeInsets.all(8.0),

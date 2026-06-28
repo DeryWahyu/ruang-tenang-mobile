@@ -54,9 +54,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         BlocProvider.value(value: _music),
       ],
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.foreground),

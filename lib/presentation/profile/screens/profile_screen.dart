@@ -1,10 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_event.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_avatar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -12,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Profil', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: false,
@@ -28,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: IconButton(
               icon: const Icon(Icons.settings_outlined, color: AppColors.foreground),
-              onPressed: () {},
+              onPressed: () => WidgetsBinding.instance.addPostFrameCallback((_) => context.push('/profile/settings')),
               tooltip: 'Pengaturan',
             ),
           ),
@@ -75,17 +77,11 @@ class ProfileScreen extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: CircleAvatar(
-                        radius: 36,
+                      child: AppAvatar(
+                        imageUrl: resolveMediaUrl(user.avatar),
+                        name: user.name,
+                        size: 72,
                         backgroundColor: Colors.white,
-                        child: Text(
-                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                            fontSize: 32, 
-                            fontWeight: FontWeight.bold, 
-                            color: AppColors.primary,
-                          ),
-                        ),
                       ),
                     ),
                     const SizedBox(width: 20),
@@ -234,14 +230,14 @@ class ProfileScreen extends StatelessWidget {
                       context,
                       icon: Icons.person_outline_rounded,
                       title: 'Edit Profil',
-                      onTap: () {},
+                      onTap: () => WidgetsBinding.instance.addPostFrameCallback((_) => context.push('/profile/edit')),
                       showDivider: true,
                     ),
                     _buildMenuItem(
                       context,
                       icon: Icons.lock_outline_rounded,
                       title: 'Ubah Password',
-                      onTap: () {},
+                      onTap: () => WidgetsBinding.instance.addPostFrameCallback((_) => context.push('/profile/password')),
                       showDivider: false,
                     ),
                   ],

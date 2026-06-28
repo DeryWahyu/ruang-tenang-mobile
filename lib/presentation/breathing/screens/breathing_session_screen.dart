@@ -8,7 +8,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/breathing.dart';
 import '../bloc/breathing_bloc.dart';
 import '../bloc/breathing_event.dart';
-import '../bloc/breathing_state.dart';
 
 class BreathingSessionScreen extends StatelessWidget {
   final BreathingTechnique? technique;
@@ -40,129 +39,167 @@ class _SessionView extends StatefulWidget {
 
 enum _Phase { inhale, inhaleHold, exhale, exhaleHold }
 
-class _SessionViewState extends State<_SessionView> with TickerProviderStateMixin {
-  late AnimationController _breathController;
-  late AnimationController _progressController;
+class _SessionViewState extends State<_SessionView> with SingleTickerProviderStateMixin {
+  late final AnimationController _breath; // 0 = contracted, 1 = expanded
 
-  _Phase _currentPhase = _Phase.inhale;
-  int _cyclesCompleted = 0;
-  int _elapsedSeconds = 0;
-  Timer? _timer;
-  Timer? _phaseTimer;
-  bool _isRunning = false;
-  bool _hasStarted = false;
+  _Phase _phase = _Phase.inhale;
+  int _phaseSecondsLeft = 0;
+  int _phaseDuration = 0;
+  int _cycles = 0;
+  int _elapsed = 0;
+  Timer? _ticker;
+  bool _running = false;
+  bool _started = false;
 
-  int get _targetSeconds => 180;
+  static const int _targetSeconds = 180;
 
   @override
   void initState() {
     super.initState();
-    _breathController = AnimationController(vsync: this, duration: Duration(seconds: widget.technique.inhaleDuration));
-    _progressController = AnimationController(vsync: this, duration: Duration(seconds: _targetSeconds));
+    _breath = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: widget.technique.inhaleDuration.clamp(1, 60)),
+      value: 0,
+    );
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _phaseTimer?.cancel();
-    _breathController.dispose();
-    _progressController.dispose();
+    _ticker?.cancel();
+    _breath.dispose();
     super.dispose();
   }
 
-  void _startSession() {
-    setState(() {
-      _hasStarted = true;
-      _isRunning = true;
-    });
-    context.read<BreathingBloc>().add(BreathingSessionStarted(technique: widget.technique, targetDurationSeconds: _targetSeconds));
-    _progressController.forward();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!_isRunning) return;
-      setState(() => _elapsedSeconds++);
-      if (_elapsedSeconds >= _targetSeconds) _completeSession(true);
-    });
-    _startPhase(_Phase.inhale);
+  int _durationFor(_Phase p) {
+    switch (p) {
+      case _Phase.inhale:
+        return widget.technique.inhaleDuration;
+      case _Phase.inhaleHold:
+        return widget.technique.inhaleHoldDuration;
+      case _Phase.exhale:
+        return widget.technique.exhaleDuration;
+      case _Phase.exhaleHold:
+        return widget.technique.exhaleHoldDuration;
+    }
   }
 
-  void _startPhase(_Phase phase) {
-    setState(() => _currentPhase = phase);
-    int duration;
-    switch (phase) {
+  _Phase _next(_Phase p) {
+    switch (p) {
       case _Phase.inhale:
-        duration = widget.technique.inhaleDuration;
-        _breathController.duration = Duration(seconds: duration);
-        _breathController.forward(from: 0);
-        HapticFeedback.lightImpact();
-        break;
+        return _Phase.inhaleHold;
       case _Phase.inhaleHold:
-        duration = widget.technique.inhaleHoldDuration;
-        break;
+        return _Phase.exhale;
       case _Phase.exhale:
-        duration = widget.technique.exhaleDuration;
-        _breathController.duration = Duration(seconds: duration);
-        _breathController.reverse(from: 1);
-        HapticFeedback.lightImpact();
-        break;
+        return _Phase.exhaleHold;
       case _Phase.exhaleHold:
-        duration = widget.technique.exhaleHoldDuration;
-        break;
+        return _Phase.inhale;
     }
-    if (duration <= 0) {
-      _nextPhase();
+  }
+
+  void _start() {
+    setState(() {
+      _started = true;
+      _running = true;
+    });
+    context.read<BreathingBloc>().add(
+          BreathingSessionStarted(technique: widget.technique, targetDurationSeconds: _targetSeconds),
+        );
+    _enterPhase(_Phase.inhale);
+    _ticker = Timer.periodic(const Duration(seconds: 1), _onTick);
+  }
+
+  void _onTick(Timer _) {
+    if (!_running || !mounted) return;
+    setState(() {
+      _elapsed++;
+      _phaseSecondsLeft--;
+    });
+    if (_elapsed >= _targetSeconds) {
+      _complete(true);
       return;
     }
-    _phaseTimer?.cancel();
-    _phaseTimer = Timer(Duration(seconds: duration), _nextPhase);
+    if (_phaseSecondsLeft <= 0) {
+      _advancePhase();
+    }
   }
 
-  void _nextPhase() {
-    switch (_currentPhase) {
+  void _advancePhase() {
+    var next = _next(_phase);
+    // Skip phases with zero duration (e.g. a technique without holds).
+    var guard = 0;
+    while (_durationFor(next) <= 0 && guard < 4) {
+      next = _next(next);
+      guard++;
+    }
+    // A full cycle completes when we wrap back to the inhale phase.
+    if (next == _Phase.inhale) {
+      _cycles++;
+    }
+    _enterPhase(next);
+  }
+
+  void _enterPhase(_Phase p) {
+    final dur = _durationFor(p);
+    if (dur <= 0) {
+      // shouldn't happen (skipped), but guard
+      _advancePhase();
+      return;
+    }
+    setState(() {
+      _phase = p;
+      _phaseDuration = dur;
+      _phaseSecondsLeft = dur;
+    });
+    HapticFeedback.lightImpact();
+    _animateForPhase(p, dur);
+  }
+
+  void _animateForPhase(_Phase p, int seconds) {
+    final d = Duration(milliseconds: (seconds * 1000));
+    switch (p) {
       case _Phase.inhale:
-        _startPhase(_Phase.inhaleHold);
-        break;
-      case _Phase.inhaleHold:
-        _startPhase(_Phase.exhale);
+        _breath.animateTo(1.0, duration: d, curve: Curves.easeInOut);
         break;
       case _Phase.exhale:
-        _startPhase(_Phase.exhaleHold);
+        _breath.animateTo(0.0, duration: d, curve: Curves.easeInOut);
         break;
+      case _Phase.inhaleHold:
       case _Phase.exhaleHold:
-        setState(() => _cyclesCompleted++);
-        _startPhase(_Phase.inhale);
+        // Stay at current size during holds.
         break;
     }
   }
 
   void _togglePause() {
-    setState(() => _isRunning = !_isRunning);
-    if (_isRunning) {
-      _breathController.forward();
+    setState(() => _running = !_running);
+    if (_running) {
+      // Resume animation for the remaining time of the current phase.
+      _animateForPhase(_phase, _phaseSecondsLeft.clamp(1, _phaseDuration));
     } else {
-      _breathController.stop();
-      _phaseTimer?.cancel();
+      _breath.stop();
     }
   }
 
-  void _completeSession(bool completed) {
-    _timer?.cancel();
-    _phaseTimer?.cancel();
-    _breathController.stop();
-    _progressController.stop();
-    setState(() => _isRunning = false);
+  void _complete(bool completed) {
+    _ticker?.cancel();
+    _breath.stop();
+    if (mounted) setState(() => _running = false);
 
     final bloc = context.read<BreathingBloc>();
-    final activeSession = bloc.state.activeSession;
-    if (activeSession != null) {
+    final active = bloc.state.activeSession;
+    if (active != null) {
       bloc.add(BreathingSessionCompleted(
-        sessionId: activeSession.id,
-        durationSeconds: _elapsedSeconds,
-        cyclesCompleted: _cyclesCompleted,
+        sessionId: active.id,
+        durationSeconds: _elapsed,
+        cyclesCompleted: _cycles,
         completed: completed,
-        completedPercentage: (_elapsedSeconds / _targetSeconds * 100).clamp(0, 100).toInt(),
+        completedPercentage: (_elapsed / _targetSeconds * 100).clamp(0, 100).toInt(),
       ));
     }
-    _showCompletionDialog(completed);
+    // Defer the dialog so we don't mutate the tree inside a pointer event.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _showCompletionDialog(completed);
+    });
   }
 
   void _showCompletionDialog(bool completed) {
@@ -170,29 +207,40 @@ class _SessionViewState extends State<_SessionView> with TickerProviderStateMixi
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(completed ? Icons.celebration : Icons.check_circle_outline, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Text(completed ? 'Selesai!' : 'Sesi Berakhir'),
-          ],
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Durasi: ${_elapsedSeconds ~/ 60} menit ${_elapsedSeconds % 60} detik'),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(color: _phaseColor(_Phase.inhale).withOpacity(0.15), shape: BoxShape.circle),
+              child: Icon(completed ? Icons.celebration_rounded : Icons.spa_rounded,
+                  color: _phaseColor(_Phase.inhale), size: 44),
+            ),
+            const SizedBox(height: 16),
+            Text(completed ? 'Sesi Selesai! 🎉' : 'Kerja Bagus',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Siklus selesai: $_cyclesCompleted'),
+            Text(
+              'Durasi ${_elapsed ~/ 60}m ${_elapsed % 60}d • $_cycles siklus',
+              style: const TextStyle(color: AppColors.mutedForeground),
+            ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.pop();
-            },
-            child: const Text('Kembali'),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.pop();
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Selesai', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
           ),
         ],
       ),
@@ -200,7 +248,7 @@ class _SessionViewState extends State<_SessionView> with TickerProviderStateMixi
   }
 
   String get _phaseLabel {
-    switch (_currentPhase) {
+    switch (_phase) {
       case _Phase.inhale:
         return 'Tarik Napas';
       case _Phase.inhaleHold:
@@ -212,120 +260,234 @@ class _SessionViewState extends State<_SessionView> with TickerProviderStateMixi
     }
   }
 
+  Color _phaseColor(_Phase p) {
+    switch (p) {
+      case _Phase.inhale:
+        return const Color(0xFF38BDF8); // sky
+      case _Phase.inhaleHold:
+        return const Color(0xFFA78BFA); // violet
+      case _Phase.exhale:
+        return const Color(0xFF34D399); // emerald
+      case _Phase.exhaleHold:
+        return const Color(0xFFA78BFA);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<BreathingBloc, BreathingState>(
-      listener: (context, state) {
-        if (state.activeSession != null) {
-        }
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: Text(widget.technique.name),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              if (_hasStarted && _isRunning) {
-                _completeSession(false);
-              } else {
-                context.pop();
-              }
-            },
-          ),
+    final color = _phaseColor(_phase);
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(widget.technique.name),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () {
+            if (_started) {
+              _complete(false);
+            } else {
+              context.pop();
+            }
+          },
         ),
-        body: Center(
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (_hasStarted) ...[
-                Text(
-                  '${(_elapsedSeconds ~/ 60).toString().padLeft(2, '0')}:${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: AppColors.mutedForeground),
-                ),
-                const SizedBox(height: 8),
-                Text('Siklus: $_cyclesCompleted', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
-                const SizedBox(height: 32),
-              ],
-              AnimatedBuilder(
-                animation: _breathController,
-                builder: (context, child) {
-                  final size = 120.0 + (_breathController.value * 80.0);
-                  return Container(
-                    width: size + 40,
-                    height: size + 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.08),
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: size,
-                        height: size,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              AppColors.primary.withOpacity(0.6),
-                              AppColors.primary.withOpacity(0.2),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _hasStarted ? _phaseLabel : 'Mulai',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 48),
-              if (!_hasStarted)
-                Column(
-                  children: [
-                    Text(widget.technique.description, textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground),
-                        maxLines: 3, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: _startSession,
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Mulai Sesi'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () => _completeSession(false),
-                      icon: const Icon(Icons.stop),
-                      label: const Text('Selesai'),
-                    ),
-                    const SizedBox(width: 16),
-                    FilledButton.icon(
-                      onPressed: _togglePause,
-                      icon: Icon(_isRunning ? Icons.pause : Icons.play_arrow),
-                      label: Text(_isRunning ? 'Pause' : 'Lanjut'),
-                    ),
-                  ],
-                ),
+              if (_started) _topStats(color),
+              Expanded(child: Center(child: _breathingCircle(color))),
+              if (!_started) _preStart(color) else _controls(color),
+              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _topStats(Color color) {
+    final progress = (_elapsed / _targetSeconds).clamp(0.0, 1.0);
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _statPill(Icons.timer_outlined,
+                '${(_elapsed ~/ 60).toString().padLeft(2, '0')}:${(_elapsed % 60).toString().padLeft(2, '0')}'),
+            _statPill(Icons.refresh_rounded, '$_cycles siklus'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 6,
+            backgroundColor: AppColors.muted,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statPill(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border.withOpacity(0.5))),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 15, color: AppColors.mutedForeground),
+        const SizedBox(width: 6),
+        Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ]),
+    );
+  }
+
+  Widget _breathingCircle(Color color) {
+    return AnimatedBuilder(
+      animation: _breath,
+      builder: (context, _) {
+        final t = _breath.value; // 0..1
+        const maxD = 260.0;
+        const minD = 150.0;
+        final d = minD + (maxD - minD) * t;
+        return SizedBox(
+          width: maxD + 36,
+          height: maxD + 36,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Soft outer halo
+              Container(
+                width: maxD + 36,
+                height: maxD + 36,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.06)),
+              ),
+              // Breathing orb
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: d,
+                height: d,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [color.withOpacity(0.85), color.withOpacity(0.35)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: color.withOpacity(0.35 + 0.25 * t), blurRadius: 30 + 20 * t, spreadRadius: 2),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _started ? _phaseLabel : 'Siap?',
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    if (_started) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        '${_phaseSecondsLeft < 0 ? 0 : _phaseSecondsLeft}',
+                        style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold, height: 1),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _preStart(Color color) {
+    return Column(
+      children: [
+        Text(
+          widget.technique.description,
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppColors.mutedForeground, height: 1.5),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            _patternChip('Tarik ${widget.technique.inhaleDuration}s'),
+            if (widget.technique.inhaleHoldDuration > 0) _patternChip('Tahan ${widget.technique.inhaleHoldDuration}s'),
+            _patternChip('Buang ${widget.technique.exhaleDuration}s'),
+            if (widget.technique.exhaleHoldDuration > 0) _patternChip('Tahan ${widget.technique.exhaleHoldDuration}s'),
+          ],
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _start,
+            icon: const Icon(Icons.play_arrow_rounded),
+            label: const Text('Mulai Sesi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _patternChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(20)),
+      child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.mutedForeground)),
+    );
+  }
+
+  Widget _controls(Color color) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _complete(false),
+            icon: const Icon(Icons.stop_rounded),
+            label: const Text('Selesai'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.mutedForeground,
+              side: BorderSide(color: AppColors.border),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _togglePause,
+            icon: Icon(_running ? Icons.pause_rounded : Icons.play_arrow_rounded),
+            label: Text(_running ? 'Jeda' : 'Lanjut'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 import '../../../domain/entities/journal.dart';
+import '../../common/widgets/mood_emoji.dart';
 import '../bloc/journal_bloc.dart';
 import '../bloc/journal_event.dart';
 import '../bloc/journal_state.dart';
@@ -22,9 +22,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   late TextEditingController _tagsController;
-  String _selectedMoodEmoji = '';
-  
-  final List<String> _moodOptions = ['??', '??', '??', '??', '??', '??', '??', '??', '??', '??'];
+  int? _selectedMoodId;
 
   @override
   void initState() {
@@ -32,7 +30,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
     _titleController = TextEditingController(text: widget.journal?.title ?? '');
     _contentController = TextEditingController(text: widget.journal?.content ?? '');
     _tagsController = TextEditingController(text: widget.journal?.tags.join(', ') ?? '');
-    _selectedMoodEmoji = widget.journal?.moodEmoji ?? '';
+    _selectedMoodId = widget.journal?.moodId;
   }
 
   @override
@@ -64,7 +62,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
             JournalCreateRequested(
               title: title,
               content: content,
-              
+              moodId: _selectedMoodId,
               tags: tags,
             ),
           );
@@ -74,7 +72,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
               uuid: widget.uuid!,
               title: title,
               content: content,
-              
+              moodId: _selectedMoodId,
               tags: tags,
             ),
           );
@@ -82,63 +80,63 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
   }
 
   void _showMoodPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Pilih Suasana Hati',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Bagaimana perasaan Anda saat menulis ini?',
-                style: TextStyle(color: AppColors.mutedForeground),
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                children: _moodOptions.map((emoji) {
-                  final isSelected = _selectedMoodEmoji == emoji;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedMoodEmoji = isSelected ? '' : emoji;
-                      });
-                      Navigator.pop(context);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.secondary,
-                        shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
-                      ),
-                      child: Text(emoji, style: const TextStyle(fontSize: 32)),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        );
-      },
-    );
+    // Defer to after the current frame to avoid MouseTracker reentrancy on
+    // desktop/web (showing a modal synchronously inside the tap event).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          return Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            decoration: const BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                const Text('Pilih Suasana Hati',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                const Text('Bagaimana perasaan Anda saat menulis ini?',
+                    style: TextStyle(color: AppColors.mutedForeground, fontSize: 13)),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 12,
+                  children: List.generate(8, (index) {
+                    final moodId = index + 1;
+                    return MoodEmoji(
+                      moodIndex: moodId,
+                      size: 44,
+                      showLabel: true,
+                      isSelected: _selectedMoodId == moodId,
+                      onTap: () {
+                        setState(() {
+                          _selectedMoodId = _selectedMoodId == moodId ? null : moodId;
+                        });
+                        Navigator.pop(sheetContext);
+                      },
+                    );
+                  }),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    });
   }
 
   @override
@@ -166,7 +164,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
@@ -233,30 +231,26 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _selectedMoodEmoji.isNotEmpty 
-                              ? AppColors.card 
-                              : AppColors.secondary,
+                          color: _selectedMoodId != null ? AppColors.card : AppColors.secondary,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _selectedMoodEmoji.isNotEmpty 
-                                ? AppColors.border 
-                                : Colors.transparent,
+                            color: _selectedMoodId != null ? AppColors.border : Colors.transparent,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              _selectedMoodEmoji.isNotEmpty ? _selectedMoodEmoji : '??',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                            if (_selectedMoodId != null)
+                              MoodEmoji(moodIndex: _selectedMoodId!, size: 20)
+                            else
+                              const Icon(Icons.mood_rounded, size: 18, color: AppColors.mutedForeground),
                             const SizedBox(width: 4),
                             Text(
-                              _selectedMoodEmoji.isNotEmpty ? 'Mood' : 'Pilih Mood',
+                              _selectedMoodId != null ? 'Mood' : 'Pilih Mood',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: _selectedMoodEmoji.isNotEmpty ? AppColors.foreground : AppColors.mutedForeground,
+                                color: _selectedMoodId != null ? AppColors.foreground : AppColors.mutedForeground,
                               ),
                             ),
                           ],

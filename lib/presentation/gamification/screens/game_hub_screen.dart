@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/level_badge.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
 import '../bloc/gamification_state.dart';
@@ -28,7 +29,7 @@ class _GameHubView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Game Hub', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: false,
@@ -211,10 +212,7 @@ class _GameHubView extends StatelessWidget {
                   border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
                 ),
                 child: Center(
-                  child: Text(
-                    badgeIcon,
-                    style: const TextStyle(fontSize: 32),
-                  ),
+                  child: LevelBadge(icon: badgeIcon, size: 46, fallbackColor: Colors.white),
                 ),
               ),
               const SizedBox(width: 20),
@@ -446,7 +444,7 @@ class _GameHubView extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: () => WidgetsBinding.instance.addPostFrameCallback((_) => onTap()),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -481,7 +479,7 @@ class _GameHubView extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: () => WidgetsBinding.instance.addPostFrameCallback((_) => onTap()),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),

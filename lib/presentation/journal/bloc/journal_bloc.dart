@@ -163,6 +163,7 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
       await _useCases.create(
         title: event.title.trim(),
         content: event.content,
+        moodId: event.moodId,
         tags: event.tags,
       );
       emit(state.copyWith(
@@ -193,6 +194,7 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         uuid: event.uuid,
         title: event.title?.trim(),
         content: event.content,
+        moodId: event.moodId,
         tags: event.tags,
       );
       emit(state.copyWith(

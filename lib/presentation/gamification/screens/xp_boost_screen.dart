@@ -24,7 +24,7 @@ class _XpBoostView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('XP Boost & Combo', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
