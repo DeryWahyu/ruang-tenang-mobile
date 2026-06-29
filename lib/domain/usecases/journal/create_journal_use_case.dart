@@ -10,6 +10,7 @@ class CreateJournalUseCase {
     required String content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   }) =>
       _repository.create(
@@ -17,6 +18,7 @@ class CreateJournalUseCase {
         content: content,
         moodId: moodId,
         tags: tags,
+        isPrivate: isPrivate,
         shareWithAI: shareWithAI,
       );
 }

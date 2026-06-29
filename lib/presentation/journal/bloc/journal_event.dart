@@ -54,16 +54,18 @@ class JournalCreateRequested extends JournalEvent {
   final String content;
   final List<String> tags;
   final int? moodId;
+  final bool isPrivate;
 
   const JournalCreateRequested({
     required this.title,
     required this.content,
     this.tags = const [],
     this.moodId,
+    this.isPrivate = true,
   });
 
   @override
-  List<Object?> get props => [title, content, tags, moodId];
+  List<Object?> get props => [title, content, tags, moodId, isPrivate];
 }
 
 /// Update an existing journal (partial).
@@ -73,6 +75,7 @@ class JournalUpdateRequested extends JournalEvent {
   final String? content;
   final List<String>? tags;
   final int? moodId;
+  final bool? isPrivate;
 
   const JournalUpdateRequested({
     required this.uuid,
@@ -80,10 +83,11 @@ class JournalUpdateRequested extends JournalEvent {
     this.content,
     this.tags,
     this.moodId,
+    this.isPrivate,
   });
 
   @override
-  List<Object?> get props => [uuid, title, content, tags, moodId];
+  List<Object?> get props => [uuid, title, content, tags, moodId, isPrivate];
 }
 
 /// Delete a journal.

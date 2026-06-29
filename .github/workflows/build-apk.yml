@@ -1,0 +1,98 @@
+name: Build APK
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: # Allows manual trigger via GitHub CLI / UI
+
+# Required so the workflow can create/update the GitHub Release and upload assets.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      # Host-only base URLs (the app appends /api/v1 itself).
+      # Configured as GitHub repository variables.
+      BASE_URL_DEVELOPMENT: ${{ vars.BASE_URL_DEVELOPMENT }}
+      BASE_URL_PRODUCTION: ${{ vars.BASE_URL_PRODUCTION }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.9"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # flutter_dotenv requires a bundled .env asset at build time. Create an
+      # empty one so asset bundling succeeds; the real values are injected via
+      # --dart-define below (which take precedence over .env anyway).
+      - name: Create placeholder .env
+        run: touch .env
+
+      - name: Analyze project
+        run: flutter analyze
+
+      # ── Development APK ──────────────────────────────────────────────
+      - name: Build development APK
+        run: |
+          flutter build apk --release \
+            --dart-define=ENVIRONMENT=development \
+            --dart-define=BASE_URL="${BASE_URL_DEVELOPMENT}"
+          mkdir -p dist
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             dist/ruang-tenang-development.apk
+
+      # ── Production APK ───────────────────────────────────────────────
+      - name: Build production APK
+        run: |
+          flutter build apk --release \
+            --dart-define=ENVIRONMENT=production \
+            --dart-define=BASE_URL="${BASE_URL_PRODUCTION}"
+          mkdir -p dist
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             dist/ruang-tenang-production.apk
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: dist/*.apk
+          if-no-files-found: error
+
+      # ── Publish to the "latest" GitHub Release ───────────────────────
+      # Only on direct push/merge to main (not on manual dry-runs you may
+      # want to keep build-only, adjust the condition if needed).
+      - name: Publish to "latest" release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest Build
+          body: |
+            Automated build from commit ${{ github.sha }}.
+
+            - `ruang-tenang-development.apk` → ${{ vars.BASE_URL_DEVELOPMENT }}
+            - `ruang-tenang-production.apk` → ${{ vars.BASE_URL_PRODUCTION }}
+          files: |
+            dist/ruang-tenang-development.apk
+            dist/ruang-tenang-production.apk
+          # Re-point the "latest" tag to this commit on every run.
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.DOCKER_TOKEN }}

@@ -23,6 +23,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
   late TextEditingController _contentController;
   late TextEditingController _tagsController;
   int? _selectedMoodId;
+  bool _isPrivate = true;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
     _contentController = TextEditingController(text: widget.journal?.content ?? '');
     _tagsController = TextEditingController(text: widget.journal?.tags.join(', ') ?? '');
     _selectedMoodId = widget.journal?.moodId;
+    _isPrivate = widget.journal?.isPrivate ?? true;
   }
 
   @override
@@ -64,6 +66,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
               content: content,
               moodId: _selectedMoodId,
               tags: tags,
+              isPrivate: _isPrivate,
             ),
           );
     } else {
@@ -74,6 +77,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
               content: content,
               moodId: _selectedMoodId,
               tags: tags,
+              isPrivate: _isPrivate,
             ),
           );
     }
@@ -261,8 +265,54 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                 ),
               ),
               const Divider(height: 1, color: AppColors.border),
+
+              // Privacy selector (private vs public/community)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isPrivate ? Icons.lock_outline_rounded : Icons.public_rounded,
+                      size: 18,
+                      color: _isPrivate ? AppColors.mutedForeground : AppColors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isPrivate ? 'Privat' : 'Publik (Komunitas)',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                          Text(
+                            _isPrivate
+                                ? 'Hanya kamu yang bisa membaca jurnal ini.'
+                                : 'Dibagikan ke komunitas setelah lolos moderasi otomatis.',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: !_isPrivate,
+                      activeColor: AppColors.primary,
+                      onChanged: (makePublic) {
+                        setState(() => _isPrivate = !makePublic);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.border),
               
-              // Editor Area
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),

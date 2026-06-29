@@ -520,7 +520,7 @@ class _GameHubView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: AppColors.accentOrange.withOpacity(0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.star_rounded, color: AppColors.accentOrange, size: 20),
+                child: Icon(_expIconFor(history.activityType as String), color: AppColors.accentOrange, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -559,5 +559,30 @@ class _GameHubView extends StatelessWidget {
         Divider(height: 1, color: AppColors.border.withOpacity(0.3), indent: 70),
       ],
     );
+  }
+
+  IconData _expIconFor(String activityType) {
+    switch (activityType) {
+      case 'chat_ai':
+        return Icons.chat_bubble_outline_rounded;
+      case 'upload_article':
+        return Icons.edit_note_rounded;
+      case 'forum_comment':
+        return Icons.forum_outlined;
+      case 'breathing':
+        return Icons.air_rounded;
+      case 'accepted_answer':
+        return Icons.check_circle_outline_rounded;
+      case 'post_upvote_given':
+        return Icons.thumb_up_outlined;
+      case 'post_upvote_removed':
+        return Icons.thumb_down_outlined;
+      case 'story_approved':
+        return Icons.menu_book_rounded;
+      case 'heart_received':
+        return Icons.favorite_border_rounded;
+      default:
+        return Icons.star_rounded;
+    }
   }
 }

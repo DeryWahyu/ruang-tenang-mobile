@@ -114,7 +114,7 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                             color: AppColors.accentOrange.withOpacity(0.1), shape: BoxShape.circle),
-                        child: const Icon(Icons.star_rounded, color: AppColors.accentOrange, size: 20),
+                        child: Icon(_iconFor(h.activityType), color: AppColors.accentOrange, size: 20),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -160,6 +160,31 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
         .split(' ')
         .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
+  }
+
+  IconData _iconFor(String activityType) {
+    switch (activityType) {
+      case 'chat_ai':
+        return Icons.chat_bubble_outline_rounded;
+      case 'upload_article':
+        return Icons.edit_note_rounded;
+      case 'forum_comment':
+        return Icons.forum_outlined;
+      case 'breathing':
+        return Icons.air_rounded;
+      case 'accepted_answer':
+        return Icons.check_circle_outline_rounded;
+      case 'post_upvote_given':
+        return Icons.thumb_up_outlined;
+      case 'post_upvote_removed':
+        return Icons.thumb_down_outlined;
+      case 'story_approved':
+        return Icons.menu_book_rounded;
+      case 'heart_received':
+        return Icons.favorite_border_rounded;
+      default:
+        return Icons.star_rounded;
+    }
   }
 
   String _formatDate(DateTime d) {

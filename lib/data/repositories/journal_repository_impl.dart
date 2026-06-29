@@ -74,6 +74,7 @@ class JournalRepositoryImpl implements JournalRepository {
     required String content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   }) async {
     final journal = await _remote.create(
@@ -81,6 +82,7 @@ class JournalRepositoryImpl implements JournalRepository {
       content: content,
       moodId: moodId,
       tags: tags,
+      isPrivate: isPrivate,
       shareWithAI: shareWithAI,
     );
     await _prefs.remove(StorageKeys.cachedJournals);
@@ -94,6 +96,7 @@ class JournalRepositoryImpl implements JournalRepository {
     String? content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   }) async {
     final journal = await _remote.update(
@@ -102,6 +105,7 @@ class JournalRepositoryImpl implements JournalRepository {
       content: content,
       moodId: moodId,
       tags: tags,
+      isPrivate: isPrivate,
       shareWithAI: shareWithAI,
     );
     await _cacheDetail(journal);

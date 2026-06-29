@@ -1,12 +1,12 @@
-import '../config/app_environment.dart';
+import '../config/app_config.dart';
 
 class ApiConstants {
   ApiConstants._();
 
-  // Base URL - automatically configured from AppEnvironment
-  static String get baseUrl => AppEnvironment.baseUrl;
-  static const String apiPrefix = '/api/v1';
-  static String get apiBaseUrl => '$baseUrl$apiPrefix';
+  // Base URL - centralized in AppConfig (dart-define -> .env -> default)
+  static String get baseUrl => AppConfig.baseUrl;
+  static const String apiPrefix = AppConfig.apiPrefix;
+  static String get apiBaseUrl => AppConfig.apiBaseUrl;
 
   // Health check
   static const String health = '/health';

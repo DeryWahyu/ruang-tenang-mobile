@@ -115,75 +115,148 @@ class _ForumListViewState extends State<_ForumListView> {
   }
 
   Widget _buildThreadCard(BuildContext context, ForumThread thread) {
-    return Card(
+    final authorName = thread.user?.name ?? 'Anonim';
+    final initial = authorName.isNotEmpty ? authorName.substring(0, 1).toUpperCase() : 'U';
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 0,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => context.push('/forum/${thread.slug}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.red100,
-                    child: Text(
-                      (thread.user?.name ?? 'U').substring(0, 1).toUpperCase(),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(thread.user?.name ?? 'Anonim', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        Text(_formatDate(thread.createdAt), style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                  if (thread.hasAcceptedAnswer)
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withOpacity(0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => context.push('/forum/${thread.slug}'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header: avatar + author + time + answered badge
+                Row(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.successLight,
-                        borderRadius: BorderRadius.circular(4),
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [AppColors.red400, AppColors.red600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                       ),
-                      child: const Text('Terjawab', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                      alignment: Alignment.center,
+                      child: Text(
+                        initial,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(authorName,
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.foreground)),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Icon(Icons.schedule_rounded, size: 11, color: AppColors.mutedForeground),
+                              const SizedBox(width: 4),
+                              Text(_formatDate(thread.createdAt),
+                                  style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (thread.hasAcceptedAnswer)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.successLight,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.check_circle_rounded, size: 13, color: AppColors.success),
+                            SizedBox(width: 4),
+                            Text('Terjawab', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+
+                // Category badge
+                if (thread.category != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.red50,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.red100),
+                    ),
+                    child: Text(thread.category!.name,
+                        style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              Text(thread.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
-              if (thread.content.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(thread.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13)),
+
+                // Title + preview
+                const SizedBox(height: 10),
+                Text(thread.title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, height: 1.3, fontSize: 16),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
+                if (thread.content.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(thread.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13, height: 1.5)),
+                ],
+
+                // Footer stats
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.only(top: 12),
+                  decoration: const BoxDecoration(
+                    border: Border(top: BorderSide(color: AppColors.border)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.chat_bubble_outline_rounded, size: 17, color: AppColors.mutedForeground),
+                      const SizedBox(width: 5),
+                      Text('${thread.repliesCount}',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray700)),
+                      const SizedBox(width: 4),
+                      const Text('balasan', style: TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
+                      const SizedBox(width: 18),
+                      Icon(thread.isLiked ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                          size: 17, color: thread.isLiked ? AppColors.primary : AppColors.mutedForeground),
+                      const SizedBox(width: 5),
+                      Text('${thread.likesCount}',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray700)),
+                      const SizedBox(width: 4),
+                      const Text('suka', style: TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
+                    ],
+                  ),
+                ),
               ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.favorite, size: 18, color: thread.isLiked ? AppColors.primary : AppColors.mutedForeground),
-                  const SizedBox(width: 4),
-                  Text('${thread.likesCount}', style: const TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
-                  const SizedBox(width: 16),
-                  const Icon(Icons.chat_bubble_outline, size: 18, color: AppColors.mutedForeground),
-                  const SizedBox(width: 4),
-                  Text('${thread.repliesCount} balasan', style: const TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
-                  const Spacer(),
-                  if (thread.category != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: AppColors.red50, borderRadius: BorderRadius.circular(4)),
-                      child: Text(thread.category!.name, style: const TextStyle(fontSize: 11, color: AppColors.primary)),
-                    ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

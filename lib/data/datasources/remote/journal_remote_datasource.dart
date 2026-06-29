@@ -74,6 +74,7 @@ class JournalRemoteDataSource {
     required String content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   }) async {
     final body = await _apiClient.fetchBody(
@@ -84,6 +85,7 @@ class JournalRemoteDataSource {
         'content': content,
         if (moodId != null) 'mood_id': moodId,
         if (tags != null && tags.isNotEmpty) 'tags': tags,
+        if (isPrivate != null) 'is_private': isPrivate,
         if (shareWithAI != null) 'share_with_ai': shareWithAI,
       },
     );
@@ -97,6 +99,7 @@ class JournalRemoteDataSource {
     String? content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   }) async {
     final body = await _apiClient.fetchBody(
@@ -107,6 +110,7 @@ class JournalRemoteDataSource {
         if (content != null) 'content': content,
         if (moodId != null) 'mood_id': moodId,
         if (tags != null) 'tags': tags,
+        if (isPrivate != null) 'is_private': isPrivate,
         if (shareWithAI != null) 'share_with_ai': shareWithAI,
       },
     );

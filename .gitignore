@@ -43,3 +43,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment files (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# Android signing / keystores
+*.jks
+*.keystore
+**/android/key.properties
+
+# Build outputs
+*.apk
+*.aab
+

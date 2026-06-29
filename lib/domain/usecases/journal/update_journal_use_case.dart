@@ -11,6 +11,7 @@ class UpdateJournalUseCase {
     String? content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   }) =>
       _repository.update(
@@ -19,6 +20,7 @@ class UpdateJournalUseCase {
         content: content,
         moodId: moodId,
         tags: tags,
+        isPrivate: isPrivate,
         shareWithAI: shareWithAI,
       );
 }

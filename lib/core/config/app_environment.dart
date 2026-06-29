@@ -1,83 +1,25 @@
-import 'dart:io' show Platform;
+import 'app_config.dart';
 
-/// Environment configuration for the app.
+export 'app_config.dart' show Environment;
+
+/// Backward-compatible facade over [AppConfig].
 ///
-/// Easily switch between environments:
-/// - Android Emulator: uses 10.0.2.2 (maps to host machine's localhost)
-/// - iOS Simulator: uses localhost (maps to host machine's localhost)
-/// - Physical Device: uses your machine's local IP address
-/// - Production: uses the production API URL
-enum Environment {
-  development,
-  staging,
-  production,
-}
-
+/// Historically the app referenced `AppEnvironment.*` directly. All
+/// configuration now lives in [AppConfig] (the single source of truth,
+/// sourced from `--dart-define` -> `.env` -> defaults). This class is kept
+/// as a thin delegate so existing call-sites keep working.
 class AppEnvironment {
   AppEnvironment._();
 
-  // ┌──────────────────────────────────────────────────────────
-  // │ CHANGE THIS to switch environments
-  // └──────────────────────────────────────────────────────────
-  static const Environment current = Environment.development;
+  /// The currently active environment.
+  static Environment get current => AppConfig.environment;
 
-  // ┌──────────────────────────────────────────────────────────
-  // │ For PHYSICAL DEVICE testing, change this to your
-  // │ computer's local IP address (e.g., 192.168.1.100)
-  // │
-  // │ Find your IP:
-  // │   Windows: ipconfig
-  // │   Mac/Linux: ifconfig | grep inet
-  // └──────────────────────────────────────────────────────────
-  static const String _localDeviceIp = '192.168.18.189';
+  /// API base URL (host only, WITHOUT the `/api/v1` prefix).
+  static String get baseUrl => AppConfig.baseUrl;
 
-  /// Set to TRUE when running on a PHYSICAL device (uses your machine's LAN IP).
-  /// Set to FALSE when running on the Android emulator (uses 10.0.2.2).
-  static const bool usePhysicalDevice = true;
+  /// Whether to enable debug logging for API calls.
+  static bool get isDebug => AppConfig.isDebug;
 
-  /// Port the Go backend runs on
-  static const int _apiPort = 8080;
-
-  /// Get the correct base URL based on environment & platform
-  static String get baseUrl {
-    switch (current) {
-      case Environment.development:
-        return _developmentUrl;
-      case Environment.staging:
-        return 'https://staging-api.ruangtenang.id';
-      case Environment.production:
-        return 'https://api.ruangtenang.id';
-    }
-  }
-
-  static String get _developmentUrl {
-    try {
-      if (Platform.isAndroid) {
-        // Physical device uses the host machine's LAN IP; emulator uses 10.0.2.2
-        return usePhysicalDevice
-            ? physicalDeviceUrl
-            : 'http://10.0.2.2:$_apiPort';
-      } else if (Platform.isIOS) {
-        // iOS simulator can use localhost directly; physical device uses LAN IP
-        return usePhysicalDevice ? physicalDeviceUrl : 'http://localhost:$_apiPort';
-      } else {
-        // Desktop or other platforms
-        return 'http://localhost:$_apiPort';
-      }
-    } catch (_) {
-      // Fallback for web or test environments
-      return 'http://localhost:$_apiPort';
-    }
-  }
-
-  /// Use this URL when testing on a physical device
-  /// connected to the same WiFi network as your dev machine
-  static String get physicalDeviceUrl =>
-      'http://$_localDeviceIp:$_apiPort';
-
-  /// Whether to enable debug logging for API calls
-  static bool get isDebug => current == Environment.development;
-
-  /// Whether to use strict SSL verification
-  static bool get useStrictSSL => current == Environment.production;
+  /// Whether to use strict SSL verification.
+  static bool get useStrictSSL => AppConfig.useStrictSSL;
 }

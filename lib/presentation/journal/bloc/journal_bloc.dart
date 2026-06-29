@@ -160,15 +160,20 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
     emit(state.copyWith(status: JournalStatus.submitting));
 
     try {
-      await _useCases.create(
+      final journal = await _useCases.create(
         title: event.title.trim(),
         content: event.content,
         moodId: event.moodId,
         tags: event.tags,
+        isPrivate: event.isPrivate,
       );
+      // If the user asked to publish but moderation kept it private, inform them.
+      final downgraded = !event.isPrivate && journal.isPrivate;
       emit(state.copyWith(
         status: JournalStatus.success,
-        successMessage: 'Jurnal berhasil disimpan.',
+        successMessage: downgraded
+            ? 'Jurnal disimpan sebagai privat. Moderasi otomatis belum menyetujuinya untuk dibagikan ke komunitas.'
+            : 'Jurnal berhasil disimpan.',
       ));
     } on ApiException catch (e) {
       emit(state.copyWith(
@@ -196,11 +201,15 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         content: event.content,
         moodId: event.moodId,
         tags: event.tags,
+        isPrivate: event.isPrivate,
       );
+      final downgraded = event.isPrivate == false && journal.isPrivate;
       emit(state.copyWith(
         status: JournalStatus.detailSuccess,
         detail: journal,
-        successMessage: 'Jurnal berhasil diperbarui.',
+        successMessage: downgraded
+            ? 'Perubahan disimpan sebagai privat. Moderasi otomatis belum menyetujuinya untuk dibagikan ke komunitas.'
+            : 'Jurnal berhasil diperbarui.',
       ));
     } on ApiException catch (e) {
       emit(state.copyWith(

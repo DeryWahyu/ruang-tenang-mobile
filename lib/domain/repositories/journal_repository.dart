@@ -19,6 +19,7 @@ abstract class JournalRepository {
     required String content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   });
   Future<Journal> update({
@@ -27,6 +28,7 @@ abstract class JournalRepository {
     String? content,
     int? moodId,
     List<String>? tags,
+    bool? isPrivate,
     bool? shareWithAI,
   });
   Future<void> delete(String uuid);
