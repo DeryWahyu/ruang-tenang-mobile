@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/config/app_environment.dart';
+import '../../../core/utils/helpers.dart';
+import '../../../core/utils/media_url.dart';
 import '../bloc/article_bloc.dart';
 import '../bloc/article_event.dart';
 import '../bloc/article_state.dart';
@@ -47,7 +48,7 @@ class _ArticleDetailView extends StatelessWidget {
                             children: [
                               if (article.thumbnail.isNotEmpty)
                                 Image.network(
-                                  article.thumbnail.startsWith('http') ? article.thumbnail : '${AppEnvironment.baseUrl}/${article.thumbnail}',
+                                  resolveMediaUrl(article.thumbnail) ?? '',
                                   width: double.infinity,
                                   height: 220,
                                   fit: BoxFit.cover,
@@ -95,7 +96,7 @@ class _ArticleDetailView extends StatelessWidget {
                                     ),
                                     const Divider(height: 32),
                                     Html(
-                                      data: article.content,
+                                      data: Helpers.stripH2Tags(article.content),
                                       style: {
                                         'body': Style(
                                           fontSize: FontSize(15),

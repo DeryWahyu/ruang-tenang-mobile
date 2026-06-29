@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/config/app_environment.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../domain/entities/article.dart';
 import '../bloc/article_bloc.dart';
 import '../bloc/article_event.dart';
@@ -128,7 +128,7 @@ class _ArticleListView extends StatelessWidget {
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
               child: article.thumbnail.isNotEmpty
                   ? Image.network(
-                      article.thumbnail.startsWith('http') ? article.thumbnail : '${AppEnvironment.baseUrl}/${article.thumbnail}',
+                      resolveMediaUrl(article.thumbnail) ?? '',
                       width: 110,
                       height: 110,
                       fit: BoxFit.cover,

@@ -80,4 +80,9 @@ class Helpers {
       return null;
     }
   }
+
+  /// Remove h2 tags from HTML content
+  static String stripH2Tags(String html) {
+    return html.replaceAll(RegExp(r'<h2[^>]*>.*?</h2>', caseSensitive: false, dotAll: true), '');
+  }
 }
