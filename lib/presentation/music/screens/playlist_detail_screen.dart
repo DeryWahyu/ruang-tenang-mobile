@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/di/injection_container.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../domain/entities/music.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
@@ -270,28 +271,28 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   }
 
   Widget _cover(String? url) {
-    final hasImage = url != null && url.startsWith('http');
+    final resolved = resolveMediaUrl(url);
     return Container(
       width: 180,
       height: 180,
       decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(24)),
       clipBehavior: Clip.antiAlias,
-      child: hasImage
-          ? Image.network(url, fit: BoxFit.cover,
+      child: resolved != null
+          ? Image.network(resolved, fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const Icon(Icons.queue_music, size: 72, color: AppColors.primary))
           : const Icon(Icons.queue_music, size: 72, color: AppColors.primary),
     );
   }
 
   Widget _thumb(String? url, double size) {
-    final hasImage = url != null && url.startsWith('http');
+    final resolved = resolveMediaUrl(url);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      child: hasImage
-          ? Image.network(url, fit: BoxFit.cover,
+      child: resolved != null
+          ? Image.network(resolved, fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Icon(Icons.music_note, color: AppColors.primary, size: size * 0.5))
           : Icon(Icons.music_note, color: AppColors.primary, size: size * 0.5),
     );

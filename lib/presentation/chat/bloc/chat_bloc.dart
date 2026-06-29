@@ -103,12 +103,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         event.title.trim(),
         folderId: event.folderId,
       );
+      // Expose the freshly created session so the UI can navigate straight
+      // into the new conversation.
       emit(state.copyWith(
-        status: ChatStatus.success,
+        status: ChatStatus.createSuccess,
+        currentSession: session,
         successMessage: 'Sesi obrolan dibuat.',
       ));
-      // Optionally trigger reload list
-      add(const ChatSessionsRequested(refresh: true));
     } on ApiException catch (e) {
       emit(state.copyWith(status: ChatStatus.failure, errorMessage: e.message));
     } catch (_) {

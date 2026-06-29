@@ -7,6 +7,7 @@ import '../../common/widgets/app_card.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
 import '../../../core/di/injection_container.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../domain/entities/music.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
@@ -339,10 +340,10 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
     );
   }
 
-  /// Builds a thumbnail box that only uses a network image for valid http URLs,
-  /// avoiding broken-image issues with relative/empty paths.
+  /// Builds a thumbnail box. Relative image paths from the API are resolved to
+  /// absolute URLs so covers also load on mobile (not just full http URLs).
   Widget _thumb(String? url, IconData fallbackIcon, double size) {
-    final hasImage = url != null && url.startsWith('http');
+    final resolved = resolveMediaUrl(url);
     return Container(
       width: size,
       height: size,
@@ -351,9 +352,9 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
-      child: hasImage
+      child: resolved != null
           ? Image.network(
-              url,
+              resolved,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Icon(fallbackIcon, color: AppColors.primary, size: size * 0.5),
             )

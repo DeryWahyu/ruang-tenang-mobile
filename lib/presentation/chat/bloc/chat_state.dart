@@ -10,6 +10,7 @@ enum ChatStatus {
   detailSuccess,
   sendingMessage,
   success,
+  createSuccess,
   failure,
 }
 

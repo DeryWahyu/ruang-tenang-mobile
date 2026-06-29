@@ -75,7 +75,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<ChatBloc, ChatState>(
       listenWhen: (prev, curr) {
-        if (prev.status != ChatStatus.success && curr.status == ChatStatus.success && _isNewSession) {
+        if (prev.status != ChatStatus.createSuccess && curr.status == ChatStatus.createSuccess && _isNewSession) {
           return true;
         }
         if (prev.currentSession?.messages.length != curr.currentSession?.messages.length) {
@@ -84,8 +84,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         return false;
       },
       listener: (context, state) {
-        if (state.status == ChatStatus.success && _isNewSession) {
-          if (mounted) context.pop();
+        if (state.status == ChatStatus.createSuccess && _isNewSession) {
+          final uuid = state.currentSession?.uuid;
+          if (mounted && uuid != null) {
+            // Masuk ke sesi yang baru dibuat menggantikan layar "/chat/new".
+            context.pushReplacement('/chat/$uuid');
+          }
         }
         if (state.status == ChatStatus.detailSuccess) {
           WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());

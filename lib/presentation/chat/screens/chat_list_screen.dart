@@ -7,6 +7,8 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
 import '../../common/widgets/app_skeleton.dart';
+import '../../common/widgets/app_input.dart';
+import '../../common/widgets/app_button.dart';
 import '../bloc/chat_bloc.dart';
 import '../bloc/chat_event.dart';
 import '../bloc/chat_state.dart';
@@ -47,8 +49,22 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
   }
 
-  void _openNewChat({String? prompt}) {
-    context.push('/chat/new', extra: prompt).then((_) {
+  Future<void> _openNewChat({String? prompt}) async {
+    // Tampilkan form pembuatan obrolan terlebih dahulu. Dialog mengembalikan
+    // uuid sesi yang baru dibuat (atau null jika dibatalkan).
+    final newUuid = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<ChatBloc>(),
+        child: _NewChatDialog(initialTitle: prompt),
+      ),
+    );
+
+    if (newUuid == null || !mounted) return;
+
+    // Masuk ke obrolan yang baru dibuat, lalu segarkan daftar saat kembali.
+    context.push('/chat/$newUuid').then((_) {
       if (mounted) {
         context.read<ChatBloc>().add(const ChatSessionsRequested(refresh: true));
       }
@@ -286,7 +302,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   Widget _sessionCard(String uuid, String title, DateTime createdAt) {
-    final dateStr = DateFormat('dd MMM yyyy, HH:mm').format(createdAt);
+    final dateStr = DateFormat('dd MMM yyyy').format(createdAt);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -338,6 +354,145 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+/// Form pop-up untuk membuat obrolan baru. Pengguna mengisi judul terlebih
+/// dahulu, lalu sesi dibuat sebelum masuk ke layar obrolan.
+class _NewChatDialog extends StatefulWidget {
+  final String? initialTitle;
+
+  const _NewChatDialog({this.initialTitle});
+
+  @override
+  State<_NewChatDialog> createState() => _NewChatDialogState();
+}
+
+class _NewChatDialogState extends State<_NewChatDialog> {
+  late final TextEditingController _controller;
+  bool _submitting = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialTitle ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final title = _controller.text.trim();
+    if (title.isEmpty) {
+      setState(() => _errorText = 'Judul obrolan tidak boleh kosong');
+      return;
+    }
+    setState(() {
+      _errorText = null;
+      _submitting = true;
+    });
+    context.read<ChatBloc>().add(ChatSessionCreateRequested(title: title));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<ChatBloc, ChatState>(
+      listenWhen: (prev, curr) =>
+          _submitting &&
+          ((prev.status != ChatStatus.createSuccess &&
+                  curr.status == ChatStatus.createSuccess) ||
+              curr.status == ChatStatus.failure),
+      listener: (context, state) {
+        if (state.status == ChatStatus.createSuccess) {
+          Navigator.of(context).pop(state.currentSession?.uuid);
+        } else if (state.status == ChatStatus.failure) {
+          setState(() => _submitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage ?? 'Gagal membuat obrolan.')),
+          );
+        }
+      },
+      child: Dialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFB7185), Color(0xFFEF4444), Color(0xFFDC2626)],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.maps_ugc_rounded, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('Obrolan Baru',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Beri judul untuk obrolanmu agar mudah ditemukan nanti.',
+                style: TextStyle(fontSize: 13, color: AppColors.mutedForeground, height: 1.4),
+              ),
+              const SizedBox(height: 20),
+              AppInput(
+                controller: _controller,
+                hint: 'mis. Mengatasi rasa cemas',
+                prefixIcon: Icons.edit_outlined,
+                autofocus: true,
+                enabled: !_submitting,
+                maxLength: 100,
+                errorText: _errorText,
+                textInputAction: TextInputAction.done,
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
+                onSubmitted: (_) => _submit(),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton.outline(
+                      label: 'Batal',
+                      onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Mulai Obrolan',
+                      isLoading: _submitting,
+                      onPressed: _submitting ? null : _submit,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
