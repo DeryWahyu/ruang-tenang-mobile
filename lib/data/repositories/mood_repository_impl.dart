@@ -25,7 +25,7 @@ class MoodRepositoryImpl implements MoodRepository {
     final userMood = await _remote.record(mood);
     await _cacheLatest(userMood);
     await _prefs.setString(
-      StorageKeys.cachedMoods + '_today',
+      '${StorageKeys.cachedMoods}_today',
       jsonEncode({
         'has_checked': true,
         'mood': userMood.toJson(),
@@ -39,7 +39,7 @@ class MoodRepositoryImpl implements MoodRepository {
     try {
       final today = await _remote.today();
       await _prefs.setString(
-        StorageKeys.cachedMoods + '_today',
+        '${StorageKeys.cachedMoods}_today',
         jsonEncode(today.toJson()),
       );
       return today.toEntity();
@@ -87,12 +87,12 @@ class MoodRepositoryImpl implements MoodRepository {
     try {
       final stats = await _remote.stats(days: days);
       await _prefs.setString(
-        StorageKeys.cachedMoods + '_stats',
+        '${StorageKeys.cachedMoods}_stats',
         jsonEncode(stats.toJson()),
       );
       return stats.toEntity();
     } on ApiException {
-      final raw = _prefs.getString(StorageKeys.cachedMoods + '_stats');
+      final raw = _prefs.getString('${StorageKeys.cachedMoods}_stats');
       if (raw == null) return const MoodStats();
       try {
         return MoodStatsModel.fromJson(jsonDecode(raw) as Map<String, dynamic>)
@@ -107,13 +107,13 @@ class MoodRepositoryImpl implements MoodRepository {
 
   Future<void> _cacheLatest(UserMoodModel mood) async {
     await _prefs.setString(
-      StorageKeys.cachedMoods + '_latest',
+      '${StorageKeys.cachedMoods}_latest',
       jsonEncode(mood.toJson()),
     );
   }
 
   UserMood? _readCachedLatest() {
-    final raw = _prefs.getString(StorageKeys.cachedMoods + '_latest');
+    final raw = _prefs.getString('${StorageKeys.cachedMoods}_latest');
     if (raw == null) return null;
     try {
       return UserMoodModel.fromJson(jsonDecode(raw) as Map<String, dynamic>)
@@ -124,7 +124,7 @@ class MoodRepositoryImpl implements MoodRepository {
   }
 
   TodayMood _readCachedToday() {
-    final raw = _prefs.getString(StorageKeys.cachedMoods + '_today');
+    final raw = _prefs.getString('${StorageKeys.cachedMoods}_today');
     if (raw == null) return const TodayMood();
     try {
       return TodayMoodModel.fromJson(jsonDecode(raw) as Map<String, dynamic>)

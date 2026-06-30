@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/forum.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../bloc/forum_bloc.dart';
 import '../bloc/forum_event.dart';
 import '../bloc/forum_state.dart';
@@ -72,7 +73,13 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
           body: state.status == ForumStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())
               : state.status == ForumStatus.failure
-                  ? Center(child: Text(state.errorMessage))
+                  ? AppErrorWidget(
+                      message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat diskusi',
+                      onRetry: () {
+                        context.read<ForumBloc>().add(ForumDetailRequested(widget.slug));
+                        context.read<ForumBloc>().add(ForumPostsRequested(widget.slug, sortBy: state.sortBy));
+                      },
+                    )
                   : Column(
                       children: [
                         Expanded(
@@ -255,7 +262,7 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Icon(icon, size: 20, color: isActive ? AppColors.primary : AppColors.mutedForeground),

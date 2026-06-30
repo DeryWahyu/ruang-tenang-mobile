@@ -32,7 +32,7 @@ class _ProgressMapView extends StatelessWidget {
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: BlocConsumer<GamificationBloc, GamificationState>(
         listenWhen: (p, c) => p.successMessage != c.successMessage || p.errorMessage != c.errorMessage,
@@ -108,7 +108,7 @@ class _ProgressMapView extends StatelessWidget {
             child: LinearProgressIndicator(
               value: (map.overallProgress / 100).clamp(0.0, 1.0),
               minHeight: 10,
-              backgroundColor: Colors.white.withOpacity(0.3),
+              backgroundColor: Colors.white.withValues(alpha: 0.3),
               color: Colors.white,
             ),
           ),
@@ -128,7 +128,7 @@ class _ProgressMapView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -139,12 +139,14 @@ class _ProgressMapView extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: region.isUnlocked ? AppColors.info.withOpacity(0.12) : AppColors.muted,
+              color: region.isUnlocked ? AppColors.info.withValues(alpha: 0.12) : AppColors.muted,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: region.isUnlocked
-                  ? Text(region.icon, style: const TextStyle(fontSize: 22))
+                  ? (region.icon.isNotEmpty
+                      ? Text(region.icon, style: const TextStyle(fontSize: 22))
+                      : const Icon(Icons.park_rounded, color: AppColors.info, size: 24))
                   : const Icon(Icons.lock_outline_rounded, color: AppColors.mutedForeground),
             ),
           ),
@@ -164,7 +166,13 @@ class _ProgressMapView extends StatelessWidget {
         children: [
           Opacity(
             opacity: l.isUnlocked ? 1 : 0.4,
-            child: Text(l.icon, style: const TextStyle(fontSize: 22)),
+            child: l.icon.isNotEmpty
+                ? Text(l.icon, style: const TextStyle(fontSize: 22))
+                : Icon(
+                    l.isUnlocked ? Icons.place_rounded : Icons.lock_outline_rounded,
+                    size: 22,
+                    color: l.isUnlocked ? AppColors.accentOrange : AppColors.mutedForeground,
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(

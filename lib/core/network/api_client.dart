@@ -75,6 +75,24 @@ class ApiClient {
     }
   }
 
+  /// Mengambil body respons mentah sebagai String (mis. CSV export billing).
+  /// Memakai header & auth interceptor yang sama dengan request JSON biasa.
+  Future<String> fetchRaw(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get<dynamic>(
+        path,
+        queryParameters: queryParameters,
+        options: Options(responseType: ResponseType.plain),
+      );
+      return response.data?.toString() ?? '';
+    } on DioException catch (e) {
+      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
+    }
+  }
+
   Future<ApiResponse<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,

@@ -74,7 +74,7 @@ class MoodRemoteDataSource {
     return UserMoodModel.fromJson(response.data!);
   }
 
-  /// GET /user-moods/stats?days= → raw Map<String, int>
+  /// GET /user-moods/stats?days= → raw `Map<String, int>`
   Future<MoodStatsModel> stats({int days = 30}) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       ApiConstants.userMoodStats,

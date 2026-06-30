@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/repositories/forum_repository.dart';
 import 'forum_event.dart';
 import '../../../domain/entities/forum.dart';
@@ -27,10 +27,8 @@ class ForumBloc extends Bloc<ForumEvent, ForumState> {
     try {
       final threads = await _repository.getForums();
       emit(state.copyWith(status: ForumStatus.listSuccess, threads: threads));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: 'Gagal memuat forum'));
+    } catch (e) {
+      emit(state.copyWith(status: ForumStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal memuat forum')));
     }
   }
 
@@ -46,10 +44,8 @@ class ForumBloc extends Bloc<ForumEvent, ForumState> {
     try {
       final forum = await _repository.getForum(event.slug);
       emit(state.copyWith(status: ForumStatus.detailSuccess, detail: forum));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: 'Gagal memuat detail forum'));
+    } catch (e) {
+      emit(state.copyWith(status: ForumStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal memuat detail forum')));
     }
   }
 
@@ -65,10 +61,8 @@ class ForumBloc extends Bloc<ForumEvent, ForumState> {
     try {
       await _repository.createForum(title: event.title, content: event.content, categoryId: event.categoryId);
       emit(state.copyWith(status: ForumStatus.success, successMessage: 'Diskusi berhasil dibuat'));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: 'Gagal membuat diskusi'));
+    } catch (e) {
+      emit(state.copyWith(status: ForumStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal membuat diskusi')));
     }
   }
 
@@ -77,10 +71,8 @@ class ForumBloc extends Bloc<ForumEvent, ForumState> {
     try {
       final post = await _repository.createPost(event.slug, event.content);
       emit(state.copyWith(status: ForumStatus.success, posts: [...state.posts, post], successMessage: 'Balasan berhasil dikirim'));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: 'Gagal mengirim balasan'));
+    } catch (e) {
+      emit(state.copyWith(status: ForumStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengirim balasan')));
     }
   }
 
@@ -136,10 +128,8 @@ class ForumBloc extends Bloc<ForumEvent, ForumState> {
     try {
       final threads = await _repository.getForums(search: event.query);
       emit(state.copyWith(status: ForumStatus.listSuccess, threads: threads));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ForumStatus.failure, errorMessage: 'Gagal mencari forum'));
+    } catch (e) {
+      emit(state.copyWith(status: ForumStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mencari forum')));
     }
   }
 }

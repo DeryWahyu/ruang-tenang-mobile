@@ -60,7 +60,7 @@ class SettingsScreen extends StatelessWidget {
               icon: const Icon(Icons.logout_rounded, color: AppColors.destructive),
               label: const Text('Keluar', style: TextStyle(color: AppColors.destructive, fontWeight: FontWeight.bold, fontSize: 16)),
               style: TextButton.styleFrom(
-                backgroundColor: AppColors.destructive.withOpacity(0.1),
+                backgroundColor: AppColors.destructive.withValues(alpha: 0.1),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
@@ -79,7 +79,7 @@ class SettingsScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border.withOpacity(0.5)),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
         ),
         child: Column(children: children),
       );
@@ -99,7 +99,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
                     child: Icon(icon, color: color, size: 20),
                   ),
                   const SizedBox(width: 14),
@@ -113,11 +113,11 @@ class SettingsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground.withOpacity(0.5)),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
                 ],
               ),
             ),
-            if (!last) Divider(height: 1, thickness: 1, color: AppColors.border.withOpacity(0.3), indent: 56),
+            if (!last) Divider(height: 1, thickness: 1, color: AppColors.border.withValues(alpha: 0.3), indent: 56),
           ],
         ),
       ),

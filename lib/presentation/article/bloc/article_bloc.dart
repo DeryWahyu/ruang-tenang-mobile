@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/repositories/article_repository.dart';
 import 'article_event.dart';
 import 'article_state.dart';
@@ -40,10 +40,11 @@ class ArticleBloc extends Bloc<ArticleEvent, ArticleState> {
         total: items.length,
         page: 1,
       ));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ArticleStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ArticleStatus.failure, errorMessage: 'Gagal memuat artikel'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ArticleStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat artikel'),
+      ));
     }
   }
 
@@ -79,10 +80,11 @@ class ArticleBloc extends Bloc<ArticleEvent, ArticleState> {
     try {
       final article = await _repository.getArticle(event.slug);
       emit(state.copyWith(status: ArticleStatus.detailSuccess, detail: article));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ArticleStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ArticleStatus.failure, errorMessage: 'Gagal memuat artikel'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ArticleStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat artikel'),
+      ));
     }
   }
 
@@ -116,10 +118,11 @@ class ArticleBloc extends Bloc<ArticleEvent, ArticleState> {
     try {
       final items = await _repository.getArticles(search: event.query);
       emit(state.copyWith(status: ArticleStatus.listSuccess, items: items, total: items.length));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ArticleStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: ArticleStatus.failure, errorMessage: 'Gagal mencari artikel'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ArticleStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal mencari artikel'),
+      ));
     }
   }
 }

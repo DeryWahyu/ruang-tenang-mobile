@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
+import '../../../domain/entities/chat.dart';
 import '../../../domain/usecases/chat/chat_usecases.dart';
 import 'chat_event.dart';
 import 'chat_state.dart';
@@ -14,6 +15,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatSessionsLoadMoreRequested>(_onLoadMoreRequested);
     on<ChatSessionDetailRequested>(_onDetailRequested);
     on<ChatSessionCreateRequested>(_onCreateRequested);
+    on<ChatFirstMessageSent>(_onFirstMessageSent);
     on<ChatSessionDeleteRequested>(_onDeleteRequested);
     on<ChatMessageSendRequested>(_onMessageSendRequested);
     on<ChatMessageLikeToggled>(_onMessageLikeToggled);
@@ -39,12 +41,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         page: result.page,
         limit: result.limit,
       ));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ChatStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: ChatStatus.failure,
-        errorMessage: 'Gagal memuat daftar obrolan.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat daftar obrolan.'),
       ));
     }
   }
@@ -84,12 +84,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         status: ChatStatus.detailSuccess,
         currentSession: session,
       ));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ChatStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: ChatStatus.failure,
-        errorMessage: 'Gagal memuat obrolan.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat obrolan.'),
       ));
     }
   }
@@ -110,12 +108,70 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         currentSession: session,
         successMessage: 'Sesi obrolan dibuat.',
       ));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ChatStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: ChatStatus.failure,
-        errorMessage: 'Gagal membuat sesi obrolan.',
+        errorMessage: ErrorMessage.from(e, 'Gagal membuat sesi obrolan.'),
+      ));
+    }
+  }
+
+  /// Membuat sesi baru tanpa judul lalu langsung mengirim pesan pertama.
+  /// Backend akan menghasilkan judul otomatis dari pesan pertama tersebut.
+  Future<void> _onFirstMessageSent(
+      ChatFirstMessageSent event, Emitter<ChatState> emit) async {
+    final content = event.content.trim();
+    if (content.isEmpty) return;
+
+    emit(state.copyWith(status: ChatStatus.loading));
+
+    // 1. Buat sesi tanpa judul (title kosong -> backend auto-generate).
+    final ChatSession session;
+    try {
+      session = await _useCases.createSession('', folderId: event.folderId);
+    } catch (e) {
+      emit(state.copyWith(
+        status: ChatStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal membuat sesi obrolan.'),
+      ));
+      return;
+    }
+
+    // Tampilkan sesi baru supaya UI bisa berpindah ke layar obrolan.
+    emit(state.copyWith(
+      status: ChatStatus.createSuccess,
+      currentSession: session,
+    ));
+
+    // 2. Kirim pesan pertama pada sesi yang baru dibuat.
+    emit(state.copyWith(status: ChatStatus.sendingMessage));
+    try {
+      final result = await _useCases.sendMessage(session.uuid, content);
+
+      final updatedMessages = [
+        ...session.messages,
+        result.userMessage,
+        result.aiMessage,
+      ];
+      var updatedSession = session.copyWith(messages: updatedMessages);
+
+      // Muat ulang sesi agar mendapat judul yang dibuat otomatis oleh backend
+      // dari pesan pertama. Jika gagal, tetap pakai gabungan pesan lokal.
+      try {
+        final refreshed = await _useCases.getSession(session.uuid);
+        updatedSession = refreshed;
+      } catch (_) {
+        // Abaikan; judul akan tersinkron saat berikutnya membuka sesi.
+      }
+
+      emit(state.copyWith(
+        status: ChatStatus.detailSuccess,
+        currentSession: updatedSession,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ChatStatus.detailSuccess,
+        errorMessage: ErrorMessage.from(e, 'Gagal mengirim pesan.'),
       ));
     }
   }
@@ -134,12 +190,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         total: state.total > 0 ? state.total - 1 : 0,
         successMessage: 'Obrolan dihapus.',
       ));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: ChatStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: ChatStatus.failure,
-        errorMessage: 'Gagal menghapus obrolan.',
+        errorMessage: ErrorMessage.from(e, 'Gagal menghapus obrolan.'),
       ));
     }
   }
@@ -167,15 +221,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         status: ChatStatus.detailSuccess,
         currentSession: updatedSession,
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
+      // Tetap di detailSuccess agar percakapan tetap tampil. Jalur ini juga
+      // menangani kuota chat habis — pesan error dari API (mis. "kuota habis")
+      // diteruskan apa adanya lewat ErrorMessage.from.
       emit(state.copyWith(
         status: ChatStatus.detailSuccess,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: ChatStatus.detailSuccess,
-        errorMessage: 'Gagal mengirim pesan.',
+        errorMessage: ErrorMessage.from(e, 'Gagal mengirim pesan.'),
       ));
     }
   }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/wellness.dart';
 
 class WellnessProfileModel extends Equatable {
@@ -27,8 +28,8 @@ class WellnessProfileModel extends Equatable {
       initialMood: json['initial_mood'] as String? ?? '',
       goals: (json['goals'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       habits: (json['habits'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      tourCompletedAt: _parseDate(json['tour_completed_at']),
-      onboardingCompletedAt: _parseDate(json['onboarding_completed_at']),
+      tourCompletedAt: Json.date(json['tour_completed_at']),
+      onboardingCompletedAt: Json.date(json['onboarding_completed_at']),
     );
   }
 
@@ -79,7 +80,7 @@ class WellnessPlanItemModel extends Equatable {
       actionType: json['action_type'] as String? ?? '',
       route: json['route'] as String? ?? '',
       status: json['status'] as String? ?? '',
-      completedAt: _parseDate(json['completed_at']),
+      completedAt: Json.date(json['completed_at']),
     );
   }
 
@@ -180,12 +181,3 @@ class WellnessOnboardingResultModel extends Equatable {
   List<Object?> get props => [needsOnboarding, profile, plan];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

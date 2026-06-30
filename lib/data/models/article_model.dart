@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/article.dart';
 
 class ArticleCategoryModel extends Equatable {
@@ -22,7 +23,7 @@ class ArticleCategoryModel extends Equatable {
       slug: json['slug'] as String? ?? '',
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
     );
   }
 
@@ -111,8 +112,8 @@ class ArticleModel extends Equatable {
           : null,
       status: json['status'] as String? ?? '',
       moderationStatus: json['moderation_status'] as String? ?? '',
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
-      updatedAt: _parseDate(json['updated_at']) ?? DateTime.now(),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
+      updatedAt: Json.date(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -196,7 +197,7 @@ class ArticleListItemModel extends Equatable {
           : null,
       status: json['status'] as String? ?? '',
       moderationStatus: json['moderation_status'] as String? ?? '',
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
     );
   }
 
@@ -232,12 +233,3 @@ class ArticleListItemModel extends Equatable {
       ];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

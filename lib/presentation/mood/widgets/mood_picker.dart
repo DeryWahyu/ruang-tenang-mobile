@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../domain/entities/mood.dart';
 
@@ -32,16 +31,16 @@ class MoodPicker extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
           decoration: BoxDecoration(
             color: isSelected
-                ? mood.color.withOpacity(0.08)
+                ? mood.color.withValues(alpha: 0.08)
                 : AppColors.card,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? mood.color : AppColors.border.withOpacity(0.5),
+              color: isSelected ? mood.color : AppColors.border.withValues(alpha: 0.5),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: mood.color.withOpacity(0.2),
+                color: mood.color.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               )

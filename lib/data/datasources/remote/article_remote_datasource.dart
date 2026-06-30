@@ -19,7 +19,7 @@ class ArticleRemoteDataSource {
       queryParameters: {
         'page': page,
         'limit': limit,
-        if (categoryId != null) 'category_id': categoryId,
+        'category_id': ?categoryId,
         if (search != null && search.isNotEmpty) 'search': search,
       },
       fromJson: (json) => ArticleListItemModel.fromJson(json),

@@ -70,22 +70,4 @@ class GamificationRepositoryImpl implements GamificationRepository {
 
   @override
   Future<Map<String, dynamic>> claimReward(int rewardId) => _remote.claimReward(rewardId);
-
-  @override
-  Future<List<MysteryChest>> getChests() async {
-    final models = await _remote.getChests();
-    return models.map((e) => e.toEntity()).toList();
-  }
-
-  @override
-  Future<Map<String, dynamic>> openChest(String chestId) => _remote.openChest(chestId);
-
-  @override
-  Future<DailySpinWheel> getSpinWheel() async {
-    final model = await _remote.getSpinWheel();
-    return model.toEntity();
-  }
-
-  @override
-  Future<Map<String, dynamic>> spinWheel() => _remote.spinWheel();
 }

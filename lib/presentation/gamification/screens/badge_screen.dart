@@ -31,7 +31,7 @@ class _BadgeView extends StatelessWidget {
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
@@ -58,7 +58,7 @@ class _BadgeView extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                     child: const Icon(Icons.workspace_premium_rounded, size: 64, color: AppColors.primary),
                   ),
                   const SizedBox(height: 24),
@@ -94,7 +94,7 @@ class _BadgeView extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         'Kumpulkan lencana dengan menyelesaikan berbagai aktivitas kesehatan mental.',
-                        style: TextStyle(fontSize: 14, color: AppColors.mutedForeground.withOpacity(0.8)),
+                        style: TextStyle(fontSize: 14, color: AppColors.mutedForeground.withValues(alpha: 0.8)),
                       ),
                     ],
                   ),
@@ -113,9 +113,9 @@ class _BadgeView extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.card,
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
                         ),
                         child: Column(
@@ -125,7 +125,7 @@ class _BadgeView extends StatelessWidget {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                                   child: const Icon(Icons.category_rounded, size: 16, color: AppColors.primary),
                                 ),
                                 const SizedBox(width: 12),
@@ -139,8 +139,8 @@ class _BadgeView extends StatelessWidget {
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 130,
                                 childAspectRatio: 0.75,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
@@ -174,18 +174,18 @@ class _BadgeView extends StatelessWidget {
           height: 72,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: badge.earned ? Colors.amber.shade100 : AppColors.muted.withOpacity(0.5),
+            color: badge.earned ? Colors.amber.shade100 : AppColors.muted.withValues(alpha: 0.5),
             border: Border.all(
               color: badge.earned ? Colors.amber.shade400 : AppColors.border,
               width: badge.earned ? 3 : 1,
             ),
             boxShadow: badge.earned ? [
-              BoxShadow(color: Colors.amber.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4)),
             ] : null,
           ),
           child: Center(
             child: Text(
-              badge.icon.isNotEmpty ? badge.icon : '🛡️',
+              badge.icon.isNotEmpty ? badge.icon : '🏅',
               style: TextStyle(
                 fontSize: 32,
                 foreground: Paint()..colorFilter = badge.earned ? null : const ColorFilter.matrix([

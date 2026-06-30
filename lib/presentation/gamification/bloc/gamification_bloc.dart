@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/entities/gamification.dart';
 import '../../../domain/repositories/gamification_repository.dart';
 import 'gamification_event.dart';
@@ -15,10 +16,6 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
     on<GamificationExpHistoryRequested>(_onExpHistoryRequested);
     on<GamificationExpHistoryLoadMore>(_onExpHistoryLoadMore);
     on<GamificationBadgesRequested>(_onBadgesRequested);
-    on<GamificationChestsRequested>(_onChestsRequested);
-    on<GamificationChestOpened>(_onChestOpened);
-    on<GamificationSpinWheelRequested>(_onSpinWheelRequested);
-    on<GamificationSpinRequested>(_onSpinRequested);
     on<GamificationDailyTasksRequested>(_onDailyTasksRequested);
     on<GamificationDailyTaskClaimed>(_onDailyTaskClaimed);
     on<GamificationAllTasksClaimed>(_onAllTasksClaimed);
@@ -86,47 +83,6 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
     }
   }
 
-  Future<void> _onChestsRequested(GamificationChestsRequested event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.loading));
-    try {
-      final chests = await _repository.getChests();
-      emit(state.copyWith(status: GamificationStatus.success, chests: chests));
-    } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat peti misteri'));
-    }
-  }
-
-  Future<void> _onChestOpened(GamificationChestOpened event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.submitting, clearResults: true));
-    try {
-      final result = await _repository.openChest(event.chestId);
-      final updatedChests = state.chests.where((c) => c.id != event.chestId).toList();
-      emit(state.copyWith(status: GamificationStatus.success, openChestResult: result, chests: updatedChests));
-    } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal membuka peti'));
-    }
-  }
-
-  Future<void> _onSpinWheelRequested(GamificationSpinWheelRequested event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.loading));
-    try {
-      final wheel = await _repository.getSpinWheel();
-      emit(state.copyWith(status: GamificationStatus.success, spinWheel: wheel));
-    } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat spin'));
-    }
-  }
-
-  Future<void> _onSpinRequested(GamificationSpinRequested event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.submitting, clearResults: true));
-    try {
-      final result = await _repository.spinWheel();
-      emit(state.copyWith(status: GamificationStatus.success, spinResult: result));
-    } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memutar spin'));
-    }
-  }
-
   // ===== Daily Tasks =====
   Future<void> _onDailyTasksRequested(GamificationDailyTasksRequested event, Emitter<GamificationState> emit) async {
     emit(state.copyWith(status: GamificationStatus.loading));
@@ -155,7 +111,7 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
         successMessage: (result['message'] as String?) ?? 'Reward berhasil diklaim',
       ));
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: _msg(e, 'Gagal mengklaim reward')));
+      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim reward')));
     }
   }
 
@@ -170,7 +126,7 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
         successMessage: (result['message'] as String?) ?? 'Semua reward berhasil diklaim',
       ));
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: _msg(e, 'Gagal mengklaim reward')));
+      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim reward')));
     }
   }
 
@@ -196,7 +152,7 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
         successMessage: (result['message'] as String?) ?? 'Hadiah berhasil diklaim',
       ));
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: _msg(e, 'Gagal mengklaim hadiah')));
+      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim hadiah')));
     }
   }
 
@@ -253,12 +209,8 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
         successMessage: (result['message'] as String?) ?? 'Hadiah berhasil diklaim',
       ));
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: _msg(e, 'Gagal mengklaim hadiah')));
+      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim hadiah')));
     }
   }
 
-  String _msg(Object e, String fallback) {
-    final s = e.toString().replaceFirst('Exception: ', '');
-    return s.isEmpty ? fallback : s;
-  }
 }

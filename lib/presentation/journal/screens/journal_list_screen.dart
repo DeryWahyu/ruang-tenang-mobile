@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_dimensions.dart';
 import '../../common/widgets/app_empty_state.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
@@ -70,10 +69,9 @@ class _JournalListScreenState extends State<JournalListScreen> {
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
+          final bloc = context.read<JournalBloc>();
           await context.push('/journal/create');
-          if (mounted) {
-            context.read<JournalBloc>().add(const JournalListRequested(refresh: true));
-          }
+          bloc.add(const JournalListRequested(refresh: true));
         },
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -103,30 +101,32 @@ class _JournalListScreenState extends State<JournalListScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Jurnal Pribadi',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.foreground,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Jurnal Pribadi',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.foreground,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Catat setiap perasaan & momen berharga',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.mutedForeground,
+                const SizedBox(height: 4),
+                Text(
+                  'Catat setiap perasaan & momen berharga',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.mutedForeground,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: IconButton(
@@ -149,7 +149,7 @@ class _JournalListScreenState extends State<JournalListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -161,7 +161,7 @@ class _JournalListScreenState extends State<JournalListScreen> {
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
             hintText: 'Cari kenangan atau catatan...',
-            hintStyle: TextStyle(color: AppColors.mutedForeground.withOpacity(0.7)),
+            hintStyle: TextStyle(color: AppColors.mutedForeground.withValues(alpha: 0.7)),
             prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
             suffixIcon: _isSearching
                 ? IconButton(
@@ -223,10 +223,9 @@ class _JournalListScreenState extends State<JournalListScreen> {
                   : 'Setiap pikiran dan cerita Anda berharga. Mulai catat sekarang.',
               actionLabel: state.isSearching ? null : 'Tulis Jurnal Pertama',
               onAction: state.isSearching ? null : () async {
+                final bloc = context.read<JournalBloc>();
                 await context.push('/journal/create');
-                if (mounted) {
-                  context.read<JournalBloc>().add(const JournalListRequested(refresh: true));
-                }
+                bloc.add(const JournalListRequested(refresh: true));
               },
             ),
           );
@@ -240,6 +239,7 @@ class _JournalListScreenState extends State<JournalListScreen> {
           },
           child: ListView.builder(
             controller: _scrollController,
+            cacheExtent: 600,
             padding: const EdgeInsets.all(20),
             itemCount: state.items.length + (state.hasNextPage && !state.isSearching ? 1 : 0),
             itemBuilder: (context, index) {
@@ -253,10 +253,9 @@ class _JournalListScreenState extends State<JournalListScreen> {
               return JournalCard(
                 journal: journal,
                 onTap: () async {
+                  final bloc = context.read<JournalBloc>();
                   await context.push('/journal/${journal.uuid}');
-                  if (mounted) {
-                    context.read<JournalBloc>().add(const JournalListRequested(refresh: true));
-                  }
+                  bloc.add(const JournalListRequested(refresh: true));
                 },
               );
             },

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/date_utils.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
 import '../bloc/journal_bloc.dart';
@@ -120,7 +119,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                         ),
                       ],
@@ -135,7 +134,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -146,7 +145,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.destructive.withOpacity(0.1),
+                      color: AppColors.destructive.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -211,7 +210,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
+                                    color: Colors.black.withValues(alpha: 0.04),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -233,8 +232,8 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           border: Border(
-                            top: BorderSide(color: AppColors.border.withOpacity(0.5)),
-                            bottom: BorderSide(color: AppColors.border.withOpacity(0.5)),
+                            top: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+                            bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
                           ),
                         ),
                         child: Row(

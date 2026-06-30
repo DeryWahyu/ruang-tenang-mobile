@@ -26,12 +26,12 @@ class AuthState extends Equatable {
 
   const AuthState.loading() : this(status: AuthStatus.loading);
 
-  AuthState.authenticated(User user)
+  const AuthState.authenticated(User user)
       : this(status: AuthStatus.authenticated, user: user);
 
   const AuthState.unauthenticated() : this(status: AuthStatus.unauthenticated);
 
-  AuthState.failure(String message)
+  const AuthState.failure(String message)
       : this(status: AuthStatus.failure, errorMessage: message);
 
   AuthState copyWith({

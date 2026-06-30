@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/date_utils.dart';
 import '../../../domain/entities/mood.dart';
 import '../bloc/mood_bloc.dart';
 import '../bloc/mood_event.dart';
@@ -47,8 +46,9 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
             ),
           );
           // Pop the screen after successful save
+          final router = GoRouter.of(context);
           Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) context.pop();
+            if (mounted) router.pop();
           });
         } else if (state.status == MoodStatus.failure && state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -96,7 +96,7 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -127,7 +127,7 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.mutedForeground.withOpacity(0.8),
+                      color: AppColors.mutedForeground.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -158,7 +158,7 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: AppColors.muted,
                           elevation: canSave ? 8 : 0,
-                          shadowColor: AppColors.primary.withOpacity(0.4),
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         ),
                         child: isLoading

@@ -6,8 +6,8 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../common/widgets/app_card.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
+import '../../common/widgets/app_network_image.dart';
 import '../../../core/di/injection_container.dart';
-import '../../../core/utils/media_url.dart';
 import '../../../domain/entities/music.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
@@ -83,22 +83,16 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
           }
 
           final hasPlayer = state.currentPlayingSong != null;
+          // Mini-player kini dirender global oleh shell (MainLayout), jadi
+          // beri ruang bawah saja agar konten tidak tertutup pemutar.
           final bottomPad = hasPlayer ? 96.0 : 16.0;
           return SizedBox.expand(
-            child: Stack(
+            child: TabBarView(
+              controller: _tabController,
               children: [
-                Positioned.fill(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildBrowseTab(context, state, bottomPad),
-                      _buildExploreTab(context, state, bottomPad),
-                      _buildPlaylistTab(context, state, bottomPad),
-                    ],
-                  ),
-                ),
-                if (hasPlayer)
-                  Positioned(left: 0, right: 0, bottom: 0, child: _buildMiniPlayer(context, state)),
+                _buildBrowseTab(context, state, bottomPad),
+                _buildExploreTab(context, state, bottomPad),
+                _buildPlaylistTab(context, state, bottomPad),
               ],
             ),
           );
@@ -343,86 +337,14 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
   /// Builds a thumbnail box. Relative image paths from the API are resolved to
   /// absolute URLs so covers also load on mobile (not just full http URLs).
   Widget _thumb(String? url, IconData fallbackIcon, double size) {
-    final resolved = resolveMediaUrl(url);
-    return Container(
+    return AppNetworkImage(
+      url: url,
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: AppColors.secondary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: resolved != null
-          ? Image.network(
-              resolved,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Icon(fallbackIcon, color: AppColors.primary, size: size * 0.5),
-            )
-          : Icon(fallbackIcon, color: AppColors.primary, size: size * 0.5),
-    );
-  }
-
-  Widget _buildMiniPlayer(BuildContext context, MusicState state) {
-    final song = state.currentPlayingSong!;
-    final progress = state.duration.inMilliseconds > 0
-        ? state.position.inMilliseconds / state.duration.inMilliseconds
-        : 0.0;
-
-    return Container(
-      margin: const EdgeInsets.all(AppDimensions.spacingBase),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              backgroundColor: AppColors.secondary,
-              color: AppColors.primary,
-              minHeight: 4,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            child: Row(
-              children: [
-                _thumb(song.thumbnail, Icons.music_note, 48),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(song.title,
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      const Text('Ruang Tenang',
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(state.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                      color: AppColors.primary, size: 36),
-                  onPressed: () => context.read<MusicBloc>().add(
-                        state.isPlaying ? const MusicPauseSongRequested() : const MusicResumeSongRequested(),
-                      ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.stop_circle_outlined, color: AppColors.mutedForeground),
-                  onPressed: () => context.read<MusicBloc>().add(const MusicStopSongRequested()),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      borderRadius: BorderRadius.circular(12),
+      backgroundColor: AppColors.secondary,
+      fallbackIcon: fallbackIcon,
+      fallbackColor: AppColors.primary,
     );
   }
 

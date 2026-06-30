@@ -4,6 +4,7 @@ import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/media_url.dart';
 import '../../common/widgets/app_avatar.dart';
+import '../../common/widgets/app_skeleton.dart';
 import '../../../domain/entities/gamification.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
@@ -34,12 +35,15 @@ class _LeaderboardView extends StatelessWidget {
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
           if (state.status == GamificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: List.generate(8, (_) => const AppSkeletonListItem()),
+            );
           }
           if (state.status == GamificationStatus.failure && state.leaderboard.isEmpty) {
             return Center(
@@ -111,13 +115,13 @@ class _LeaderboardView extends StatelessWidget {
           colors: [Color(0xFFFFB300), Color(0xFFFF7043)],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 18, offset: const Offset(0, 8))],
+        boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.3), blurRadius: 18, offset: const Offset(0, 8))],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
             child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 16),
@@ -129,7 +133,7 @@ class _LeaderboardView extends StatelessWidget {
                     style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 2),
                 Text('$monthLabel • $total peserta',
-                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
               ],
             ),
           ),
@@ -211,7 +215,7 @@ class _LeaderboardView extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [color, color.withOpacity(0.6)],
+                colors: [color, color.withValues(alpha: 0.6)],
               ),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
@@ -232,7 +236,7 @@ class _LeaderboardView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [

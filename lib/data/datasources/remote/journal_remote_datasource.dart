@@ -29,7 +29,7 @@ class JournalRemoteDataSource {
       if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
       if (startDate != null) 'start_date': _formatDate(startDate),
       if (endDate != null) 'end_date': _formatDate(endDate),
-      if (moodId != null) 'mood': moodId,
+      'mood': ?moodId,
     };
 
     final body = await _apiClient.fetchBody(
@@ -83,10 +83,10 @@ class JournalRemoteDataSource {
       data: {
         'title': title,
         'content': content,
-        if (moodId != null) 'mood_id': moodId,
+        'mood_id': ?moodId,
         if (tags != null && tags.isNotEmpty) 'tags': tags,
-        if (isPrivate != null) 'is_private': isPrivate,
-        if (shareWithAI != null) 'share_with_ai': shareWithAI,
+        'is_private': ?isPrivate,
+        'share_with_ai': ?shareWithAI,
       },
     );
     return JournalModel.fromJson(Map<String, dynamic>.from(body['data'] as Map));
@@ -106,12 +106,12 @@ class JournalRemoteDataSource {
       'PUT',
       '${ApiConstants.journals}/$uuid',
       data: {
-        if (title != null) 'title': title,
-        if (content != null) 'content': content,
-        if (moodId != null) 'mood_id': moodId,
-        if (tags != null) 'tags': tags,
-        if (isPrivate != null) 'is_private': isPrivate,
-        if (shareWithAI != null) 'share_with_ai': shareWithAI,
+        'title': ?title,
+        'content': ?content,
+        'mood_id': ?moodId,
+        'tags': ?tags,
+        'is_private': ?isPrivate,
+        'share_with_ai': ?shareWithAI,
       },
     );
     return JournalModel.fromJson(Map<String, dynamic>.from(body['data'] as Map));

@@ -11,13 +11,11 @@ import '../bloc/gamification_state.dart';
 /// web `DailyTaskFAB`. It loads today's tasks to display a claimable-count
 /// badge, and opens the full Daily Tasks page when tapped.
 class DailyTaskFab extends StatefulWidget {
-  /// Extra bottom offset so the FAB sits above the floating bottom nav bar.
+  /// Extra bottom offset so the FAB sits above the floating bottom nav bar
+  /// (and above a screen's own FAB / mini-player when present).
   final double bottomOffset;
 
-  /// When false the FAB is hidden (e.g. on screens with their own FAB).
-  final bool visible;
-
-  const DailyTaskFab({super.key, this.bottomOffset = 96, this.visible = true});
+  const DailyTaskFab({super.key, this.bottomOffset = 96});
 
   @override
   State<DailyTaskFab> createState() => _DailyTaskFabState();
@@ -56,7 +54,6 @@ class _DailyTaskFabState extends State<DailyTaskFab> {
       value: _bloc,
       child: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
-          if (!widget.visible) return const SizedBox.shrink();
           final summary = state.dailyTasks;
           if (summary == null || summary.tasks.isEmpty) return const SizedBox.shrink();
           final claimable = summary.claimableCount;
@@ -81,31 +78,39 @@ class _DailyTaskFabState extends State<DailyTaskFab> {
       onTap: _openTasks,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 64,
-        height: 64,
+        width: 58,
+        height: 58,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.fabGradientFrom, AppColors.fabGradientTo]),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.fabGradientFrom, AppColors.fabGradientTo],
+                ),
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: AppColors.accentOrange.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6)),
+                  BoxShadow(
+                    color: AppColors.accentOrange.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
-              child: const Icon(Icons.assignment_rounded, color: Colors.white, size: 28),
+              child: const Icon(Icons.assignment_turned_in_rounded, color: Colors.white, size: 24),
             ),
             if (claimable > 0)
               Positioned(
-                top: 0,
-                right: 0,
+                top: -2,
+                right: -2,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                  padding: const EdgeInsets.all(3),
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                   decoration: BoxDecoration(
                     color: AppColors.notification,
                     shape: BoxShape.circle,
@@ -113,7 +118,7 @@ class _DailyTaskFabState extends State<DailyTaskFab> {
                   ),
                   child: Text('$claimable',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
                 ),
               ),
           ],

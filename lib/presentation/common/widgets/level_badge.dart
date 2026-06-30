@@ -34,14 +34,15 @@ class LevelBadge extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => _fallback(),
+          errorBuilder: (_, _, _) => _fallback(),
         );
       }
       return _fallback();
     }
 
+    // Konsisten dengan web: nilai non-image diperlakukan sebagai emoji/teks
+    // pendek dan dirender apa adanya (web memakai `<span>{icon}</span>`).
     if (raw.isNotEmpty) {
-      // Treat as emoji / short text.
       return Center(child: Text(raw, style: TextStyle(fontSize: size * 0.62)));
     }
 

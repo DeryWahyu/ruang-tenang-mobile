@@ -87,65 +87,6 @@ class BadgeProgress extends Equatable {
   ];
 }
 
-class MysteryChest extends Equatable {
-  final String id;
-  final String rarity;
-  final String rarityIcon;
-  final bool isOpened;
-  final String rewardType;
-  final int rewardValue;
-  final String rewardLabel;
-  final DateTime createdAt;
-
-  const MysteryChest({
-    required this.id,
-    required this.rarity,
-    required this.rarityIcon,
-    required this.isOpened,
-    this.rewardType = '',
-    this.rewardValue = 0,
-    this.rewardLabel = '',
-    required this.createdAt,
-  });
-
-  @override
-  List<Object?> get props => [id, rarity, rarityIcon, isOpened, rewardType, rewardValue, rewardLabel, createdAt];
-}
-
-class DailySpinSlot extends Equatable {
-  final int id;
-  final String name;
-  final String icon;
-  final String rewardType;
-  final int rewardValue;
-  final String rarity;
-
-  const DailySpinSlot({
-    required this.id,
-    required this.name,
-    required this.icon,
-    required this.rewardType,
-    required this.rewardValue,
-    required this.rarity,
-  });
-
-  @override
-  List<Object?> get props => [id, name, icon, rewardType, rewardValue, rarity];
-}
-
-class DailySpinWheel extends Equatable {
-  final List<DailySpinSlot> slots;
-  final bool hasSpunToday;
-
-  const DailySpinWheel({
-    required this.slots,
-    required this.hasSpunToday,
-  });
-
-  @override
-  List<Object?> get props => [slots, hasSpunToday];
-}
-
 
 // ==========================================
 // Personal Journey (/community/my-journey)

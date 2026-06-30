@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/forum.dart';
 
 class ForumCategoryModel extends Equatable {
@@ -19,7 +20,7 @@ class ForumCategoryModel extends Equatable {
       id: (json['id'] as num?)?.toInt() ?? 0,
       name: json['name'] as String? ?? '',
       slug: json['slug'] as String? ?? '',
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
     );
   }
 
@@ -242,12 +243,3 @@ class ForumPostModel extends Equatable {
       ];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_network_image.dart';
 import '../../../core/di/injection_container.dart';
-import '../../../core/utils/media_url.dart';
 import '../../../domain/entities/music.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
@@ -172,9 +172,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isCurrent ? AppColors.primary.withOpacity(0.08) : AppColors.card,
+          color: isCurrent ? AppColors.primary.withValues(alpha: 0.08) : AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isCurrent ? AppColors.primary.withOpacity(0.5) : AppColors.border),
+          border: Border.all(color: isCurrent ? AppColors.primary.withValues(alpha: 0.5) : AppColors.border),
         ),
         child: Row(
           children: [
@@ -271,30 +271,26 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   }
 
   Widget _cover(String? url) {
-    final resolved = resolveMediaUrl(url);
-    return Container(
+    return AppNetworkImage(
+      url: url,
       width: 180,
       height: 180,
-      decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(24)),
-      clipBehavior: Clip.antiAlias,
-      child: resolved != null
-          ? Image.network(resolved, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(Icons.queue_music, size: 72, color: AppColors.primary))
-          : const Icon(Icons.queue_music, size: 72, color: AppColors.primary),
+      borderRadius: BorderRadius.circular(24),
+      backgroundColor: AppColors.secondary,
+      fallbackIcon: Icons.queue_music,
+      fallbackColor: AppColors.primary,
     );
   }
 
   Widget _thumb(String? url, double size) {
-    final resolved = resolveMediaUrl(url);
-    return Container(
+    return AppNetworkImage(
+      url: url,
       width: size,
       height: size,
-      decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      child: resolved != null
-          ? Image.network(resolved, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Icon(Icons.music_note, color: AppColors.primary, size: size * 0.5))
-          : Icon(Icons.music_note, color: AppColors.primary, size: size * 0.5),
+      borderRadius: BorderRadius.circular(12),
+      backgroundColor: AppColors.secondary,
+      fallbackIcon: Icons.music_note,
+      fallbackColor: AppColors.primary,
     );
   }
 }

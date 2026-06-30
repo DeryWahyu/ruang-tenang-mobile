@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/mood.dart';
 
 /// Data-layer model for [UserMood]. JSON (de)serialization lives here;
@@ -25,7 +26,7 @@ class UserMoodModel extends Equatable {
       emoji: (json['emoji'] as String?)?.isNotEmpty == true
           ? json['emoji'] as String
           : MoodType.fromString(json['mood'] as String?).emoji,
-      createdAt: _parseDate(json['created_at']) ??
+      createdAt: Json.date(json['created_at']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
@@ -148,12 +149,3 @@ class MoodStatsModel extends Equatable {
   List<Object?> get props => [counts];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

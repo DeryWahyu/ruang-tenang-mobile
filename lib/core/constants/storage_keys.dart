@@ -27,4 +27,7 @@ class StorageKeys {
 
   // Offline Queue
   static const String offlineQueue = 'offline_queue';
+
+  // Mini Game
+  static const String mindfulRunnerHighScore = 'mindful_runner_high_score';
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/journal.dart';
 
 /// Data-layer model for [Journal] (full entry). JSON (de)serialization
@@ -58,11 +59,11 @@ class JournalModel extends Equatable {
           const [],
       isPrivate: json['is_private'] as bool? ?? false,
       shareWithAI: json['share_with_ai'] as bool? ?? false,
-      aiAccessedAt: _parseDate(json['ai_accessed_at']),
+      aiAccessedAt: Json.date(json['ai_accessed_at']),
       wordCount: (json['word_count'] as num?)?.toInt() ?? 0,
       sentimentScore: (json['sentiment_score'] as num?)?.toDouble(),
-      createdAt: _parseDate(json['created_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
-      updatedAt: _parseDate(json['updated_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      createdAt: Json.date(json['created_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: Json.date(json['updated_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 
@@ -211,9 +212,9 @@ class JournalListItemModel extends Equatable {
               .toList() ??
           const [],
       shareWithAI: json['share_with_ai'] as bool? ?? false,
-      aiAccessedAt: _parseDate(json['ai_accessed_at']),
+      aiAccessedAt: Json.date(json['ai_accessed_at']),
       wordCount: (json['word_count'] as num?)?.toInt() ?? 0,
-      createdAt: _parseDate(json['created_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      createdAt: Json.date(json['created_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 
@@ -293,12 +294,3 @@ class JournalListResultModel extends Equatable {
   List<Object?> get props => [items, total, page, limit];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

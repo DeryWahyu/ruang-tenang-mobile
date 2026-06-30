@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/chat.dart';
 
 class ChatMessageModel extends Equatable {
@@ -31,7 +32,7 @@ class ChatMessageModel extends Equatable {
       isLiked: json['is_liked'] as bool? ?? false,
       isDisliked: json['is_disliked'] as bool? ?? false,
       isPinned: json['is_pinned'] as bool? ?? false,
-      createdAt: _parseDate(json['created_at']) ??
+      createdAt: Json.date(json['created_at']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
@@ -137,9 +138,9 @@ class ChatSessionModel extends Equatable {
                   Map<String, dynamic>.from(e as Map)))
               .toList() ??
           [],
-      createdAt: _parseDate(json['created_at']) ??
+      createdAt: Json.date(json['created_at']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
-      updatedAt: _parseDate(json['updated_at']) ??
+      updatedAt: Json.date(json['updated_at']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
@@ -240,7 +241,7 @@ class ChatSessionListItemModel extends Equatable {
       isTrash: json['is_trash'] as bool? ?? false,
       hasSummary: json['has_summary'] as bool? ?? false,
       lastMessage: json['last_message'] as String? ?? '',
-      createdAt: _parseDate(json['created_at']) ??
+      createdAt: Json.date(json['created_at']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
@@ -319,12 +320,3 @@ class ChatSessionListResultModel extends Equatable {
   List<Object?> get props => [items, total, page, limit];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

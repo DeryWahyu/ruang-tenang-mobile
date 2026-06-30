@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_skeleton.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
 import '../bloc/gamification_state.dart';
@@ -57,12 +58,15 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
           if (state.expHistory.isEmpty && state.status == GamificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: List.generate(8, (_) => const AppSkeletonListItem()),
+            );
           }
           if (state.expHistory.isEmpty) {
             return Center(
@@ -90,9 +94,10 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
                 context.read<GamificationBloc>().add(const GamificationExpHistoryRequested(refresh: true)),
             child: ListView.separated(
               controller: _scrollController,
+              cacheExtent: 600,
               padding: const EdgeInsets.all(20),
               itemCount: state.expHistory.length + (state.expHistoryHasMore ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 if (index >= state.expHistory.length) {
                   return const Padding(
@@ -106,14 +111,14 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                            color: AppColors.accentOrange.withOpacity(0.1), shape: BoxShape.circle),
+                            color: AppColors.accentOrange.withValues(alpha: 0.1), shape: BoxShape.circle),
                         child: Icon(_iconFor(h.activityType), color: AppColors.accentOrange, size: 20),
                       ),
                       const SizedBox(width: 14),
@@ -137,7 +142,7 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                            color: AppColors.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                         child: Text('+${h.points} XP',
                             style: const TextStyle(
                                 color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 13)),

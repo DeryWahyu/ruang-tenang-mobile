@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_shadows.dart';
 
 class AppCard extends StatefulWidget {
   final Widget child;
@@ -59,7 +60,7 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final double translateY = _isPressed ? -2.0 : 0.0;
-    
+
     final cardContent = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
@@ -76,14 +77,9 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
         ),
         border: widget.border ??
             Border.all(color: AppColors.border, width: 1),
-        boxShadow: widget.boxShadow ??
-            [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: _isPressed ? 0.1 : 0.04),
-                blurRadius: _isPressed ? 15 : 3,
-                offset: Offset(0, _isPressed ? 5 : 1),
-              ),
-            ],
+        // Elevasi terpusat & selaras web: shadow-md saat ditekan (interaktif),
+        // shadow-sm pada keadaan normal.
+        boxShadow: widget.boxShadow ?? (_isPressed ? AppShadows.md : AppShadows.sm),
       ),
       child: widget.child,
     );
@@ -93,7 +89,13 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
         onTapDown: _handleTapDown,
         onTapUp: _handleTapUp,
         onTapCancel: _handleTapCancel,
-        child: cardContent,
+        // Skala turun halus saat ditekan untuk umpan balik sentuh.
+        child: AnimatedScale(
+          scale: _isPressed ? 0.98 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: cardContent,
+        ),
       );
     }
 

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/gamification.dart';
 import '../../common/widgets/level_badge.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
@@ -136,7 +137,7 @@ class _GameHubView extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.card,
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                           ),
                           child: Column(
                             children: state.expHistory.take(5).map((history) => _buildExpTile(history)).toList(),
@@ -166,7 +167,7 @@ class _GameHubView extends StatelessWidget {
         : (info?.badgeName.isNotEmpty ?? false ? info!.badgeName : 'Pemula');
     final badgeIcon = (journey?.badgeIcon.isNotEmpty ?? false)
         ? journey!.badgeIcon
-        : (info?.badgeIcon.isNotEmpty ?? false ? info!.badgeIcon : '🌟');
+        : (info?.badgeIcon.isNotEmpty ?? false ? info!.badgeIcon : '🌱');
     final currentExp = journey?.currentExp ?? info?.currentExp ?? 0;
 
     // Progress comes from the backend (progress_percent + exp_to_next_level).
@@ -193,7 +194,7 @@ class _GameHubView extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withOpacity(0.3),
+            color: Colors.orange.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -207,9 +208,9 @@ class _GameHubView extends StatelessWidget {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
                 ),
                 child: Center(
                   child: LevelBadge(icon: badgeIcon, size: 46, fallbackColor: Colors.white),
@@ -233,7 +234,7 @@ class _GameHubView extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -268,7 +269,7 @@ class _GameHubView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   color: Colors.white,
                   minHeight: 14,
                 ),
@@ -285,7 +286,7 @@ class _GameHubView extends StatelessWidget {
               ),
               Text(
                 progressLabel,
-                style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -295,30 +296,13 @@ class _GameHubView extends StatelessWidget {
   }
 
   Widget _buildDailyActivitiesGrid(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildActionCard(
-            context,
-            title: 'Tugas Harian',
-            subtitle: 'Selesaikan misi',
-            icon: Icons.checklist_rounded,
-            color: Colors.teal,
-            onTap: () => context.push('/gamification/daily-tasks'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActionCard(
-            context,
-            title: 'Spin Harian',
-            subtitle: 'Putar roda',
-            icon: Icons.casino_rounded,
-            color: AppColors.accentOrange,
-            onTap: () => context.push('/gamification/spin'),
-          ),
-        ),
-      ],
+    return _buildListCard(
+      context,
+      title: 'Tugas Harian',
+      subtitle: 'Selesaikan misi harianmu',
+      icon: Icons.checklist_rounded,
+      color: Colors.teal,
+      onTap: () => context.push('/gamification/daily-tasks'),
     );
   }
 
@@ -332,15 +316,6 @@ class _GameHubView extends StatelessWidget {
           icon: Icons.workspace_premium_rounded,
           color: Colors.amber.shade600,
           onTap: () => context.push('/gamification/badges'),
-        ),
-        const SizedBox(height: 12),
-        _buildListCard(
-          context,
-          title: 'Peti Misteri',
-          subtitle: 'Buka peti dan dapatkan hadiah',
-          icon: Icons.card_giftcard_rounded,
-          color: Colors.purple,
-          onTap: () => context.push('/gamification/chests'),
         ),
         const SizedBox(height: 12),
         _buildListCard(
@@ -369,6 +344,15 @@ class _GameHubView extends StatelessWidget {
           color: AppColors.primary,
           onTap: () => context.push('/gamification/leaderboard'),
         ),
+        const SizedBox(height: 12),
+        _buildListCard(
+          context,
+          title: 'Mini Game',
+          subtitle: 'Mindful Runner — bisa dimainkan offline',
+          icon: Icons.videogame_asset_rounded,
+          color: Colors.deepPurple,
+          onTap: () => context.push('/game'),
+        ),
       ],
     );
   }
@@ -387,29 +371,11 @@ class _GameHubView extends StatelessWidget {
         const SizedBox(height: 12),
         _buildListCard(
           context,
-          title: 'Liga Mingguan',
-          subtitle: 'Berkompetisi & naik divisi setiap pekan',
-          icon: Icons.emoji_events_rounded,
-          color: Colors.amber.shade700,
-          onTap: () => context.push('/gamification/weekly-league'),
-        ),
-        const SizedBox(height: 12),
-        _buildListCard(
-          context,
-          title: 'Quest Kilat',
-          subtitle: 'Tantangan berbatas waktu untuk XP ekstra',
-          icon: Icons.bolt_rounded,
-          color: Colors.deepPurple,
-          onTap: () => context.push('/gamification/timed-challenge'),
-        ),
-        const SizedBox(height: 12),
-        _buildListCard(
-          context,
-          title: 'Streak Society',
-          subtitle: 'Klub eksklusif berdasarkan streak harian',
-          icon: Icons.local_fire_department_rounded,
-          color: Colors.deepOrange,
-          onTap: () => context.push('/gamification/streak-society'),
+          title: 'Statistik Komunitas',
+          subtitle: 'Lihat pencapaian & pertumbuhan komunitas',
+          icon: Icons.insights_rounded,
+          color: AppColors.info,
+          onTap: () => context.push('/community'),
         ),
         const SizedBox(height: 12),
         _buildListCard(
@@ -420,51 +386,7 @@ class _GameHubView extends StatelessWidget {
           color: AppColors.accentOrange,
           onTap: () => context.push('/gamification/xp-boost'),
         ),
-        const SizedBox(height: 12),
-        _buildListCard(
-          context,
-          title: 'Friend Quest',
-          subtitle: 'Selesaikan misi bersama teman',
-          icon: Icons.handshake_rounded,
-          color: Colors.teal,
-          onTap: () => context.push('/gamification/friend-quest'),
-        ),
       ],
-    );
-  }
-
-  Widget _buildActionCard(BuildContext context, {required String title, required String subtitle, required IconData icon, required Color color, required VoidCallback onTap}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => WidgetsBinding.instance.addPostFrameCallback((_) => onTap()),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 28),
-                ),
-                const SizedBox(height: 16),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -473,8 +395,8 @@ class _GameHubView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -487,7 +409,7 @@ class _GameHubView extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
                   child: Icon(icon, color: color, size: 28),
                 ),
                 const SizedBox(width: 16),
@@ -501,7 +423,7 @@ class _GameHubView extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground.withOpacity(0.5)),
+                Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
               ],
             ),
           ),
@@ -510,7 +432,7 @@ class _GameHubView extends StatelessWidget {
     );
   }
 
-  Widget _buildExpTile(history) {
+  Widget _buildExpTile(ExpHistory history) {
     return Column(
       children: [
         Padding(
@@ -519,8 +441,8 @@ class _GameHubView extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.accentOrange.withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(_expIconFor(history.activityType as String), color: AppColors.accentOrange, size: 20),
+                decoration: BoxDecoration(color: AppColors.accentOrange.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(_expIconFor(history.activityType), color: AppColors.accentOrange, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -545,7 +467,7 @@ class _GameHubView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -556,7 +478,7 @@ class _GameHubView extends StatelessWidget {
             ],
           ),
         ),
-        Divider(height: 1, color: AppColors.border.withOpacity(0.3), indent: 70),
+        Divider(height: 1, color: AppColors.border.withValues(alpha: 0.3), indent: 70),
       ],
     );
   }

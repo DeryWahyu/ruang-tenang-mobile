@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
-import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/error_message.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../domain/repositories/upload_repository.dart';
 import '../../../domain/usecases/music/music_usecases.dart';
 import '../../../domain/entities/music.dart';
@@ -88,24 +90,31 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     List<PlaylistListItem> myPlaylists = [];
     String? errorMsg;
 
+    // Categories are the primary content; failure here is treated as fatal.
     try {
       categories = await _getCategories();
     } catch (e) {
-      print("ERROR Fetching Categories: $e");
-      errorMsg = "Gagal memuat kategori: $e";
+      if (kDebugMode) debugPrint('Music: gagal memuat kategori: $e');
+      errorMsg = ErrorMessage.from(e, 'Gagal memuat kategori musik');
     }
 
+    // Public & personal playlists are supplementary; failures are non-fatal.
     try {
       publicPlaylists = await _getPublicPlaylists();
     } catch (e) {
-      print("ERROR Fetching Public Playlists: $e");
-      errorMsg = errorMsg ?? "Gagal memuat playlist publik: $e";
+      if (kDebugMode) debugPrint('Music: gagal memuat playlist publik: $e');
     }
 
     try {
       myPlaylists = await _getMyPlaylists();
     } catch (e) {
-      print("ERROR Fetching My Playlists: $e");
+      if (kDebugMode) debugPrint('Music: gagal memuat playlist saya: $e');
+    }
+
+    // If the primary content failed and we have nothing to show, surface the error.
+    if (errorMsg != null && categories.isEmpty) {
+      emit(state.copyWith(status: MusicStatus.failure, errorMessage: errorMsg));
+      return;
     }
 
     emit(
@@ -130,7 +139,8 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
       final songs = await _getSongsByCategory(event.slug);
       emit(state.copyWith(currentCategorySongs: songs));
     } catch (e) {
-      // Handle error gracefully
+      // Non-fatal: keep previously loaded songs; just log in debug.
+      if (kDebugMode) debugPrint('Music: gagal memuat lagu kategori: $e');
     }
   }
 
@@ -138,30 +148,28 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     MusicPlaySongRequested event,
     Emitter<MusicState> emit,
   ) async {
+    final song = event.song;
+
+    // Resolve a playable absolute URL from the (possibly relative) file path.
+    final url = resolveMediaUrl(song.filePath);
+    if (url == null) {
+      emit(state.copyWith(errorMessage: 'Lagu tidak memiliki sumber audio yang valid'));
+      return;
+    }
+
+    emit(state.copyWith(currentPlayingSong: song));
+
     try {
-      final song = event.song;
-      emit(state.copyWith(currentPlayingSong: song));
-
-      String url = song.filePath ?? '';
-      if (!url.startsWith('http')) {
-        url = '${ApiConstants.baseUrl}/$url';
-        url = url
-            .replaceAll('//storage', '/storage')
-            .replaceAll('//public', '/public');
-      }
-
-      try {
-        await _audioPlayer.setUrl(url);
-        await _audioPlayer.play();
-      } catch (e) {
-        // Fallback to dummy audio if backend URL is broken
-        const dummyAudio =
-            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-        await _audioPlayer.setUrl(dummyAudio);
-        await _audioPlayer.play();
-      }
+      await _audioPlayer.setUrl(url);
+      await _audioPlayer.play();
     } catch (e) {
-      // Silently handle playback errors
+      if (kDebugMode) debugPrint('Music: gagal memutar audio: $e');
+      // Surface the failure and clear the now-unplayable "current song".
+      emit(state.copyWith(
+        clearPlayingSong: true,
+        isPlaying: false,
+        errorMessage: ErrorMessage.from(e, 'Gagal memutar lagu'),
+      ));
     }
   }
 
@@ -202,7 +210,10 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
       final myPlaylists = await _getMyPlaylists();
       emit(state.copyWith(myPlaylists: myPlaylists));
     } catch (e) {
-      // Error will be shown via snackbar in UI
+      if (kDebugMode) debugPrint('Music: gagal membuat playlist: $e');
+      emit(state.copyWith(
+        errorMessage: ErrorMessage.from(e, 'Gagal membuat playlist'),
+      ));
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/billing.dart';
 
 class PremiumPlanModel extends Equatable {
@@ -124,4 +125,77 @@ class BillingCatalogModel extends Equatable {
 
   @override
   List<Object?> get props => [plans, topupPackages];
+}
+
+
+// ==========================================
+// Billing Status
+// ==========================================
+class ChatQuotaModel {
+  static ChatQuota fromJson(Map<String, dynamic> j) => ChatQuota(
+        featureKey: Json.string(j['feature_key']),
+        limit: Json.intValue(j['limit']),
+        used: Json.intValue(j['used']),
+        remaining: Json.intValue(j['remaining']),
+        isUnlimited: Json.boolValue(j['is_unlimited']),
+        resetAt: Json.string(j['reset_at']),
+      );
+}
+
+class SubscriptionInfoModel {
+  static SubscriptionInfo fromJson(Map<String, dynamic> j) => SubscriptionInfo(
+        planName: Json.string(j['plan_name']),
+        status: Json.string(j['status']),
+        startsAt: Json.date(j['starts_at']),
+        endsAt: Json.date(j['ends_at']),
+      );
+}
+
+class BillingStatusModel {
+  static BillingStatus fromJson(Map<String, dynamic> j) => BillingStatus(
+        isPremium: Json.boolValue(j['is_premium']),
+        entitlementSource: Json.string(j['entitlement_source'], fallback: 'free'),
+        premiumExpiresAt: Json.date(j['premium_expires_at']),
+        goldCoins: Json.intValue(j['gold_coins']),
+        chatQuota: j['chat_quota'] is Map
+            ? ChatQuotaModel.fromJson(Map<String, dynamic>.from(j['chat_quota'] as Map))
+            : const ChatQuota(),
+        subscription: j['subscription'] is Map
+            ? SubscriptionInfoModel.fromJson(Map<String, dynamic>.from(j['subscription'] as Map))
+            : null,
+      );
+}
+
+// ==========================================
+// Billing Transactions
+// ==========================================
+class BillingTransactionModel {
+  static BillingTransaction fromJson(Map<String, dynamic> j) => BillingTransaction(
+        id: Json.intValue(j['id']),
+        orderId: Json.string(j['order_id']),
+        itemType: Json.string(j['item_type']),
+        itemName: Json.string(j['item_name']),
+        amount: Json.intValue(j['amount']),
+        currency: Json.string(j['currency'], fallback: 'IDR'),
+        status: Json.string(j['status']),
+        paymentProvider: Json.string(j['payment_provider']),
+        failureReason: (j['failure_reason'] as String?)?.isNotEmpty == true
+            ? j['failure_reason'] as String
+            : null,
+        paidAt: Json.date(j['paid_at']),
+        createdAt: Json.date(j['created_at']) ?? DateTime.now(),
+      );
+}
+
+class BillingTransactionPageModel {
+  static BillingTransactionPage fromJson(Map<String, dynamic> j) => BillingTransactionPage(
+        transactions: Json.list(
+          j['transactions'],
+          (e) => BillingTransactionModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        ),
+        total: Json.intValue(j['total']),
+        page: Json.intValue(j['page'], fallback: 1),
+        limit: Json.intValue(j['limit'], fallback: 20),
+        totalPages: Json.intValue(j['total_pages'], fallback: 1),
+      );
 }

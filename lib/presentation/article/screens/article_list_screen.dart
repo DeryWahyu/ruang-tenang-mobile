@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_network_image.dart';
+import '../../common/widgets/app_skeleton.dart';
+import '../../common/widgets/app_empty_state.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../../../domain/entities/article.dart';
 import '../bloc/article_bloc.dart';
 import '../bloc/article_event.dart';
@@ -40,37 +43,22 @@ class _ArticleListView extends StatelessWidget {
               if (state.categories.isNotEmpty) _buildCategoryChips(context, state),
               Expanded(
                 child: state.status == ArticleStatus.loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const _ArticleSkeletonList()
                     : state.status == ArticleStatus.failure
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.error_outline, size: 48, color: AppColors.mutedForeground),
-                                const SizedBox(height: 16),
-                                Text(state.errorMessage, textAlign: TextAlign.center),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: () => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
-                                  child: const Text('Coba Lagi'),
-                                ),
-                              ],
-                            ),
+                        ? AppErrorWidget(
+                            message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat artikel',
+                            onRetry: () => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
                           )
                         : state.items.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.article_outlined, size: 64, color: AppColors.mutedForeground.withOpacity(0.5)),
-                                    const SizedBox(height: 16),
-                                    const Text('Belum ada artikel', style: TextStyle(color: AppColors.mutedForeground)),
-                                  ],
-                                ),
+                            ? const AppEmptyState(
+                                icon: Icons.article_outlined,
+                                title: 'Belum Ada Artikel',
+                                subtitle: 'Artikel kesehatan mental akan muncul di sini.',
                               )
                             : RefreshIndicator(
                                 onRefresh: () async => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
                                 child: ListView.builder(
+                                  cacheExtent: 600,
                                   padding: const EdgeInsets.all(16),
                                   itemCount: state.items.length,
                                   itemBuilder: (context, index) => _buildArticleCard(context, state.items[index]),
@@ -127,17 +115,11 @@ class _ArticleListView extends StatelessWidget {
             ClipRRect(
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
               child: article.thumbnail.isNotEmpty
-                  ? Image.network(
-                      resolveMediaUrl(article.thumbnail) ?? '',
+                  ? AppNetworkImage(
+                      url: article.thumbnail,
                       width: 110,
                       height: 110,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 110,
-                        height: 110,
-                        color: AppColors.muted,
-                        child: const Icon(Icons.article, color: AppColors.mutedForeground),
-                      ),
+                      fallbackIcon: Icons.article,
                     )
                   : Container(
                       width: 110,
@@ -187,5 +169,19 @@ class _ArticleListView extends StatelessWidget {
     if (diff.inDays < 1) return 'Hari ini';
     if (diff.inDays < 7) return '${diff.inDays} hari lalu';
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+
+/// Skeleton shimmer untuk daftar artikel saat memuat.
+class _ArticleSkeletonList extends StatelessWidget {
+  const _ArticleSkeletonList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: List.generate(5, (_) => const AppSkeletonCard()),
+    );
   }
 }

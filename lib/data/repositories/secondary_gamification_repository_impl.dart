@@ -40,25 +40,6 @@ class SecondaryGamificationRepositoryImpl implements SecondaryGamificationReposi
   Future<void> leaveGuild(String guildId) => _remote.leaveGuild(guildId);
 
   @override
-  Future<StreakSocietyOverview> getStreakSocietyOverview() => _remote.getStreakSocietyOverview();
-
-  @override
-  Future<String> joinStreakSociety() => _remote.joinStreakSociety();
-
-  @override
-  Future<List<TimedChallengeTemplate>> getTimedChallengeTemplates() => _remote.getTimedChallengeTemplates();
-
-  @override
-  Future<UserTimedChallenge?> getActiveTimedChallenge() => _remote.getActiveTimedChallenge();
-
-  @override
-  Future<UserTimedChallenge> startTimedChallenge(int templateId) => _remote.startTimedChallenge(templateId);
-
-  @override
-  Future<UserTimedChallenge> completeTimedChallenge(String challengeId) =>
-      _remote.completeTimedChallenge(challengeId);
-
-  @override
   Future<XPBoost?> getActiveBoost() => _remote.getActiveBoost();
 
   @override
@@ -66,20 +47,4 @@ class SecondaryGamificationRepositoryImpl implements SecondaryGamificationReposi
 
   @override
   Future<double> getEffectiveMultiplier() => _remote.getEffectiveMultiplier();
-
-  @override
-  Future<List<FriendQuest>> getMyFriendQuests({String? status, int page = 1, int limit = 20}) =>
-      _remote.getMyFriendQuests(status: status, page: page, limit: limit);
-
-  @override
-  Future<void> acceptFriendQuest(String questId) => _remote.acceptFriendQuest(questId);
-
-  @override
-  Future<void> declineFriendQuest(String questId) => _remote.declineFriendQuest(questId);
-
-  @override
-  Future<LeagueOverview?> getLeagueOverview() => _remote.getLeagueOverview();
-
-  @override
-  Future<List<LeagueDivision>> getLeagueDivisions() => _remote.getLeagueDivisions();
 }

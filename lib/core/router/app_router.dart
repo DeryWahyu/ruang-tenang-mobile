@@ -40,76 +40,130 @@ import '../../presentation/article/screens/article_detail_screen.dart';
 
 import '../../presentation/gamification/screens/game_hub_screen.dart';
 import '../../presentation/gamification/screens/badge_screen.dart';
-import '../../presentation/gamification/screens/chest_screen.dart';
-import '../../presentation/gamification/screens/daily_spin_screen.dart';
 import '../../presentation/gamification/screens/daily_tasks_screen.dart';
 import '../../presentation/gamification/screens/exp_history_screen.dart';
 import '../../presentation/gamification/screens/leaderboard_screen.dart';
 import '../../presentation/gamification/screens/progress_map_screen.dart';
 import '../../presentation/gamification/screens/rewards_screen.dart';
 import '../../presentation/gamification/screens/guild_screen.dart';
-import '../../presentation/gamification/screens/streak_society_screen.dart';
-import '../../presentation/gamification/screens/timed_challenge_screen.dart';
 import '../../presentation/gamification/screens/xp_boost_screen.dart';
-import '../../presentation/gamification/screens/friend_quest_screen.dart';
-import '../../presentation/gamification/screens/weekly_league_screen.dart';
 import '../../presentation/billing/screens/premium_plans_screen.dart';
+import '../../presentation/billing/screens/billing_transactions_screen.dart';
 import '../../presentation/wellness/screens/wellness_onboarding_screen.dart';
 import '../../presentation/wellness/screens/wellness_plan_screen.dart';
 import '../../presentation/search/screens/global_search_screen.dart';
-import '../../presentation/explore/screens/explore_screen.dart';
+import '../../presentation/community/screens/community_stats_screen.dart';
+import '../../presentation/game/screens/mindful_runner_screen.dart';
 class AppRouter {
   AppRouter._();
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+  /// Rute autentikasi (publik, hanya untuk pengguna yang BELUM login).
+  /// Pengguna yang sudah login akan diarahkan keluar dari rute ini.
+  static const _authRoutes = <String>{
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+  };
+
+  /// Rute publik non-auth yang boleh diakses tanpa login (alur awal aplikasi).
+  static const _publicRoutes = <String>{
+    '/splash',
+    '/onboarding',
+  };
+
+  /// Menentukan apakah [location] adalah rute publik (boleh tanpa login).
+  ///
+  /// Pendekatan **secure-by-default**: hanya rute yang masuk allowlist publik
+  /// (`_publicRoutes` + `_authRoutes`) yang dianggap publik. Semua rute lain
+  /// otomatis dianggap privat sehingga fitur baru pada phase berikutnya
+  /// langsung terlindungi tanpa perlu didaftarkan manual.
+  static bool _isPublicLocation(String location) {
+    return _publicRoutes.contains(location) || _isAuthLocation(location);
+  }
+
+  /// Apakah [location] termasuk salah satu rute autentikasi.
+  static bool _isAuthLocation(String location) {
+    return _authRoutes.any((route) => location == route || location.startsWith('$route?'));
+  }
+
+  /// Apakah [location] dirender di dalam shell (MainLayout). Dipakai untuk
+  /// menentukan di mana mini-player musik global dipasang agar tidak dobel:
+  /// MainLayout menampilkannya untuk rute shell, `app.dart` untuk rute lain.
+  ///
+  /// Catatan: hanya `/journal/*` dan `/chat/*` yang punya anak di dalam shell.
+  /// `/music/playlist/...` dan `/profile/...` adalah rute yang di-`push` di
+  /// atas shell sehingga TIDAK memakai MainLayout — diperlakukan non-shell.
+  static bool isShellLocation(String location) {
+    if (location == '/home' || location == '/music' || location == '/profile') {
+      return true;
+    }
+    return location == '/journal' ||
+        location.startsWith('/journal/') ||
+        location == '/chat' ||
+        location.startsWith('/chat/');
+  }
+
+  /// Apakah mini-player musik global boleh tampil di [location].
+  /// Disembunyikan pada alur awal/auth (belum login).
+  static bool showsGlobalMiniPlayer(String location) {
+    return !_isPublicLocation(location);
+  }
+
+  /// Rute non-shell yang memiliki FAB sendiri. Dipakai agar FAB tugas harian
+  /// dinaikkan posisinya supaya tidak menumpuk dengan FAB milik layar.
+  static bool hasOwnFab(String location) {
+    return location == '/forum' || location.startsWith('/forum/');
+  }
+
+  /// Tujuan redirect ketika pengguna belum login mencoba membuka rute privat:
+  /// ke onboarding bila belum pernah dilihat, selain itu ke login.
+  static String _unauthenticatedRedirect() {
+    final hasSeenOnboarding =
+        sl<SharedPreferences>().getBool(StorageKeys.hasSeenOnboarding) ?? false;
+    return hasSeenOnboarding ? '/login' : '/onboarding';
+  }
+
   static GoRouter createRouter({required Listenable refreshListenable}) {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
       initialLocation: '/splash',
       refreshListenable: refreshListenable,
+      // Guard navigasi terpusat (secure-by-default).
+      //
+      // Aturan:
+      // 1. Selama status auth masih `initial`, tahan di splash sampai
+      //    pengecekan sesi selesai.
+      // 2. Splash mengarahkan ke /home (login) atau onboarding/login.
+      // 3. Pengguna login yang membuka rute auth dilempar ke /home.
+      // 4. Pengguna belum login yang membuka rute privat (apa pun yang
+      //    bukan rute publik) dilempar ke login/onboarding.
       redirect: (context, state) {
         final authState = sl<AuthBloc>().state;
         final loc = state.matchedLocation;
 
+        // (1) Tunggu hasil pengecekan sesi awal.
         if (authState.status == AuthStatus.initial) return '/splash';
 
         final isAuthenticated = authState.isAuthenticated;
 
+        // (2) Titik masuk: tentukan layar awal berdasarkan sesi & onboarding.
         if (loc == '/splash') {
-          if (isAuthenticated) return '/home';
-          final hasSeen = sl<SharedPreferences>().getBool(StorageKeys.hasSeenOnboarding) ?? false;
-          return hasSeen ? '/login' : '/onboarding';
+          return isAuthenticated ? '/home' : _unauthenticatedRedirect();
         }
 
-        if (loc == '/onboarding') {
-          if (isAuthenticated) return '/home';
-          return null;
+        // (3) Pengguna sudah login tidak perlu melihat onboarding/auth lagi.
+        if (isAuthenticated && (loc == '/onboarding' || _isAuthLocation(loc))) {
+          return '/home';
         }
 
-        final isPrivate = loc == '/home' ||
-            loc.startsWith('/journal') ||
-            loc == '/chat' ||
-            loc.startsWith('/music') ||
-            loc.startsWith('/profile') ||
-            loc.startsWith('/mood') ||
-            loc.startsWith('/breathing') ||
-            loc.startsWith('/forum') ||
-            loc.startsWith('/stories') ||
-            loc.startsWith('/articles');
-
-        final isAuthRoute = loc == '/login' ||
-            loc == '/register' ||
-            loc == '/forgot-password' ||
-            loc == '/reset-password';
-
-        if (isPrivate && !isAuthenticated) {
-          final hasSeen = sl<SharedPreferences>().getBool(StorageKeys.hasSeenOnboarding) ?? false;
-          return hasSeen ? '/login' : '/onboarding';
+        // (4) Pengguna belum login hanya boleh mengakses rute publik.
+        if (!isAuthenticated && !_isPublicLocation(loc)) {
+          return _unauthenticatedRedirect();
         }
-
-        if (isAuthRoute && isAuthenticated) return '/home';
 
         return null;
       },
@@ -217,14 +271,6 @@ class AppRouter {
               builder: (context, state) => const BadgeScreen(),
             ),
             GoRoute(
-              path: 'chests',
-              builder: (context, state) => const ChestScreen(),
-            ),
-            GoRoute(
-              path: 'spin',
-              builder: (context, state) => const DailySpinScreen(),
-            ),
-            GoRoute(
               path: 'daily-tasks',
               builder: (context, state) => const DailyTasksScreen(),
             ),
@@ -249,24 +295,8 @@ class AppRouter {
               builder: (context, state) => const GuildScreen(),
             ),
             GoRoute(
-              path: 'streak-society',
-              builder: (context, state) => const StreakSocietyScreen(),
-            ),
-            GoRoute(
-              path: 'timed-challenge',
-              builder: (context, state) => const TimedChallengeScreen(),
-            ),
-            GoRoute(
               path: 'xp-boost',
               builder: (context, state) => const XpBoostScreen(),
-            ),
-            GoRoute(
-              path: 'friend-quest',
-              builder: (context, state) => const FriendQuestScreen(),
-            ),
-            GoRoute(
-              path: 'weekly-league',
-              builder: (context, state) => const WeeklyLeagueScreen(),
             ),
           ],
         ),
@@ -279,6 +309,10 @@ class AppRouter {
         GoRoute(
           path: '/billing/premium',
           builder: (context, state) => const PremiumPlansScreen(),
+        ),
+        GoRoute(
+          path: '/billing/transactions',
+          builder: (context, state) => const BillingTransactionsScreen(),
         ),
         // Wellness
         GoRoute(
@@ -295,8 +329,12 @@ class AppRouter {
           builder: (context, state) => const GlobalSearchScreen(),
         ),
         GoRoute(
-          path: '/explore',
-          builder: (context, state) => const ExploreScreen(),
+          path: '/community',
+          builder: (context, state) => const CommunityStatsScreen(),
+        ),
+        GoRoute(
+          path: '/game',
+          builder: (context, state) => const MindfulRunnerScreen(),
         ),
         GoRoute(
           path: '/profile/edit',

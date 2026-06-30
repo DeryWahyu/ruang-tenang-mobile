@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/entities/mood.dart';
 import '../../../domain/usecases/mood/mood_usecases.dart';
 import 'mood_event.dart';
@@ -26,12 +26,10 @@ class MoodBloc extends Bloc<MoodEvent, MoodState> {
     try {
       final today = await _useCases.getToday();
       emit(state.copyWith(status: MoodStatus.todayLoaded, today: today));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: MoodStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: MoodStatus.failure,
-        errorMessage: 'Gagal memeriksa mood hari ini.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memeriksa mood hari ini.'),
       ));
     }
   }
@@ -69,12 +67,10 @@ class MoodBloc extends Bloc<MoodEvent, MoodState> {
       } catch (_) {
         // Background refresh is best-effort.
       }
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: MoodStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: MoodStatus.failure,
-        errorMessage: 'Gagal menyimpan mood. Silakan coba lagi.',
+        errorMessage: ErrorMessage.from(e, 'Gagal menyimpan mood. Silakan coba lagi.'),
       ));
     }
   }
@@ -90,12 +86,10 @@ class MoodBloc extends Bloc<MoodEvent, MoodState> {
         endDate: event.endDate,
       );
       emit(state.copyWith(status: MoodStatus.historyLoaded, history: history));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: MoodStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: MoodStatus.failure,
-        errorMessage: 'Gagal memuat riwayat mood.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat riwayat mood.'),
       ));
     }
   }
@@ -108,12 +102,10 @@ class MoodBloc extends Bloc<MoodEvent, MoodState> {
     try {
       final stats = await _useCases.getStats(days: event.days);
       emit(state.copyWith(status: MoodStatus.statsLoaded, stats: stats));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: MoodStatus.failure, errorMessage: e.message));
-    } catch (_) {
+    } catch (e) {
       emit(state.copyWith(
         status: MoodStatus.failure,
-        errorMessage: 'Gagal memuat statistik mood.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat statistik mood.'),
       ));
     }
   }

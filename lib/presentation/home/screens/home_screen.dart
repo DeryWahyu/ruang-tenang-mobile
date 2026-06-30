@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/gamification.dart';
 import '../../../domain/repositories/gamification_repository.dart';
+import '../../common/widgets/app_bottom_sheet.dart';
 import '../../common/widgets/level_badge.dart';
 import '../../auth/bloc/auth_bloc.dart';
 
@@ -23,7 +24,7 @@ class HomeScreen extends StatelessWidget {
           // Greeting header — scrolls naturally with the content.
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 16, 16, 8),
+              padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 12, 16, 8),
               child: Row(
                 children: [
                   Expanded(
@@ -31,7 +32,7 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Halo, $userName! ✨',
+                          'Halo, $userName!',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -43,7 +44,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         const Text(
-                          'Semoga harimu menyenangkan 🌿',
+                          'Semoga harimu menyenangkan',
                           style: TextStyle(color: AppColors.mutedForeground, fontSize: 13),
                         ),
                       ],
@@ -52,7 +53,16 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   _circleIconButton(Icons.search_rounded, () => context.push('/search')),
                   const SizedBox(width: 8),
-                  _circleIconButton(Icons.notifications_none_rounded, () {}),
+                  _circleIconButton(
+                    Icons.notifications_none_rounded,
+                    () {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          const SnackBar(content: Text('Notifikasi akan segera hadir')),
+                        );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -69,11 +79,11 @@ class HomeScreen extends StatelessWidget {
                   
                   // Wellness Banner (Primary Call to Action)
                   _buildWellnessBanner(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
                   // Gamification / XP Progress Mini
                   const _HomeXpCard(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
                   // Quick Actions Grid (Mood & Journal)
                   Row(
@@ -101,15 +111,15 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
                   // Breathing / Meditation Widget
                   _buildBreathingWidget(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
                   // Music / Relaxation Widget
                   _buildMusicWidget(context),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 12),
 
                   // Explore Section
                   Row(
@@ -120,12 +130,12 @@ class HomeScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.foreground),
                       ),
                       TextButton(
-                        onPressed: () => context.push('/explore'),
+                        onPressed: () => _showAllFeatures(context),
                         child: const Text('Lihat Semua', style: TextStyle(color: AppColors.primary)),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   
                   // Horizontal scroll for features
                   SizedBox(
@@ -180,7 +190,7 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: IconButton(
         icon: Icon(icon, color: AppColors.foreground),
@@ -189,17 +199,114 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// Daftar lengkap fitur aplikasi — ditampilkan dalam bottom sheet
+  /// "Lihat Semua" pada section Eksplorasi. Sebelumnya ini berada di
+  /// layar `/explore` terpisah; digabung ke Home agar navigasi lebih ringkas.
+  static const _allFeatures = <_HomeFeature>[
+    _HomeFeature('Konseling AI', 'Teman cerita virtual', Icons.auto_awesome, AppColors.primary, '/chat'),
+    _HomeFeature('Jurnal', 'Tulis & refleksi harian', Icons.auto_stories_rounded, Color(0xFF6366F1), '/journal'),
+    _HomeFeature('Mood Tracker', 'Pantau suasana hati', Icons.mood_rounded, Color(0xFFF59E0B), '/mood/stats'),
+    _HomeFeature('Pernapasan', 'Latihan menenangkan', Icons.air_rounded, Color(0xFF14B8A6), '/breathing'),
+    _HomeFeature('Musik Relaksasi', 'Dengarkan & rileks', Icons.headphones_rounded, Color(0xFF8B5CF6), '/music'),
+    _HomeFeature('Forum', 'Diskusi komunitas', Icons.forum_rounded, Color(0xFF7C3AED), '/forum'),
+    _HomeFeature('Cerita Inspiratif', 'Kisah dari pengguna', Icons.menu_book_rounded, Color(0xFFEC4899), '/stories'),
+    _HomeFeature('Artikel', 'Bacaan kesehatan mental', Icons.article_rounded, Color(0xFF0EA5E9), '/articles'),
+    _HomeFeature('Game Hub', 'XP, badge & tantangan', Icons.emoji_events_rounded, Color(0xFFF59E0B), '/gamification'),
+    _HomeFeature('Statistik Komunitas', 'Pencapaian komunitas', Icons.insights_rounded, Color(0xFF0EA5E9), '/community'),
+    _HomeFeature('Wellness Plan', 'Rencana harianmu', Icons.self_improvement_rounded, Color(0xFF22C55E), '/wellness/plan'),
+    _HomeFeature('Mini Game', 'Mindful Runner (offline)', Icons.videogame_asset_rounded, Color(0xFF7C3AED), '/game'),
+    _HomeFeature('Premium', 'Buka fitur eksklusif', Icons.workspace_premium_rounded, Color(0xFFD97706), '/billing/premium'),
+  ];
+
+  /// Membuka bottom sheet berisi grid seluruh fitur aplikasi.
+  void _showAllFeatures(BuildContext context) {
+    AppBottomSheet.show(
+      context,
+      title: 'Jelajahi Fitur',
+      maxHeight: MediaQuery.of(context).size.height * 0.8,
+      child: GridView.builder(
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
+          childAspectRatio: 1.05,
+        ),
+        itemCount: _allFeatures.length,
+        itemBuilder: (context, index) {
+          final f = _allFeatures[index];
+          return _buildExploreCard(context, f);
+        },
+      ),
+    );
+  }
+
+  /// Kartu fitur di dalam bottom sheet "Jelajahi Fitur".
+  Widget _buildExploreCard(BuildContext context, _HomeFeature f) {
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () {
+          Navigator.of(context).pop(); // tutup sheet sebelum berpindah
+          context.push(f.route);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [f.color, f.color.withValues(alpha: 0.65)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [BoxShadow(color: f.color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                ),
+                child: Icon(f.icon, color: Colors.white, size: 26),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(f.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 2),
+                  Text(f.subtitle,
+                      style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildWellnessBanner(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Material(
@@ -217,20 +324,20 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
                         child: const Text('Rencana Harian', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 12),
                       const Text('Wellness Plan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24, letterSpacing: -0.5)),
                       const SizedBox(height: 6),
-                      Text('Selesaikan misimu hari ini untuk menjaga kesehatan mental.', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13, height: 1.4)),
+                      Text('Selesaikan misimu hari ini untuk menjaga kesehatan mental.', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, height: 1.4)),
                     ],
                   ),
                 ),
                 const SizedBox(width: 20),
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
                   child: const Icon(Icons.self_improvement_rounded, color: Colors.white, size: 40),
                 ),
               ],
@@ -246,8 +353,8 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -261,10 +368,10 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
                 Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
@@ -281,7 +388,7 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4), // Sangat soft teal/green
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.teal.withOpacity(0.2)),
+        border: Border.all(color: Colors.teal.withValues(alpha: 0.2)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -294,7 +401,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.teal.withOpacity(0.15), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.teal.withValues(alpha: 0.15), shape: BoxShape.circle),
                   child: const Icon(Icons.air_rounded, color: Colors.teal, size: 32),
                 ),
                 const SizedBox(width: 16),
@@ -321,8 +428,8 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -339,7 +446,7 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                         child: const Text('Audio Relaksasi', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 12),
@@ -354,7 +461,7 @@ class HomeScreen extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Center(
@@ -375,8 +482,8 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -391,7 +498,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 24),
                 ),
                 Column(
@@ -461,8 +568,8 @@ class _HomeXpCardState extends State<_HomeXpCard> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -475,7 +582,7 @@ class _HomeXpCardState extends State<_HomeXpCard> {
                 width: 48,
                 height: 48,
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.15), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.15), shape: BoxShape.circle),
                 child: LevelBadge(icon: badgeIcon, size: 36),
               ),
               const SizedBox(width: 16),
@@ -505,7 +612,7 @@ class _HomeXpCardState extends State<_HomeXpCard> {
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: progress,
-                        backgroundColor: Colors.amber.withOpacity(0.2),
+                        backgroundColor: Colors.amber.withValues(alpha: 0.2),
                         color: Colors.amber.shade600,
                         minHeight: 6,
                       ),
@@ -532,3 +639,13 @@ class _HomeXpCardState extends State<_HomeXpCard> {
 /// A soft, modern gradient backdrop is now provided globally via
 /// `GradientBackground` (see app.dart builder), so the home screen no longer
 /// needs its own backdrop widget.
+
+/// Data satu kartu fitur pada bottom sheet "Jelajahi Fitur".
+class _HomeFeature {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final String route;
+  const _HomeFeature(this.title, this.subtitle, this.icon, this.color, this.route);
+}

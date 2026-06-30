@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/repositories/auth_repository.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -57,15 +58,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _snack(msg, AppColors.success);
       context.pop();
     } catch (e) {
-      _snack(_err(e), AppColors.destructive);
+      _snack(ErrorMessage.from(e, 'Gagal mengubah password'), AppColors.destructive);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
-  }
-
-  String _err(Object e) {
-    final s = e.toString().replaceFirst('Exception: ', '');
-    return s.isEmpty ? 'Gagal mengubah password' : s;
   }
 
   void _snack(String msg, Color color) {
@@ -91,7 +87,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -100,7 +96,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text('Gunakan password yang kuat & mudah kamu ingat (min. 8 karakter).',
-                      style: TextStyle(color: AppColors.foreground.withOpacity(0.8), fontSize: 13)),
+                      style: TextStyle(color: AppColors.foreground.withValues(alpha: 0.8), fontSize: 13)),
                 ),
               ],
             ),
@@ -154,7 +150,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             filled: true,
             fillColor: AppColors.card,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border.withOpacity(0.6))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.6))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
           ),
         ),

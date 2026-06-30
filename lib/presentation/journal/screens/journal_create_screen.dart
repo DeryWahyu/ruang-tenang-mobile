@@ -221,9 +221,9 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                         controller: _tagsController,
                         decoration: InputDecoration(
                           hintText: 'Tambah tag (pisahkan dengan koma)',
-                          hintStyle: TextStyle(color: AppColors.mutedForeground.withOpacity(0.5), fontSize: 13),
+                          hintStyle: TextStyle(color: AppColors.mutedForeground.withValues(alpha: 0.5), fontSize: 13),
                           border: InputBorder.none,
-                          icon: Icon(Icons.sell_rounded, size: 18, color: AppColors.mutedForeground.withOpacity(0.5)),
+                          icon: Icon(Icons.sell_rounded, size: 18, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
                         ),
                         style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
                       ),
@@ -303,7 +303,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                     ),
                     Switch.adaptive(
                       value: !_isPrivate,
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       onChanged: (makePublic) {
                         setState(() => _isPrivate = !makePublic);
                       },
@@ -328,7 +328,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                         decoration: InputDecoration(
                           hintText: 'Judul Jurnal...',
                           hintStyle: TextStyle(
-                            color: AppColors.mutedForeground.withOpacity(0.5),
+                            color: AppColors.mutedForeground.withValues(alpha: 0.5),
                             fontWeight: FontWeight.bold,
                           ),
                           border: InputBorder.none,
@@ -346,7 +346,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                         decoration: InputDecoration(
                           hintText: 'Apa yang sedang Anda pikirkan atau rasakan hari ini?',
                           hintStyle: TextStyle(
-                            color: AppColors.mutedForeground.withOpacity(0.6),
+                            color: AppColors.mutedForeground.withValues(alpha: 0.6),
                             height: 1.8,
                           ),
                           border: InputBorder.none,

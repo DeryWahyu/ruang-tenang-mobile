@@ -118,8 +118,14 @@ class _DailyTasksView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('🔥 Login Streak: ${s.loginStreak} hari',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 6),
+              Text('Login Streak: ${s.loginStreak} hari',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
           const SizedBox(height: 14),
           Text('${s.completedTasks}/${s.totalTasks} tugas selesai',
               style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
@@ -137,8 +143,19 @@ class _DailyTasksView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text('⭐ ${s.totalXpEarned}/${s.totalXpPossible} XP    🪙 ${s.totalCoinsEarned}/${s.totalCoinsPossible} koin',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+          Row(
+            children: [
+              const Icon(Icons.star_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: 4),
+              Text('${s.totalXpEarned}/${s.totalXpPossible} XP',
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 16),
+              const Icon(Icons.monetization_on_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: 4),
+              Text('${s.totalCoinsEarned}/${s.totalCoinsPossible} koin',
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          ),
         ],
       ),
     );
@@ -152,7 +169,7 @@ class _DailyTasksView extends StatelessWidget {
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: task.isClaimed ? AppColors.success.withOpacity(0.4) : AppColors.border.withOpacity(0.5),
+          color: task.isClaimed ? AppColors.success.withValues(alpha: 0.4) : AppColors.border.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -173,11 +190,21 @@ class _DailyTasksView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  task.premiumOnly ? '${task.taskName}  ⭐' : task.taskName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        task.taskName,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (task.premiumOnly) ...[
+                      const SizedBox(width: 6),
+                      Icon(Icons.workspace_premium_rounded, size: 15, color: Colors.amber.shade700),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

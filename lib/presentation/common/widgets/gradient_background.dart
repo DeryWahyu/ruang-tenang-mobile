@@ -43,7 +43,7 @@ class GradientBackground extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withOpacity(opacity), color.withOpacity(0)],
+            colors: [color.withValues(alpha: opacity), color.withValues(alpha: 0)],
           ),
         ),
       ),

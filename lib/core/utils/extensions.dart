@@ -33,6 +33,35 @@ extension BuildContextExtension on BuildContext {
   bool get isMediumScreen => screenWidth >= 375 && screenWidth < 768;
   bool get isLargeScreen => screenWidth >= 768;
 
+  /// Lebar terpendek perangkat (tetap sama saat orientasi berubah) — patokan
+  /// terbaik membedakan ponsel vs tablet.
+  double get shortestSide => MediaQuery.sizeOf(this).shortestSide;
+
+  /// Tablet bila sisi terpendek >= 600dp (konvensi Material).
+  bool get isTablet => shortestSide >= 600;
+
+  /// Apakah perangkat sedang dalam orientasi lanskap.
+  bool get isLandscape => MediaQuery.orientationOf(this) == Orientation.landscape;
+
+  /// Jumlah kolom grid adaptif berdasarkan lebar layar yang tersedia.
+  ///
+  /// Memilih kolom berdasarkan estimasi lebar minimum tiap item
+  /// ([minItemWidth]) dan dibatasi [min]..[max]. Cocok untuk membuat grid
+  /// nyaman di HP kecil (1–2 kolom), HP standar (2), hingga tablet/lanskap
+  /// (3–4 kolom) tanpa menulis breakpoint manual di tiap layar.
+  int gridColumns({double minItemWidth = 180, int min = 2, int max = 4}) {
+    final columns = (screenWidth / minItemWidth).floor();
+    return columns.clamp(min, max);
+  }
+
+  /// Pilih nilai berbeda menurut kelas ukuran layar. [tablet]/[large] opsional;
+  /// bila null akan jatuh ke nilai sebelumnya.
+  T responsiveValue<T>({required T mobile, T? tablet, T? large}) {
+    if (isLargeScreen && large != null) return large;
+    if (isTablet && tablet != null) return tablet;
+    return mobile;
+  }
+
   void showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(this).hideCurrentSnackBar();
     ScaffoldMessenger.of(this).showSnackBar(

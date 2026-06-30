@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/config/app_environment.dart';
+import '../../common/widgets/app_network_image.dart';
 import '../../../domain/entities/story.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../bloc/story_bloc.dart';
 import '../bloc/story_event.dart';
 import '../bloc/story_state.dart';
@@ -60,7 +61,10 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
           body: state.status == StoryStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())
               : state.status == StoryStatus.failure
-                  ? Center(child: Text(state.errorMessage))
+                  ? AppErrorWidget(
+                      message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat cerita',
+                      onRetry: () => context.read<StoryBloc>().add(StoryDetailRequested(widget.id)),
+                    )
                   : story == null
                       ? const Center(child: Text('Cerita tidak ditemukan'))
                       : Column(
@@ -72,19 +76,14 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     if (story.coverImage.isNotEmpty)
-                                      ClipRRect(
+                                      AppNetworkImage(
+                                        url: story.coverImage,
+                                        width: double.infinity,
+                                        height: 200,
                                         borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          story.coverImage.startsWith('http') ? story.coverImage : '${AppEnvironment.baseUrl}/${story.coverImage}',
-                                          width: double.infinity,
-                                          height: 200,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Container(
-                                            height: 200,
-                                            decoration: BoxDecoration(color: AppColors.storyFrom, borderRadius: BorderRadius.circular(12)),
-                                            child: const Center(child: Icon(Icons.image, size: 40, color: AppColors.storyIcon)),
-                                          ),
-                                        ),
+                                        backgroundColor: AppColors.storyFrom,
+                                        fallbackIcon: Icons.image,
+                                        fallbackColor: AppColors.storyIcon,
                                       ),
                                     const SizedBox(height: 16),
                                     if (story.hasTriggerWarning) ...[

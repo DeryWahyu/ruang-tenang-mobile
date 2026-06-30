@@ -213,12 +213,12 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
           children: [
             Container(
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(color: _phaseColor(_Phase.inhale).withOpacity(0.15), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: _phaseColor(_Phase.inhale).withValues(alpha: 0.15), shape: BoxShape.circle),
               child: Icon(completed ? Icons.celebration_rounded : Icons.spa_rounded,
                   color: _phaseColor(_Phase.inhale), size: 44),
             ),
             const SizedBox(height: 16),
-            Text(completed ? 'Sesi Selesai! 🎉' : 'Kerja Bagus',
+            Text(completed ? 'Sesi Selesai!' : 'Kerja Bagus',
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(
@@ -340,7 +340,7 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
   Widget _statPill(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border.withOpacity(0.5))),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border.withValues(alpha: 0.5))),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 15, color: AppColors.mutedForeground),
         const SizedBox(width: 6),
@@ -367,7 +367,7 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
               Container(
                 width: maxD + 36,
                 height: maxD + 36,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.06)),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.06)),
               ),
               // Breathing orb
               AnimatedContainer(
@@ -377,10 +377,10 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    colors: [color.withOpacity(0.85), color.withOpacity(0.35)],
+                    colors: [color.withValues(alpha: 0.85), color.withValues(alpha: 0.35)],
                   ),
                   boxShadow: [
-                    BoxShadow(color: color.withOpacity(0.35 + 0.25 * t), blurRadius: 30 + 20 * t, spreadRadius: 2),
+                    BoxShadow(color: color.withValues(alpha: 0.35 + 0.25 * t), blurRadius: 30 + 20 * t, spreadRadius: 2),
                   ],
                 ),
                 alignment: Alignment.center,

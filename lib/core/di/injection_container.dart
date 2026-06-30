@@ -20,6 +20,10 @@ import '../../data/repositories/secondary_gamification_repository_impl.dart';
 import '../../presentation/gamification/bloc/gamification_bloc.dart';
 import '../../presentation/gamification/cubit/secondary_cubits.dart';
 import '../../presentation/billing/bloc/billing_bloc.dart';
+import '../../data/datasources/remote/community_remote_datasource.dart';
+import '../../domain/repositories/community_repository.dart';
+import '../../data/repositories/community_repository_impl.dart';
+import '../../presentation/community/cubit/community_cubit.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -308,7 +312,7 @@ Future<void> initDependencies() async {
     () => BillingBloc(repository: sl<BillingRepository>()),
   );
 
-  // === Secondary Gamification (Guild, Streak Society, Timed Challenge, XP Boost, Friend Quest, Weekly League) ===
+  // === Secondary Gamification (Guild, XP Boost) ===
   sl.registerLazySingleton<SecondaryGamificationRemoteDataSource>(
     () => SecondaryGamificationRemoteDataSource(sl<ApiClient>()),
   );
@@ -316,11 +320,16 @@ Future<void> initDependencies() async {
     () => SecondaryGamificationRepositoryImpl(remote: sl<SecondaryGamificationRemoteDataSource>()),
   );
   sl.registerFactory<GuildCubit>(() => GuildCubit(sl<SecondaryGamificationRepository>()));
-  sl.registerFactory<StreakSocietyCubit>(() => StreakSocietyCubit(sl<SecondaryGamificationRepository>()));
-  sl.registerFactory<TimedChallengeCubit>(() => TimedChallengeCubit(sl<SecondaryGamificationRepository>()));
   sl.registerFactory<XpBoostCubit>(() => XpBoostCubit(sl<SecondaryGamificationRepository>()));
-  sl.registerFactory<FriendQuestCubit>(() => FriendQuestCubit(sl<SecondaryGamificationRepository>()));
-  sl.registerFactory<WeeklyLeagueCubit>(() => WeeklyLeagueCubit(sl<SecondaryGamificationRepository>()));
+
+  // === Community (Statistik Komunitas) ===
+  sl.registerLazySingleton<CommunityRemoteDataSource>(
+    () => CommunityRemoteDataSource(sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<CommunityRepository>(
+    () => CommunityRepositoryImpl(remote: sl<CommunityRemoteDataSource>()),
+  );
+  sl.registerFactory<CommunityCubit>(() => CommunityCubit(sl<CommunityRepository>()));
 
   // === Phase 4: Polish & Advanced ===
   // Remote Data Sources

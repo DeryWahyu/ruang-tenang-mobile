@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/config/app_environment.dart';
+import '../../common/widgets/app_network_image.dart';
+import '../../common/widgets/app_skeleton.dart';
+import '../../common/widgets/app_empty_state.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../../../domain/entities/story.dart';
 import '../bloc/story_bloc.dart';
 import '../bloc/story_event.dart';
@@ -36,42 +39,30 @@ class _StoryListView extends StatelessWidget {
       body: BlocBuilder<StoryBloc, StoryState>(
         builder: (context, state) {
           if (state.status == StoryStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: List.generate(4, (_) => const AppSkeletonCard()),
+            );
           }
           if (state.status == StoryStatus.failure) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.mutedForeground),
-                  const SizedBox(height: 16),
-                  Text(state.errorMessage, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<StoryBloc>().add(const StoryListRequested(refresh: true)),
-                    child: const Text('Coba Lagi'),
-                  ),
-                ],
-              ),
+            return AppErrorWidget(
+              message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat cerita',
+              onRetry: () => context.read<StoryBloc>().add(const StoryListRequested(refresh: true)),
             );
           }
 
           if (state.stories.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.auto_stories_outlined, size: 64, color: AppColors.storyIcon.withOpacity(0.5)),
-                  const SizedBox(height: 16),
-                  const Text('Belum ada cerita', style: TextStyle(color: AppColors.mutedForeground)),
-                ],
-              ),
+            return const AppEmptyState(
+              icon: Icons.auto_stories_outlined,
+              title: 'Belum Ada Cerita',
+              subtitle: 'Kisah inspiratif dari komunitas akan muncul di sini.',
             );
           }
 
           return RefreshIndicator(
             onRefresh: () async => context.read<StoryBloc>().add(const StoryListRequested(refresh: true)),
             child: ListView.builder(
+              cacheExtent: 600,
               padding: const EdgeInsets.all(16),
               itemCount: state.stories.length,
               itemBuilder: (context, index) => _buildStoryCard(context, state.stories[index]),
@@ -96,13 +87,12 @@ class _StoryListView extends StatelessWidget {
             if (story.coverImage.isNotEmpty)
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  story.coverImage.startsWith('http') ? story.coverImage : '${AppEnvironment.baseUrl}/${story.coverImage}',
+                child: AppNetworkImage(
+                  url: story.coverImage,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: AppColors.storyFrom,
-                    child: const Center(child: Icon(Icons.image, size: 40, color: AppColors.storyIcon)),
-                  ),
+                  backgroundColor: AppColors.storyFrom,
+                  fallbackIcon: Icons.image,
+                  fallbackColor: AppColors.storyIcon,
                 ),
               )
             else
@@ -124,7 +114,14 @@ class _StoryListView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(color: AppColors.warningLight, borderRadius: BorderRadius.circular(4)),
-                        child: const Text('⭐ Featured', style: TextStyle(fontSize: 11, color: AppColors.storyHeading, fontWeight: FontWeight.w600)),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.star_rounded, size: 13, color: AppColors.storyHeading),
+                            SizedBox(width: 3),
+                            Text('Featured', style: TextStyle(fontSize: 11, color: AppColors.storyHeading, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       ),
                     ),
                   Text(story.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),

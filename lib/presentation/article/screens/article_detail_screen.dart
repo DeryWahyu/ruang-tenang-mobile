@@ -4,7 +4,8 @@ import 'package:flutter_html/flutter_html.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/helpers.dart';
-import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_network_image.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../bloc/article_bloc.dart';
 import '../bloc/article_event.dart';
 import '../bloc/article_state.dart';
@@ -17,13 +18,14 @@ class ArticleDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<ArticleBloc>()..add(ArticleDetailRequested(slug)),
-      child: const _ArticleDetailView(),
+      child: _ArticleDetailView(slug: slug),
     );
   }
 }
 
 class _ArticleDetailView extends StatelessWidget {
-  const _ArticleDetailView();
+  final String slug;
+  const _ArticleDetailView({required this.slug});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,10 @@ class _ArticleDetailView extends StatelessWidget {
           body: state.status == ArticleStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())
               : state.status == ArticleStatus.failure
-                  ? Center(child: Text(state.errorMessage))
+                  ? AppErrorWidget(
+                      message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat artikel',
+                      onRetry: () => context.read<ArticleBloc>().add(ArticleDetailRequested(slug)),
+                    )
                   : article == null
                       ? const Center(child: Text('Artikel tidak ditemukan'))
                       : SingleChildScrollView(
@@ -47,16 +52,11 @@ class _ArticleDetailView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (article.thumbnail.isNotEmpty)
-                                Image.network(
-                                  resolveMediaUrl(article.thumbnail) ?? '',
+                                AppNetworkImage(
+                                  url: article.thumbnail,
                                   width: double.infinity,
                                   height: 220,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    height: 220,
-                                    color: AppColors.muted,
-                                    child: const Center(child: Icon(Icons.article, size: 48, color: AppColors.mutedForeground)),
-                                  ),
+                                  fallbackIcon: Icons.article,
                                 ),
                               Padding(
                                 padding: const EdgeInsets.all(20),

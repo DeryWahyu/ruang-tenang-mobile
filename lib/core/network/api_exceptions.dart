@@ -16,27 +16,27 @@ class ApiException implements Exception {
 }
 
 class UnauthorizedException extends ApiException {
-  const UnauthorizedException({String message = 'Sesi telah berakhir, silakan login kembali'})
-      : super(message: message, statusCode: 401);
+  const UnauthorizedException({super.message = 'Sesi telah berakhir, silakan login kembali'})
+      : super(statusCode: 401);
 }
 
 class ForbiddenException extends ApiException {
-  const ForbiddenException({String message = 'Anda tidak memiliki akses'})
-      : super(message: message, statusCode: 403);
+  const ForbiddenException({super.message = 'Anda tidak memiliki akses'})
+      : super(statusCode: 403);
 }
 
 class NotFoundException extends ApiException {
-  const NotFoundException({String message = 'Data tidak ditemukan'})
-      : super(message: message, statusCode: 404);
+  const NotFoundException({super.message = 'Data tidak ditemukan'})
+      : super(statusCode: 404);
 }
 
 class ValidationException extends ApiException {
   final List<ValidationError> errors;
 
   const ValidationException({
-    String message = 'Validasi gagal',
+    super.message = 'Validasi gagal',
     this.errors = const [],
-  }) : super(message: message, statusCode: 422, code: 'ERR_VALIDATION');
+  }) : super(statusCode: 422, code: 'ERR_VALIDATION');
 }
 
 class ValidationError {
@@ -54,21 +54,21 @@ class ValidationError {
 }
 
 class RateLimitException extends ApiException {
-  const RateLimitException({String message = 'Terlalu banyak permintaan, coba lagi nanti'})
-      : super(message: message, statusCode: 429);
+  const RateLimitException({super.message = 'Terlalu banyak permintaan, coba lagi nanti'})
+      : super(statusCode: 429);
 }
 
 class ServerException extends ApiException {
-  const ServerException({String message = 'Terjadi kesalahan pada server'})
-      : super(message: message, statusCode: 500);
+  const ServerException({super.message = 'Terjadi kesalahan pada server'})
+      : super(statusCode: 500);
 }
 
 class NetworkException extends ApiException {
-  const NetworkException({String message = 'Tidak ada koneksi internet'})
-      : super(message: message, statusCode: null);
+  const NetworkException({super.message = 'Tidak ada koneksi internet'})
+      : super(statusCode: null);
 }
 
 class TimeoutException extends ApiException {
-  const TimeoutException({String message = 'Koneksi timeout, coba lagi'})
-      : super(message: message, statusCode: null);
+  const TimeoutException({super.message = 'Koneksi timeout, coba lagi'})
+      : super(statusCode: null);
 }

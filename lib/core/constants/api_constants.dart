@@ -82,14 +82,8 @@ class ApiConstants {
   static const String levelConfigs = '/level-configs';
   static const String expHistory = '/exp-history';
   static const String rewards = '/rewards';
-  static const String chests = '/chests';
-  static const String dailySpin = '/daily-spin';
-  static const String streakSociety = '/streak-society';
-  static const String challenges = '/challenges';
   static const String xpBoost = '/xp-boost';
   static const String combo = '/combo';
-  static const String friendQuests = '/friend-quests';
-  static const String leagues = '/leagues';
   static const String community = '/community';
 
   // Billing

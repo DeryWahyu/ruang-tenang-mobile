@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/story.dart';
 
 class StoryCategoryModel extends Equatable {
@@ -143,8 +144,8 @@ class StoryModel extends Equatable {
           [],
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       hasHearted: json['has_hearted'] as bool? ?? false,
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
-      publishedAt: _parseDate(json['published_at']),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
+      publishedAt: Json.date(json['published_at']),
     );
   }
 
@@ -242,7 +243,7 @@ class StoryCardModel extends Equatable {
               ?.map((e) => StoryCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
               .toList() ??
           [],
-      publishedAt: _parseDate(json['published_at']),
+      publishedAt: Json.date(json['published_at']),
     );
   }
 
@@ -280,15 +281,6 @@ class StoryCardModel extends Equatable {
       ];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}
 
 
 class StoryCommentModel extends Equatable {
@@ -320,7 +312,7 @@ class StoryCommentModel extends Equatable {
           : null,
       hasHearted: json['has_hearted'] as bool? ?? false,
       isHidden: json['is_hidden'] as bool? ?? false,
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
     );
   }
 

@@ -20,7 +20,7 @@ class ForumRemoteDataSource {
         'page': page,
         'limit': limit,
         if (search != null && search.isNotEmpty) 'search': search,
-        if (categoryId != null) 'category_id': categoryId,
+        'category_id': ?categoryId,
       },
       fromJson: (json) => ForumThreadModel.fromJson(json),
     );
@@ -58,7 +58,7 @@ class ForumRemoteDataSource {
       data: {
         'title': title,
         'content': content,
-        if (categoryId != null) 'category_id': categoryId,
+        'category_id': ?categoryId,
       },
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );

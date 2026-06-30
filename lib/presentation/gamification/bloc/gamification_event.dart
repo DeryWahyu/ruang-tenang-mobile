@@ -29,25 +29,6 @@ class GamificationBadgesRequested extends GamificationEvent {
   const GamificationBadgesRequested();
 }
 
-class GamificationChestsRequested extends GamificationEvent {
-  const GamificationChestsRequested();
-}
-
-class GamificationChestOpened extends GamificationEvent {
-  final String chestId;
-  const GamificationChestOpened(this.chestId);
-  @override
-  List<Object?> get props => [chestId];
-}
-
-class GamificationSpinWheelRequested extends GamificationEvent {
-  const GamificationSpinWheelRequested();
-}
-
-class GamificationSpinRequested extends GamificationEvent {
-  const GamificationSpinRequested();
-}
-
 // ===== Daily Tasks =====
 class GamificationDailyTasksRequested extends GamificationEvent {
   /// When true, processes the daily login (marks login task & updates streak)

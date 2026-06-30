@@ -9,7 +9,7 @@ class WellnessRemoteDataSource {
 
   Future<WellnessOnboardingResultModel> getOnboarding() async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConstants.wellness + '/onboarding',
+      '${ApiConstants.wellness}/onboarding',
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success || response.data == null) {
@@ -20,7 +20,7 @@ class WellnessRemoteDataSource {
 
   Future<WellnessOnboardingResultModel> completeOnboarding(String initialMood, List<String> goals, List<String> habits) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
-      ApiConstants.wellness + '/onboarding',
+      '${ApiConstants.wellness}/onboarding',
       data: {
         'initial_mood': initialMood,
         'goals': goals,
@@ -36,7 +36,7 @@ class WellnessRemoteDataSource {
 
   Future<WellnessPlanModel> getCurrentPlan() async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConstants.wellness + '/plan/current',
+      '${ApiConstants.wellness}/plan/current',
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success || response.data == null) {
@@ -47,7 +47,7 @@ class WellnessRemoteDataSource {
 
   Future<void> completePlanItem(String itemId) async {
     final response = await _apiClient.patch<dynamic>(
-      ApiConstants.wellness + '/plan/items/$itemId/complete',
+      '${ApiConstants.wellness}/plan/items/$itemId/complete',
     );
     if (!response.success) {
       throw Exception(response.error ?? 'Gagal menyelesaikan tugas plan');

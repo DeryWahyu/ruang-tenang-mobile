@@ -6,6 +6,43 @@ enum AppButtonVariant { primary, secondary, outline, ghost, destructive, text }
 
 enum AppButtonSize { sm, md, lg }
 
+/// Wrapper yang memberi umpan balik "scale" halus saat tombol ditekan.
+///
+/// Dipakai membungkus seluruh varian [AppButton] agar micro-interaction-nya
+/// konsisten di seluruh aplikasi (selaras rasa "tactile" tombol di web).
+class _PressableScale extends StatefulWidget {
+  final Widget child;
+  final bool enabled;
+  const _PressableScale({required this.child, required this.enabled});
+
+  @override
+  State<_PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<_PressableScale> {
+  bool _pressed = false;
+
+  void _set(bool v) {
+    if (!widget.enabled) return;
+    if (_pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _set(true),
+      onPointerUp: (_) => _set(false),
+      onPointerCancel: (_) => _set(false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class AppButton extends StatelessWidget {
   final String? label;
   final VoidCallback? onPressed;
@@ -238,17 +275,23 @@ class AppButton extends StatelessWidget {
     );
 
     if (variant == AppButtonVariant.text) {
-      return TextButton(
-        onPressed: isLoading ? null : onPressed,
-        style: style,
-        child: buttonChild,
+      return _PressableScale(
+        enabled: !isLoading && onPressed != null,
+        child: TextButton(
+          onPressed: isLoading ? null : onPressed,
+          style: style,
+          child: buttonChild,
+        ),
       );
     }
 
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: style,
-      child: buttonChild,
+    return _PressableScale(
+      enabled: !isLoading && onPressed != null,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: style,
+        child: buttonChild,
+      ),
     );
   }
 

@@ -5,6 +5,7 @@ import '../../../core/constants/storage_keys.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../common/widgets/app_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -21,32 +22,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _slides = [
     _OnboardingSlide(
       icon: Icons.chat_bubble_rounded,
-      iconColor: AppColors.primary,
-      iconBgColor: AppColors.red50,
+      gradient: [Color(0xFFFB7185), Color(0xFFEF4444)],
       title: 'Curhat dengan AI',
       description:
           'Ceritakan perasaanmu kapan saja kepada AI yang penuh empati. '
           'Privasi terjaga, tanpa penghakiman.',
     ),
     _OnboardingSlide(
-      icon: Icons.book_rounded,
-      iconColor: AppColors.accentOrangeDark,
-      iconBgColor: AppColors.accentOrangeLight,
+      icon: Icons.menu_book_rounded,
+      gradient: [Color(0xFFFB923C), Color(0xFFF59E0B)],
       title: 'Tulis Jurnal & Lacak Mood',
       description:
           'Ekspresikan pikiranmu lewat jurnal harian dan pantau '
           'perubahan suasana hatimu dari waktu ke waktu.',
     ),
     _OnboardingSlide(
-      icon: Icons.people_rounded,
-      iconColor: AppColors.info,
-      iconBgColor: AppColors.infoLight,
+      icon: Icons.groups_rounded,
+      gradient: [Color(0xFFF87171), Color(0xFFDC2626)],
       title: 'Bergabung dengan Komunitas',
       description:
           'Temukan dukungan dari sesama, berbagi cerita inspiratif, '
           'dan tumbuh bersama di komunitas yang aman.',
     ),
   ];
+
+  bool get _isLastPage => _currentPage == _slides.length - 1;
 
   @override
   void dispose() {
@@ -57,15 +57,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final prefs = sl<SharedPreferences>();
     await prefs.setBool(StorageKeys.hasSeenOnboarding, true);
-    if (mounted) {
-      context.go('/login');
-    }
+    if (mounted) context.go('/login');
   }
 
   void _nextPage() {
-    if (_currentPage < _slides.length - 1) {
+    if (!_isLastPage) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
     } else {
@@ -80,55 +78,53 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
+            // Tombol "Lewati" — disembunyikan di slide terakhir.
             Align(
               alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  top: AppDimensions.spacingBase,
-                  right: AppDimensions.spacingSm,
-                ),
-                child: TextButton(
-                  onPressed: _completeOnboarding,
-                  child: Text(
-                    'Lewati',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.mutedForeground,
-                          fontWeight: FontWeight.w500,
-                        ),
+              child: AnimatedOpacity(
+                opacity: _isLastPage ? 0 : 1,
+                duration: const Duration(milliseconds: 250),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: AppDimensions.spacingBase,
+                    right: AppDimensions.spacingSm,
+                  ),
+                  child: TextButton(
+                    onPressed: _isLastPage ? null : _completeOnboarding,
+                    child: Text(
+                      'Lewati',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.mutedForeground,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
                   ),
                 ),
               ),
             ),
 
-            // Page view
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: _slides.length,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                },
-                itemBuilder: (context, index) {
-                  final slide = _slides[index];
-                  return _buildSlide(context, slide);
-                },
-              ),
-            ),
-
-            // Dot indicator
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.spacingXl),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _slides.length,
-                  (index) => _buildDot(index),
+                onPageChanged: (index) => setState(() => _currentPage = index),
+                itemBuilder: (context, index) => _OnboardingSlideView(
+                  slide: _slides[index],
+                  isActive: index == _currentPage,
                 ),
               ),
             ),
 
-            // Bottom button
+            // Indikator titik dengan animasi lebar.
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.spacingXl),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_slides.length, _buildDot),
+              ),
+            ),
+
+            // Tombol aksi utama (scale-on-press dari AppButton).
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppDimensions.spacingXl,
@@ -137,12 +133,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 AppDimensions.spacing2xl,
               ),
               child: AppButton.primary(
-                label: _currentPage == _slides.length - 1
-                    ? 'Mulai Sekarang'
-                    : 'Selanjutnya',
-                suffixIcon: _currentPage == _slides.length - 1
-                    ? Icons.arrow_forward_rounded
-                    : Icons.arrow_forward_rounded,
+                label: _isLastPage ? 'Mulai Sekarang' : 'Selanjutnya',
+                suffixIcon: Icons.arrow_forward_rounded,
                 onPressed: _nextPage,
               ),
             ),
@@ -152,60 +144,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildSlide(BuildContext context, _OnboardingSlide slide) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spacing2xl,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon container
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: slide.iconBgColor,
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: Icon(
-              slide.icon,
-              size: 60,
-              color: slide.iconColor,
-            ),
-          ),
-          const SizedBox(height: AppDimensions.spacing2xl),
-
-          // Title
-          Text(
-            slide.title,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.foreground,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppDimensions.spacingMd),
-
-          // Description
-          Text(
-            slide.description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.mutedForeground,
-                  height: 1.6,
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDot(int index) {
     final isActive = index == _currentPage;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 24 : 8,
+      width: isActive ? 26 : 8,
       height: 8,
       decoration: BoxDecoration(
         color: isActive ? AppColors.primary : AppColors.gray300,
@@ -215,17 +160,83 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+/// Satu halaman onboarding, dengan animasi masuk halus (fade + slide-up)
+/// saat menjadi halaman aktif.
+class _OnboardingSlideView extends StatelessWidget {
+  final _OnboardingSlide slide;
+  final bool isActive;
+
+  const _OnboardingSlideView({required this.slide, required this.isActive});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing2xl, vertical: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Ilustrasi: lingkaran gradient bertema merah + glow lembut.
+          AnimatedScale(
+            scale: isActive ? 1 : 0.85,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutBack,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: slide.gradient,
+                ),
+                boxShadow: AppShadows.lg,
+              ),
+              child: Icon(slide.icon, size: 68, color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing2xl),
+
+          AnimatedOpacity(
+            opacity: isActive ? 1 : 0,
+            duration: const Duration(milliseconds: 400),
+            child: Column(
+              children: [
+                Text(
+                  slide.title,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: AppColors.foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppDimensions.spacingMd),
+                Text(
+                  slide.description,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.mutedForeground,
+                        height: 1.6,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _OnboardingSlide {
   final IconData icon;
-  final Color iconColor;
-  final Color iconBgColor;
+  final List<Color> gradient;
   final String title;
   final String description;
 
   const _OnboardingSlide({
     required this.icon,
-    required this.iconColor,
-    required this.iconBgColor,
+    required this.gradient,
     required this.title,
     required this.description,
   });

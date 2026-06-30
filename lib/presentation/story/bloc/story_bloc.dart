@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/entities/story.dart';
 import '../../../domain/repositories/story_repository.dart';
 import 'story_event.dart';
@@ -25,10 +25,11 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     try {
       final stories = await _repository.getStories(sortBy: event.sortBy);
       emit(state.copyWith(status: StoryStatus.listSuccess, stories: stories));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: 'Gagal memuat cerita'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: StoryStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat cerita'),
+      ));
     }
   }
 
@@ -37,10 +38,11 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     try {
       final story = await _repository.getStory(event.id);
       emit(state.copyWith(status: StoryStatus.detailSuccess, detail: story));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: 'Gagal memuat cerita'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: StoryStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat cerita'),
+      ));
     }
   }
 
@@ -96,10 +98,11 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
         comments: [...state.comments, comment],
         successMessage: 'Komentar berhasil dikirim',
       ));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: 'Gagal mengirim komentar'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: StoryStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal mengirim komentar'),
+      ));
     }
   }
 
@@ -108,10 +111,11 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     try {
       final stories = await _repository.getStories(search: event.query);
       emit(state.copyWith(status: StoryStatus.listSuccess, stories: stories));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: StoryStatus.failure, errorMessage: 'Gagal mencari cerita'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: StoryStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal mencari cerita'),
+      ));
     }
   }
 }

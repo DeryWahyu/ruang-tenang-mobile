@@ -18,18 +18,18 @@ class MoodEmoji extends StatelessWidget {
     this.onTap,
   });
 
-  // Fallback emoji characters when asset images are not available
-  String get _emojiChar {
+  // Fallback Material icon when asset images are not available.
+  IconData get _fallbackIcon {
     switch (moodIndex) {
-      case 1: return '\u{1F60A}'; // Happy
-      case 2: return '\u{1F60C}'; // Calm
-      case 3: return '\u{1F610}'; // Neutral
-      case 4: return '\u{1F614}'; // Sad
-      case 5: return '\u{1F622}'; // Cry
-      case 6: return '\u{1F621}'; // Angry
-      case 7: return '\u{1F630}'; // Anxious
-      case 8: return '\u{1F62B}'; // Stressed
-      default: return '\u{2753}';
+      case 1: return Icons.sentiment_very_satisfied_rounded; // Happy
+      case 2: return Icons.sentiment_satisfied_rounded;      // Calm
+      case 3: return Icons.sentiment_neutral_rounded;        // Neutral
+      case 4: return Icons.sentiment_dissatisfied_rounded;   // Sad
+      case 5: return Icons.sentiment_very_dissatisfied_rounded; // Cry
+      case 6: return Icons.mood_bad_rounded;                 // Angry
+      case 7: return Icons.sentiment_dissatisfied_rounded;   // Anxious
+      case 8: return Icons.sentiment_very_dissatisfied_rounded; // Stressed
+      default: return Icons.help_outline_rounded;
     }
   }
 
@@ -65,18 +65,12 @@ class MoodEmoji extends StatelessWidget {
                       height: size,
                       errorBuilder: (context, error, stackTrace) {
                         return Center(
-                          child: Text(
-                            _emojiChar,
-                            style: TextStyle(fontSize: size * 0.7),
-                          ),
+                          child: Icon(_fallbackIcon, size: size * 0.82, color: color),
                         );
                       },
                     )
                   : Center(
-                      child: Text(
-                        _emojiChar,
-                        style: TextStyle(fontSize: size * 0.7),
-                      ),
+                      child: Icon(_fallbackIcon, size: size * 0.82, color: color),
                     ),
             ),
             if (showLabel) ...[

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
@@ -62,12 +61,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   void _sendMessage(String text) {
+    final content = text.trim();
+    if (content.isEmpty) return;
+
     if (_isNewSession) {
-      final title = text.length > 30 ? '${text.substring(0, 30)}...' : text;
-      context.read<ChatBloc>().add(ChatSessionCreateRequested(title: title));
+      // Obrolan baru: buat sesi tanpa judul lalu kirim pesan pertama. Judul
+      // dibuat otomatis oleh backend dari pesan pertama ini
+      // (mirip GPT/Gemini/Claude).
+      context.read<ChatBloc>().add(ChatFirstMessageSent(content: content));
     } else {
       final sessionUuid = context.read<ChatBloc>().state.currentSession?.uuid ?? widget.uuid!;
-      context.read<ChatBloc>().add(ChatMessageSendRequested(uuid: sessionUuid, content: text));
+      context.read<ChatBloc>().add(ChatMessageSendRequested(uuid: sessionUuid, content: content));
     }
   }
 
@@ -81,18 +85,32 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         if (prev.currentSession?.messages.length != curr.currentSession?.messages.length) {
           return true;
         }
+        // Tampilkan error yang baru muncul (mis. gagal kirim / kuota chat habis).
+        if (curr.errorMessage != null &&
+            curr.errorMessage!.isNotEmpty &&
+            curr.errorMessage != prev.errorMessage) {
+          return true;
+        }
         return false;
       },
       listener: (context, state) {
         if (state.status == ChatStatus.createSuccess && _isNewSession) {
-          final uuid = state.currentSession?.uuid;
-          if (mounted && uuid != null) {
-            // Masuk ke sesi yang baru dibuat menggantikan layar "/chat/new".
-            context.pushReplacement('/chat/$uuid');
+          // Sesi baru sudah dibuat dan pesan pertama sedang dikirim oleh bloc.
+          // Tetap di layar ini (tanpa navigasi ulang) dan render dari
+          // currentSession agar tidak balapan dengan proses pengiriman.
+          if (mounted) {
+            setState(() => _isNewSession = false);
           }
         }
         if (state.status == ChatStatus.detailSuccess) {
           WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        }
+        // Umpan balik kegagalan kirim pesan / kuota habis kepada pengguna.
+        final error = state.errorMessage;
+        if (error != null && error.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: AppColors.destructive),
+          );
         }
       },
       builder: (context, state) {
@@ -130,7 +148,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             backgroundColor: AppColors.card,
             surfaceTintColor: Colors.transparent,
             elevation: 1,
-            shadowColor: Colors.black.withOpacity(0.05),
+            shadowColor: Colors.black.withValues(alpha: 0.05),
           ),
           body: Column(
             children: [
@@ -158,7 +176,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           end: Alignment.bottomRight,
           colors: [Color(0xFFFB7185), Color(0xFFEF4444), Color(0xFFDC2626)],
         ),
-        boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Icon(Icons.auto_awesome, color: Colors.white, size: radius),
     );
@@ -188,6 +206,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     return ListView.builder(
       controller: _scrollController,
+      cacheExtent: 800,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       itemCount: messages.length + (state.isSendingMessage ? 1 : 0),
       itemBuilder: (context, index) {
@@ -215,7 +234,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 end: Alignment.bottomRight,
                 colors: [Color(0xFFFB7185), Color(0xFFEF4444), Color(0xFFDC2626)],
               ),
-              boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.35), blurRadius: 24, offset: const Offset(0, 10))],
+              boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10))],
             ),
             child: const Icon(Icons.auto_awesome, color: Colors.white, size: 40),
           ),
@@ -262,13 +281,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border.withOpacity(0.6)),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), shape: BoxShape.circle),
                   child: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.primary),
                 ),
                 const SizedBox(width: 12),
@@ -296,7 +315,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(20).copyWith(bottomLeft: const Radius.circular(4)),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
             ),
             child: const _TypingDots(),
           ),
@@ -347,7 +366,7 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.5 + 0.5 * (1 - (2 * t - 1).abs())),
+                    color: AppColors.primary.withValues(alpha: 0.5 + 0.5 * (1 - (2 * t - 1).abs())),
                     shape: BoxShape.circle,
                   ),
                 ),

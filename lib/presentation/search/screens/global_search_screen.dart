@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/config/app_environment.dart';
+import '../../common/widgets/app_network_image.dart';
+import '../../../domain/entities/music.dart';
+import '../../music/bloc/music_bloc.dart';
+import '../../music/bloc/music_event.dart';
 import '../bloc/search_bloc.dart';
 import '../bloc/search_event.dart';
 import '../bloc/search_state.dart';
@@ -120,7 +123,7 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(isError ? Icons.error_outline : Icons.search, size: 64, color: AppColors.mutedForeground.withOpacity(0.5)),
+          Icon(isError ? Icons.error_outline : Icons.search, size: 64, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(message, style: const TextStyle(color: AppColors.mutedForeground)),
         ],
@@ -160,40 +163,33 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: () => context.push('/articles/${article.slug}'),
-      leading: Container(
+      leading: AppNetworkImage(
+        url: article.thumbnail,
         width: 60,
         height: 60,
-        decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(8)),
-        clipBehavior: Clip.antiAlias,
-        child: article.thumbnail.isNotEmpty
-            ? Image.network(
-                article.thumbnail.startsWith('http') ? article.thumbnail : '${AppEnvironment.baseUrl}/${article.thumbnail}',
-                fit: BoxFit.cover,
-                errorBuilder: (_,__,___) => const Icon(Icons.article),
-              )
-            : const Icon(Icons.article),
+        borderRadius: BorderRadius.circular(8),
+        fallbackIcon: Icons.article,
       ),
       title: Text(article.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       subtitle: Text('Artikel', style: TextStyle(color: AppColors.primary, fontSize: 12)),
     );
   }
 
-  Widget _buildSongItem(BuildContext context, song) {
+  Widget _buildSongItem(BuildContext context, Song song) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      onTap: () {}, // Navigate to player
-      leading: Container(
+      onTap: () {
+        // Putar lagu lewat MusicBloc global (singleton) lalu kembali —
+        // mini-player global akan tampil mengikuti layar.
+        sl<MusicBloc>().add(MusicPlaySongRequested(song));
+        context.pop();
+      },
+      leading: AppNetworkImage(
+        url: song.thumbnail,
         width: 60,
         height: 60,
-        decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(8)),
-        clipBehavior: Clip.antiAlias,
-        child: song.thumbnail.isNotEmpty
-            ? Image.network(
-                song.thumbnail.startsWith('http') ? song.thumbnail : '${AppEnvironment.baseUrl}/${song.thumbnail}',
-                fit: BoxFit.cover,
-                errorBuilder: (_,__,___) => const Icon(Icons.music_note),
-              )
-            : const Icon(Icons.music_note),
+        borderRadius: BorderRadius.circular(8),
+        fallbackIcon: Icons.music_note,
       ),
       title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       subtitle: Text('Lagu', style: TextStyle(color: Colors.blue, fontSize: 12)),

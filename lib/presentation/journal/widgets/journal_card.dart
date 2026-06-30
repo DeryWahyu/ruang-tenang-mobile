@@ -18,10 +18,10 @@ class JournalCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.6)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -42,7 +42,7 @@ class JournalCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: hasMood ? AppColors.primary.withOpacity(0.1) : AppColors.muted,
+                    color: hasMood ? AppColors.primary.withValues(alpha: 0.1) : AppColors.muted,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   alignment: Alignment.center,
@@ -78,7 +78,7 @@ class JournalCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.08),
+                                color: AppColors.primary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -160,7 +160,7 @@ class JournalCard extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
+                                  color: AppColors.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
@@ -198,7 +198,7 @@ class JournalCardSkeleton extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +216,7 @@ class JournalCardSkeleton extends StatelessWidget {
             height: 14,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.muted.withOpacity(0.5),
+              color: AppColors.muted.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -225,7 +225,7 @@ class JournalCardSkeleton extends StatelessWidget {
             height: 14,
             width: MediaQuery.of(context).size.width * 0.7,
             decoration: BoxDecoration(
-              color: AppColors.muted.withOpacity(0.5),
+              color: AppColors.muted.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(4),
             ),
           ),

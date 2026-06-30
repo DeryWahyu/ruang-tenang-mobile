@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/repositories/breathing_repository.dart';
 import 'breathing_event.dart';
 import 'breathing_state.dart';
@@ -24,10 +24,11 @@ class BreathingBloc extends Bloc<BreathingEvent, BreathingState> {
     try {
       final techniques = await _repository.getTechniques();
       emit(state.copyWith(status: BreathingStatus.success, techniques: techniques));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: BreathingStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: BreathingStatus.failure, errorMessage: 'Gagal memuat teknik pernapasan'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: BreathingStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat teknik pernapasan'),
+      ));
     }
   }
 
@@ -52,10 +53,11 @@ class BreathingBloc extends Bloc<BreathingEvent, BreathingState> {
         targetDurationSeconds: event.targetDurationSeconds,
       );
       emit(state.copyWith(status: BreathingStatus.sessionActive, activeSession: session));
-    } on ApiException catch (e) {
-      emit(state.copyWith(status: BreathingStatus.failure, errorMessage: e.message));
-    } catch (_) {
-      emit(state.copyWith(status: BreathingStatus.failure, errorMessage: 'Gagal memulai sesi'));
+    } catch (e) {
+      emit(state.copyWith(
+        status: BreathingStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal memulai sesi'),
+      ));
     }
   }
 

@@ -56,7 +56,7 @@ class _WellnessPlanView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.self_improvement, size: 64, color: AppColors.mutedForeground.withOpacity(0.5)),
+                  Icon(Icons.self_improvement, size: 64, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   const Text('Belum ada rencana wellness.'),
                   const SizedBox(height: 16),

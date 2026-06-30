@@ -81,7 +81,7 @@ class _MoodStatsScreenState extends State<MoodStatsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: const Icon(Icons.insights_rounded, size: 64, color: AppColors.primary),
           ),
           const SizedBox(height: 24),
@@ -121,10 +121,10 @@ class _MoodStatsScreenState extends State<MoodStatsScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.75)],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.75)],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.25), blurRadius: 18, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 18, offset: const Offset(0, 10))],
       ),
       child: Row(
         children: [
@@ -132,7 +132,7 @@ class _MoodStatsScreenState extends State<MoodStatsScreen> {
             Container(
               width: 64,
               height: 64,
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
               padding: const EdgeInsets.all(10),
               child: Image.asset(top.activeImagePath, fit: BoxFit.contain),
             ),
@@ -260,7 +260,7 @@ class _MoodStatsScreenState extends State<MoodStatsScreen> {
                 Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(color: mood.mood.color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(color: mood.mood.color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
                   padding: const EdgeInsets.all(7),
                   child: Image.asset(mood.mood.activeImagePath, fit: BoxFit.contain),
                 ),
@@ -291,8 +291,8 @@ class _MoodStatsScreenState extends State<MoodStatsScreen> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,8 +364,8 @@ class _MoodCalendarState extends State<_MoodCalendar> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

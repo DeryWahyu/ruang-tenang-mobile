@@ -1,5 +1,6 @@
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
+import '../../../domain/entities/billing.dart';
 import '../../models/billing_model.dart';
 
 class BillingRemoteDataSource {
@@ -9,7 +10,7 @@ class BillingRemoteDataSource {
 
   Future<BillingCatalogModel> getCatalog() async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConstants.billing + '/catalog',
+      '${ApiConstants.billing}/catalog',
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success || response.data == null) {
@@ -20,7 +21,7 @@ class BillingRemoteDataSource {
 
   Future<Map<String, dynamic>> createCheckout(String itemType, int itemId) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
-      ApiConstants.billing + '/checkout',
+      '${ApiConstants.billing}/checkout',
       data: {
         'item_type': itemType,
         'item_id': itemId,
@@ -31,5 +32,56 @@ class BillingRemoteDataSource {
       throw Exception(response.error ?? 'Gagal membuat checkout');
     }
     return response.data!;
+  }
+
+  /// Status billing pengguna: GET /billing/status.
+  Future<BillingStatus> getStatus() async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '${ApiConstants.billing}/status',
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Gagal memuat status billing');
+    }
+    return BillingStatusModel.fromJson(response.data!);
+  }
+
+  /// Riwayat transaksi (paginasi): GET /billing/transactions.
+  Future<BillingTransactionPage> getTransactions({
+    int page = 1,
+    int limit = 20,
+    String? status,
+    String? itemType,
+  }) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '${ApiConstants.billing}/transactions',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (itemType != null && itemType.isNotEmpty) 'item_type': itemType,
+      },
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Gagal memuat riwayat transaksi');
+    }
+    return BillingTransactionPageModel.fromJson(response.data!);
+  }
+
+  /// Unduh CSV riwayat transaksi (string mentah), menghormati filter.
+  Future<String> exportTransactionsCsv({String? status, String? itemType}) {
+    return _apiClient.fetchRaw(
+      '${ApiConstants.billing}/transactions/export',
+      queryParameters: {
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (itemType != null && itemType.isNotEmpty) 'item_type': itemType,
+      },
+    );
+  }
+
+  /// Unduh CSV satu invoice berdasarkan order ID.
+  Future<String> getInvoiceCsv(String orderId) {
+    return _apiClient.fetchRaw('${ApiConstants.billing}/transactions/$orderId/invoice');
   }
 }

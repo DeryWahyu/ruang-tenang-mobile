@@ -27,12 +27,4 @@ abstract class GamificationRepository {
   Future<List<Reward>> getRewards();
   Future<int> getCoinBalance();
   Future<Map<String, dynamic>> claimReward(int rewardId);
-
-  // Mystery Chests
-  Future<List<MysteryChest>> getChests();
-  Future<Map<String, dynamic>> openChest(String chestId);
-
-  // Daily Spin
-  Future<DailySpinWheel> getSpinWheel();
-  Future<Map<String, dynamic>> spinWheel();
 }

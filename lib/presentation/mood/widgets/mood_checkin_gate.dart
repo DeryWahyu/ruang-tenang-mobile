@@ -43,20 +43,24 @@ class _MoodCheckinGateState extends State<MoodCheckinGate> {
   Future<void> _record(BuildContext dialogContext, MoodType mood) async {
     if (_submitting) return;
     _submitting = true;
+    // Tangkap referensi sebelum await agar tidak memakai BuildContext
+    // melintasi async gap (aman terhadap widget yang sudah dispose).
+    final navigator = Navigator.of(dialogContext);
+    final messenger = ScaffoldMessenger.of(context);
     try {
       await _moodRepository.record(mood);
-      if (mounted) Navigator.of(dialogContext).pop();
+      if (mounted) navigator.pop();
       if (mounted) {
-        ScaffoldMessenger.of(context)
+        messenger
           ..hideCurrentSnackBar()
           ..showSnackBar(const SnackBar(
-            content: Text('Mood berhasil dicatat! Semoga harimu menyenangkan 😊'),
+            content: Text('Mood berhasil dicatat! Semoga harimu menyenangkan'),
             backgroundColor: AppColors.success,
           ));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
+        messenger
           ..hideCurrentSnackBar()
           ..showSnackBar(const SnackBar(
             content: Text('Gagal mencatat mood'),
@@ -77,7 +81,7 @@ class _MoodCheckinGateState extends State<MoodCheckinGate> {
           builder: (dialogContext, setLocal) {
             return Dialog(
               backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.card,
@@ -90,7 +94,7 @@ class _MoodCheckinGateState extends State<MoodCheckinGate> {
                     // Header
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [AppColors.primary, AppColors.red600],
@@ -104,10 +108,10 @@ class _MoodCheckinGateState extends State<MoodCheckinGate> {
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Center(child: Text('👋', style: TextStyle(fontSize: 30))),
+                            child: const Center(child: Icon(Icons.waving_hand_rounded, color: Colors.white, size: 30)),
                           ),
                           const SizedBox(height: 12),
                           const Text('Halo, Apa Kabar?',
@@ -120,56 +124,64 @@ class _MoodCheckinGateState extends State<MoodCheckinGate> {
                     ),
                     // Mood grid
                     Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            alignment: WrapAlignment.center,
-                            children: MoodType.values.map((m) {
-                              return SizedBox(
-                                width: 88,
-                                height: 88,
-                                child: Material(
-                                  color: AppColors.muted.withOpacity(0.6),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: InkWell(
-                                    onTap: _submitting ? null : () => _record(dialogContext, m),
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Container(
-                                      decoration: BoxDecoration(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          const spacing = 10.0;
+                          const crossAxisCount = 3;
+                          final itemWidth = (constraints.maxWidth - (spacing * (crossAxisCount - 1))) / crossAxisCount;
+
+                          return Column(
+                            children: [
+                              Wrap(
+                                spacing: spacing,
+                                runSpacing: spacing,
+                                alignment: WrapAlignment.center,
+                                children: MoodType.values.map((m) {
+                                  return SizedBox(
+                                    width: itemWidth,
+                                    height: itemWidth,
+                                    child: Material(
+                                      color: AppColors.muted.withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: InkWell(
+                                        onTap: _submitting ? null : () => _record(dialogContext, m),
                                         borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Image.asset(
-                                            m.activeImagePath,
-                                            width: 40,
-                                            height: 40,
-                                            fit: BoxFit.contain,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                                           ),
-                                          const SizedBox(height: 6),
-                                          Text(m.label,
-                                              style: const TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColors.mutedForeground)),
-                                        ],
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Image.asset(
+                                                m.activeImagePath,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.contain,
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(m.label,
+                                                  style: const TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: AppColors.mutedForeground)),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 14),
-                          const Text('Rekomendasi konten akan disesuaikan dengan mood-mu ✨',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: AppColors.mutedForeground, fontSize: 11)),
-                        ],
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 14),
+                              const Text('Rekomendasi konten akan disesuaikan dengan mood-mu',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: AppColors.mutedForeground, fontSize: 11)),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],

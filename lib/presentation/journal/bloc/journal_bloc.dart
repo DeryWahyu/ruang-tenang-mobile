@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/error_message.dart';
 import '../../../domain/usecases/journal/journal_usecases.dart';
 import 'journal_event.dart';
 import 'journal_state.dart';
@@ -41,15 +41,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         page: result.page,
         limit: result.limit,
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.failure,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.failure,
-        errorMessage: 'Gagal memuat jurnal. Periksa koneksi internet Anda.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat jurnal. Periksa koneksi internet Anda.'),
       ));
     }
   }
@@ -71,15 +66,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         page: result.page,
         total: result.total,
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.listSuccess,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.listSuccess,
-        errorMessage: 'Gagal memuat lebih banyak jurnal.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat lebih banyak jurnal.'),
       ));
     }
   }
@@ -104,15 +94,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         items: results,
         total: results.length,
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.failure,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.failure,
-        errorMessage: 'Gagal mencari jurnal.',
+        errorMessage: ErrorMessage.from(e, 'Gagal mencari jurnal.'),
       ));
     }
   }
@@ -140,15 +125,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         status: JournalStatus.detailSuccess,
         detail: journal,
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.failure,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.failure,
-        errorMessage: 'Gagal memuat detail jurnal.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memuat detail jurnal.'),
       ));
     }
   }
@@ -175,15 +155,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
             ? 'Jurnal disimpan sebagai privat. Moderasi otomatis belum menyetujuinya untuk dibagikan ke komunitas.'
             : 'Jurnal berhasil disimpan.',
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.failure,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.failure,
-        errorMessage: 'Gagal menyimpan jurnal. Silakan coba lagi.',
+        errorMessage: ErrorMessage.from(e, 'Gagal menyimpan jurnal. Silakan coba lagi.'),
       ));
     }
   }
@@ -211,15 +186,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
             ? 'Perubahan disimpan sebagai privat. Moderasi otomatis belum menyetujuinya untuk dibagikan ke komunitas.'
             : 'Jurnal berhasil diperbarui.',
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.failure,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.failure,
-        errorMessage: 'Gagal memperbarui jurnal.',
+        errorMessage: ErrorMessage.from(e, 'Gagal memperbarui jurnal.'),
       ));
     }
   }
@@ -240,15 +210,10 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
         total: state.total > 0 ? state.total - 1 : 0,
         successMessage: 'Jurnal berhasil dihapus.',
       ));
-    } on ApiException catch (e) {
+    } catch (e) {
       emit(state.copyWith(
         status: JournalStatus.failure,
-        errorMessage: e.message,
-      ));
-    } catch (_) {
-      emit(state.copyWith(
-        status: JournalStatus.failure,
-        errorMessage: 'Gagal menghapus jurnal.',
+        errorMessage: ErrorMessage.from(e, 'Gagal menghapus jurnal.'),
       ));
     }
   }

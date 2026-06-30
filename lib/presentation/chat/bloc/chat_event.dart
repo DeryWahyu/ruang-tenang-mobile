@@ -55,6 +55,20 @@ class ChatMessageSendRequested extends ChatEvent {
   List<Object?> get props => [uuid, content];
 }
 
+/// Dikirim saat pengguna mengirim pesan pertama pada obrolan baru (belum ada
+/// sesi). Bloc akan membuat sesi tanpa judul lalu langsung mengirim pesan
+/// pertama. Judul dibuat otomatis oleh backend dari pesan pertama tersebut
+/// (mirip GPT/Gemini/Claude).
+class ChatFirstMessageSent extends ChatEvent {
+  final String content;
+  final int? folderId;
+
+  const ChatFirstMessageSent({required this.content, this.folderId});
+
+  @override
+  List<Object?> get props => [content, folderId];
+}
+
 class ChatMessageLikeToggled extends ChatEvent {
   final int messageId;
   const ChatMessageLikeToggled(this.messageId);

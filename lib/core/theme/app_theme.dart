@@ -28,8 +28,11 @@ class AppTheme {
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
-        backgroundColor: AppColors.card,
+        // Transparan agar GradientBackground global terlihat menembus —
+        // konsisten dengan tampilan web yang berlatar lembut.
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.foreground,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.titleLarge?.copyWith(
@@ -42,9 +45,10 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: AppDimensions.elevationSm,
+        elevation: 0,
         color: AppColors.card,
         surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
           side: const BorderSide(color: AppColors.border, width: 1),

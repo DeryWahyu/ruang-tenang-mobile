@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/media_url.dart';
+import '../../common/widgets/app_network_image.dart';
+import '../../common/widgets/app_skeleton.dart';
 import '../../../domain/entities/gamification.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
@@ -33,7 +34,7 @@ class _RewardsView extends StatelessWidget {
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: BlocConsumer<GamificationBloc, GamificationState>(
         listenWhen: (p, c) => p.successMessage != c.successMessage || p.errorMessage != c.errorMessage,
@@ -50,7 +51,14 @@ class _RewardsView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state.rewards.isEmpty && state.status == GamificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return GridView.count(
+              padding: const EdgeInsets.all(16),
+              crossAxisCount: 2,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 0.72,
+              children: List.generate(4, (_) => const AppSkeleton(height: double.infinity, borderRadius: 16)),
+            );
           }
           return RefreshIndicator(
             color: AppColors.primary,
@@ -73,8 +81,8 @@ class _RewardsView extends StatelessWidget {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 220,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
                         childAspectRatio: 0.72,
@@ -105,7 +113,7 @@ class _RewardsView extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), shape: BoxShape.circle),
             child: const Icon(Icons.monetization_on_rounded, color: Colors.white, size: 28),
           ),
           const SizedBox(width: 16),
@@ -131,7 +139,7 @@ class _RewardsView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,12 +148,13 @@ class _RewardsView extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: AspectRatio(
               aspectRatio: 16 / 10,
-              child: Builder(builder: (_) {
-                final url = resolveMediaUrl(reward.image);
-                return url != null
-                    ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholder())
-                    : _placeholder();
-              }),
+              child: reward.image.isNotEmpty
+                  ? AppNetworkImage(
+                      url: reward.image,
+                      fit: BoxFit.cover,
+                      fallbackIcon: Icons.card_giftcard_rounded,
+                    )
+                  : _placeholder(),
             ),
           ),
           Padding(

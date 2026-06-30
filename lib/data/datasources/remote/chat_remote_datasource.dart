@@ -49,7 +49,7 @@ class ChatRemoteDataSource {
       ApiConstants.chatSessions,
       data: {
         'title': title,
-        if (folderId != null) 'folder_id': folderId,
+        'folder_id': ?folderId,
       },
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );

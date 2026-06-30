@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_network_image.dart';
 import '../../../core/utils/media_url.dart';
 import '../../common/widgets/app_avatar.dart';
 import '../../../domain/entities/secondary_gamification.dart';
@@ -33,7 +34,7 @@ class _GuildView extends StatelessWidget {
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: BlocConsumer<GuildCubit, ViewState<GuildHubData>>(
         listenWhen: (p, c) => p.actionMessage != c.actionMessage || p.error != c.error,
@@ -86,7 +87,7 @@ class _GuildView extends StatelessWidget {
                 Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
                   child: Center(child: _guildIcon(guild.icon, 44)),
                 ),
                 const SizedBox(width: 16),
@@ -169,7 +170,7 @@ class _GuildView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +209,7 @@ class _GuildView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -300,7 +301,7 @@ class _GuildView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -342,7 +343,7 @@ class _GuildView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -402,18 +403,18 @@ class _GuildView extends StatelessWidget {
     if (isImage) {
       final url = resolveMediaUrl(icon);
       if (url != null) {
-        return ClipOval(
-          child: Image.network(
-            url,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Icon(Icons.shield_rounded, size: size * 0.75, color: AppColors.primary),
-          ),
+        return AppNetworkImage(
+          url: url,
+          width: size,
+          height: size,
+          borderRadius: BorderRadius.circular(size / 2),
+          fallbackIcon: Icons.shield_rounded,
+          fallbackColor: AppColors.primary,
         );
       }
     }
     if (icon.isNotEmpty) {
+      // Konsisten dengan web: ikon guild non-image dirender sebagai emoji/teks.
       return Text(icon, style: TextStyle(fontSize: size * 0.6));
     }
     return Icon(Icons.shield_rounded, size: size * 0.75, color: AppColors.primary);
@@ -490,7 +491,7 @@ class _GuildView extends StatelessWidget {
                 cubit.createGuild(
                   name: nameCtrl.text.trim(),
                   description: descCtrl.text.trim(),
-                  icon: '🛡️',
+                  icon: 'shield',
                   isPublic: isPublic,
                 );
               },

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../core/utils/json_parser.dart';
 import '../../domain/entities/breathing.dart';
 
 class BreathingTechniqueModel extends Equatable {
@@ -67,7 +68,7 @@ class BreathingTechniqueModel extends Equatable {
       origin: json['origin'] as String? ?? '',
       isSystem: json['is_system'] as bool? ?? false,
       isFavorite: json['is_favorite'] as bool? ?? false,
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt: Json.date(json['created_at']) ?? DateTime.now(),
     );
   }
 
@@ -171,8 +172,8 @@ class BreathingSessionModel extends Equatable {
       hapticFeedbackEnabled: json['haptic_feedback_enabled'] as bool? ?? false,
       completed: json['completed'] as bool? ?? false,
       completedPercentage: (json['completed_percentage'] as num?)?.toInt() ?? 0,
-      startedAt: _parseDate(json['started_at']) ?? DateTime.now(),
-      endedAt: _parseDate(json['ended_at']),
+      startedAt: Json.date(json['started_at']) ?? DateTime.now(),
+      endedAt: Json.date(json['ended_at']),
       xpEarned: (json['xp_earned'] as num?)?.toInt() ?? 0,
       moodBefore: json['mood_before'] as String? ?? '',
       moodAfter: json['mood_after'] as String? ?? '',
@@ -268,12 +269,3 @@ class BreathingStatsModel extends Equatable {
   List<Object?> get props => [today, overall, streakInfo];
 }
 
-DateTime? _parseDate(dynamic value) {
-  if (value == null) return null;
-  if (value is! String || value.isEmpty) return null;
-  try {
-    return DateTime.parse(value).toLocal();
-  } catch (_) {
-    return null;
-  }
-}

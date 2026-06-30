@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_skeleton.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../../../domain/entities/breathing.dart';
 import '../bloc/breathing_bloc.dart';
 import '../bloc/breathing_event.dart';
@@ -35,23 +37,15 @@ class _BreathingListView extends StatelessWidget {
       body: BlocBuilder<BreathingBloc, BreathingState>(
         builder: (context, state) {
           if (state.status == BreathingStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: List.generate(4, (_) => const AppSkeletonCard()),
+            );
           }
           if (state.status == BreathingStatus.failure) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.mutedForeground),
-                  const SizedBox(height: 16),
-                  Text(state.errorMessage, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<BreathingBloc>().add(const BreathingTechniquesRequested()),
-                    child: const Text('Coba Lagi'),
-                  ),
-                ],
-              ),
+            return AppErrorWidget(
+              message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat teknik pernapasan',
+              onRetry: () => context.read<BreathingBloc>().add(const BreathingTechniquesRequested()),
             );
           }
 
@@ -143,8 +137,8 @@ class _BreathingListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -162,10 +156,10 @@ class _BreathingListView extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [color, color.withOpacity(0.65)],
+                      colors: [color, color.withValues(alpha: 0.65)],
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                    boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
                   ),
                   child: Icon(icon, color: Colors.white, size: 26),
                 ),
@@ -210,7 +204,7 @@ class _BreathingListView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),

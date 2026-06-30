@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_skeleton.dart';
+import '../../common/widgets/app_empty_state.dart';
+import '../../common/widgets/app_error_widget.dart';
 import '../../../domain/entities/forum.dart';
 import '../bloc/forum_bloc.dart';
 import '../bloc/forum_event.dart';
@@ -60,44 +63,30 @@ class _ForumListViewState extends State<_ForumListView> {
         },
         builder: (context, state) {
           if (state.status == ForumStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: List.generate(5, (_) => const AppSkeletonCard()),
+            );
           }
           if (state.status == ForumStatus.failure) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.mutedForeground),
-                  const SizedBox(height: 16),
-                  Text(state.errorMessage, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<ForumBloc>().add(const ForumListRequested(refresh: true)),
-                    child: const Text('Coba Lagi'),
-                  ),
-                ],
-              ),
+            return AppErrorWidget(
+              message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat forum',
+              onRetry: () => context.read<ForumBloc>().add(const ForumListRequested(refresh: true)),
             );
           }
 
           if (state.threads.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.forum_outlined, size: 64, color: AppColors.mutedForeground.withOpacity(0.5)),
-                  const SizedBox(height: 16),
-                  const Text('Belum ada diskusi', style: TextStyle(color: AppColors.mutedForeground)),
-                  const SizedBox(height: 8),
-                  const Text('Mulai diskusi baru!', style: TextStyle(color: AppColors.mutedForeground, fontSize: 13)),
-                ],
-              ),
+            return const AppEmptyState(
+              icon: Icons.forum_outlined,
+              title: 'Belum Ada Diskusi',
+              subtitle: 'Jadilah yang pertama memulai diskusi di komunitas.',
             );
           }
 
           return RefreshIndicator(
             onRefresh: () async => context.read<ForumBloc>().add(const ForumListRequested(refresh: true)),
             child: ListView.builder(
+              cacheExtent: 600,
               padding: const EdgeInsets.all(16),
               itemCount: state.threads.length,
               itemBuilder: (context, index) => _buildThreadCard(context, state.threads[index]),
@@ -123,10 +112,10 @@ class _ForumListViewState extends State<_ForumListView> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.6)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
