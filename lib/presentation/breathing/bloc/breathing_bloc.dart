@@ -51,6 +51,10 @@ class BreathingBloc extends Bloc<BreathingEvent, BreathingState> {
       final session = await _repository.startSession(
         techniqueId: event.technique.id,
         targetDurationSeconds: event.targetDurationSeconds,
+        moodBefore: event.moodBefore,
+        backgroundSound: event.backgroundSound,
+        voiceGuidanceEnabled: event.voiceGuidanceEnabled,
+        hapticFeedbackEnabled: event.hapticFeedbackEnabled,
       );
       emit(state.copyWith(status: BreathingStatus.sessionActive, activeSession: session));
     } catch (e) {
@@ -73,10 +77,17 @@ class BreathingBloc extends Bloc<BreathingEvent, BreathingState> {
         cyclesCompleted: event.cyclesCompleted,
         completed: event.completed,
         completedPercentage: event.completedPercentage,
+        moodAfter: event.moodAfter,
       );
       emit(state.copyWith(status: BreathingStatus.sessionCompleted, sessionResult: result, clearSession: true));
-    } catch (_) {
-      emit(state.copyWith(status: BreathingStatus.sessionCompleted, clearSession: true));
+    } catch (e) {
+      // Surface the failure so the UI can inform the user their session may
+      // not have been saved, instead of silently pretending success.
+      emit(state.copyWith(
+        status: BreathingStatus.failure,
+        errorMessage: ErrorMessage.from(e, 'Gagal menyimpan sesi'),
+        clearSession: true,
+      ));
     }
   }
 }

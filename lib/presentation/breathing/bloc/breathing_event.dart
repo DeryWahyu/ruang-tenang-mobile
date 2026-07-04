@@ -18,12 +18,27 @@ class BreathingStatsRequested extends BreathingEvent {
 class BreathingSessionStarted extends BreathingEvent {
   final BreathingTechnique technique;
   final int targetDurationSeconds;
+  final String moodBefore;
+  final String backgroundSound;
+  final bool voiceGuidanceEnabled;
+  final bool hapticFeedbackEnabled;
   const BreathingSessionStarted({
     required this.technique,
     required this.targetDurationSeconds,
+    this.moodBefore = '',
+    this.backgroundSound = '',
+    this.voiceGuidanceEnabled = false,
+    this.hapticFeedbackEnabled = true,
   });
   @override
-  List<Object?> get props => [technique, targetDurationSeconds];
+  List<Object?> get props => [
+        technique,
+        targetDurationSeconds,
+        moodBefore,
+        backgroundSound,
+        voiceGuidanceEnabled,
+        hapticFeedbackEnabled,
+      ];
 }
 
 class BreathingSessionCompleted extends BreathingEvent {
@@ -32,13 +47,15 @@ class BreathingSessionCompleted extends BreathingEvent {
   final int cyclesCompleted;
   final bool completed;
   final int completedPercentage;
+  final String moodAfter;
   const BreathingSessionCompleted({
     required this.sessionId,
     required this.durationSeconds,
     required this.cyclesCompleted,
     required this.completed,
     required this.completedPercentage,
+    this.moodAfter = '',
   });
   @override
-  List<Object?> get props => [sessionId, durationSeconds, cyclesCompleted, completed, completedPercentage];
+  List<Object?> get props => [sessionId, durationSeconds, cyclesCompleted, completed, completedPercentage, moodAfter];
 }
