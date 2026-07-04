@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection_container.dart';
@@ -85,7 +86,7 @@ class _RewardsView extends StatelessWidget {
                         maxCrossAxisExtent: 220,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
-                        childAspectRatio: 0.72,
+                        mainAxisExtent: 270, // Fixed height to prevent overflow
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _rewardCard(context, state.rewards[index], state),
@@ -135,6 +136,11 @@ class _RewardsView extends StatelessWidget {
     final canAfford = state.coinBalance >= reward.coinCost;
     final available = reward.isAvailable;
     final submitting = state.status == GamificationStatus.submitting;
+    
+    // Check if it's a theme and we are not on web
+    final isTheme = reward.name.toLowerCase().contains('tema');
+    final canClaimOnDevice = kIsWeb || !isTheme;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -184,7 +190,7 @@ class _RewardsView extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: (!available || !canAfford || submitting)
+                    onPressed: (!available || !canAfford || submitting || !canClaimOnDevice)
                         ? null
                         : () => _confirm(context, reward),
                     style: ElevatedButton.styleFrom(
@@ -195,7 +201,9 @@ class _RewardsView extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
-                      !available ? 'Habis' : (!canAfford ? 'Koin Kurang' : 'Tukar'),
+                      !canClaimOnDevice 
+                          ? 'Khusus Web' 
+                          : (!available ? 'Habis' : (!canAfford ? 'Koin Kurang' : 'Tukar')),
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ),

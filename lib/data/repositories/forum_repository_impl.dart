@@ -46,8 +46,8 @@ class ForumRepositoryImpl implements ForumRepository {
   }
 
   @override
-  Future<void> toggleLike(int id) async {
-    await _remote.toggleLike(id);
+  Future<void> toggleLike(String slug) async {
+    await _remote.toggleLike(slug);
   }
 
   @override

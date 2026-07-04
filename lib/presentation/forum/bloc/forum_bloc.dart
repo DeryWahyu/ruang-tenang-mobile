@@ -118,9 +118,24 @@ class ForumBloc extends Bloc<ForumEvent, ForumState> {
   }
 
   Future<void> _onLikeToggled(ForumLikeToggled event, Emitter<ForumState> emit) async {
-    try {
-      await _repository.toggleLike(event.forumId);
-    } catch (_) {}
+    final currentDetail = state.detail;
+    if (currentDetail != null && currentDetail.slug == event.slug) {
+      final isLiked = !currentDetail.isLiked;
+      final likesCount = currentDetail.likesCount + (isLiked ? 1 : -1);
+      final updatedDetail = currentDetail.copyWith(isLiked: isLiked, likesCount: likesCount);
+      emit(state.copyWith(detail: updatedDetail));
+
+      try {
+        await _repository.toggleLike(event.slug);
+      } catch (_) {
+        // Revert on failure
+        emit(state.copyWith(detail: currentDetail));
+      }
+    } else {
+      try {
+        await _repository.toggleLike(event.slug);
+      } catch (_) {}
+    }
   }
 
   Future<void> _onSearchRequested(ForumSearchRequested event, Emitter<ForumState> emit) async {

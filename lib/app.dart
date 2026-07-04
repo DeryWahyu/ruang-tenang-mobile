@@ -99,66 +99,102 @@ class _RuangTenangAppState extends State<RuangTenangApp> {
 /// - Rute **non-shell** (di-push, tanpa bottom-nav): overlay menampilkan
 ///   mini-player di atas safe-area dan FAB di atasnya (dinaikkan lagi bila
 ///   layar punya FAB sendiri seperti Forum).
-class _GlobalOverlay extends StatelessWidget {
+class _GlobalOverlay extends StatefulWidget {
   final Widget child;
   final GoRouter router;
 
   const _GlobalOverlay({required this.child, required this.router});
 
   @override
+  State<_GlobalOverlay> createState() => _GlobalOverlayState();
+}
+
+class _GlobalOverlayState extends State<_GlobalOverlay> {
+  late String _location;
+
+  @override
+  void initState() {
+    super.initState();
+    _location = widget.router.routerDelegate.currentConfiguration.uri.path;
+    widget.router.routerDelegate.addListener(_onRouteChanged);
+  }
+
+  @override
+  void didUpdateWidget(_GlobalOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.router != oldWidget.router) {
+      oldWidget.router.routerDelegate.removeListener(_onRouteChanged);
+      _location = widget.router.routerDelegate.currentConfiguration.uri.path;
+      widget.router.routerDelegate.addListener(_onRouteChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.router.routerDelegate.removeListener(_onRouteChanged);
+    super.dispose();
+  }
+
+  void _onRouteChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final newLocation = widget.router.routerDelegate.currentConfiguration.uri.path;
+      if (_location != newLocation) {
+        setState(() {
+          _location = newLocation;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      // Rebuild saat lokasi rute berubah.
-      animation: router.routerDelegate,
-      builder: (context, _) {
-        final location = router.routerDelegate.currentConfiguration.uri.path;
+    final location = _location;
 
-        // Hanya tampil pada area terautentikasi (bukan splash/onboarding/auth).
-        if (!AppRouter.showsGlobalMiniPlayer(location)) {
-          return child;
-        }
+    // Hanya tampil pada area terautentikasi (bukan splash/onboarding/auth).
+    if (!AppRouter.showsGlobalMiniPlayer(location)) {
+      return widget.child;
+    }
 
-        final inShell = AppRouter.isShellLocation(location);
-        final safeBottom = MediaQuery.of(context).padding.bottom;
+    final inShell = AppRouter.isShellLocation(location);
+    final safeBottom = MediaQuery.of(context).padding.bottom;
 
-        // Konten dasar: untuk rute shell, MainLayout sudah menangani
-        // mini-player & FAB. Untuk non-shell, overlay menambahkannya di sini.
-        Widget content;
-        if (inShell) {
-          content = child;
-        } else {
-          final fabBottom = safeBottom + (AppRouter.hasOwnFab(location) ? 88.0 : 20.0);
-          content = Stack(
-            children: [
-              child,
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: safeBottom + 8,
-                child: const GlobalMiniPlayer(),
-              ),
-              Positioned.fill(
-                child: DailyTaskFab(bottomOffset: fabBottom),
-              ),
-            ],
-          );
-        }
+    // Konten dasar: untuk rute shell, MainLayout sudah menangani
+    // mini-player & FAB. Untuk non-shell, overlay menambahkannya di sini.
+    Widget content;
+    if (inShell) {
+      content = widget.child;
+    } else {
+      final fabBottom = safeBottom + (AppRouter.hasOwnFab(location) ? 76.0 : 16.0);
+      content = Stack(
+        children: [
+          widget.child,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: safeBottom + 8,
+            child: const GlobalMiniPlayer(),
+          ),
+          Positioned.fill(
+            child: DailyTaskFab(bottomOffset: fabBottom),
+          ),
+        ],
+      );
+    }
 
-        // Banner offline melayang di atas konten (kecuali di layar game).
-        final showBanner = location != '/game';
-        return Stack(
-          children: [
-            content,
-            if (showBanner)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                child: _OfflineBanner(router: router),
-              ),
-          ],
-        );
-      },
+    // Banner offline melayang di atas konten (kecuali di layar game).
+    final showBanner = location != '/game';
+    return Stack(
+      children: [
+        content,
+        if (showBanner)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: _OfflineBanner(router: widget.router),
+          ),
+      ],
     );
   }
 }

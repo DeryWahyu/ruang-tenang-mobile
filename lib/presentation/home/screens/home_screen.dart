@@ -8,6 +8,7 @@ import '../../../domain/repositories/gamification_repository.dart';
 import '../../common/widgets/app_bottom_sheet.dart';
 import '../../common/widgets/level_badge.dart';
 import '../../auth/bloc/auth_bloc.dart';
+import '../../../core/constants/app_features.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -139,7 +140,7 @@ class HomeScreen extends StatelessWidget {
                   
                   // Horizontal scroll for features
                   SizedBox(
-                    height: 160,
+                    height: 136,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       clipBehavior: Clip.none,
@@ -202,21 +203,6 @@ class HomeScreen extends StatelessWidget {
   /// Daftar lengkap fitur aplikasi — ditampilkan dalam bottom sheet
   /// "Lihat Semua" pada section Eksplorasi. Sebelumnya ini berada di
   /// layar `/explore` terpisah; digabung ke Home agar navigasi lebih ringkas.
-  static const _allFeatures = <_HomeFeature>[
-    _HomeFeature('Konseling AI', 'Teman cerita virtual', Icons.auto_awesome, AppColors.primary, '/chat'),
-    _HomeFeature('Jurnal', 'Tulis & refleksi harian', Icons.auto_stories_rounded, Color(0xFF6366F1), '/journal'),
-    _HomeFeature('Mood Tracker', 'Pantau suasana hati', Icons.mood_rounded, Color(0xFFF59E0B), '/mood/stats'),
-    _HomeFeature('Pernapasan', 'Latihan menenangkan', Icons.air_rounded, Color(0xFF14B8A6), '/breathing'),
-    _HomeFeature('Musik Relaksasi', 'Dengarkan & rileks', Icons.headphones_rounded, Color(0xFF8B5CF6), '/music'),
-    _HomeFeature('Forum', 'Diskusi komunitas', Icons.forum_rounded, Color(0xFF7C3AED), '/forum'),
-    _HomeFeature('Cerita Inspiratif', 'Kisah dari pengguna', Icons.menu_book_rounded, Color(0xFFEC4899), '/stories'),
-    _HomeFeature('Artikel', 'Bacaan kesehatan mental', Icons.article_rounded, Color(0xFF0EA5E9), '/articles'),
-    _HomeFeature('Game Hub', 'XP, badge & tantangan', Icons.emoji_events_rounded, Color(0xFFF59E0B), '/gamification'),
-    _HomeFeature('Statistik Komunitas', 'Pencapaian komunitas', Icons.insights_rounded, Color(0xFF0EA5E9), '/community'),
-    _HomeFeature('Wellness Plan', 'Rencana harianmu', Icons.self_improvement_rounded, Color(0xFF22C55E), '/wellness/plan'),
-    _HomeFeature('Mini Game', 'Mindful Runner (offline)', Icons.videogame_asset_rounded, Color(0xFF7C3AED), '/game'),
-    _HomeFeature('Premium', 'Buka fitur eksklusif', Icons.workspace_premium_rounded, Color(0xFFD97706), '/billing/premium'),
-  ];
 
   /// Membuka bottom sheet berisi grid seluruh fitur aplikasi.
   void _showAllFeatures(BuildContext context) {
@@ -226,16 +212,16 @@ class HomeScreen extends StatelessWidget {
       maxHeight: MediaQuery.of(context).size.height * 0.8,
       child: GridView.builder(
         shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 200,
           mainAxisSpacing: 14,
           crossAxisSpacing: 14,
-          childAspectRatio: 1.05,
+          mainAxisExtent: 130,
         ),
-        itemCount: _allFeatures.length,
+        itemCount: kAllAppFeatures.length,
         itemBuilder: (context, index) {
-          final f = _allFeatures[index];
+          final f = kAllAppFeatures[index];
           return _buildExploreCard(context, f);
         },
       ),
@@ -243,7 +229,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Kartu fitur di dalam bottom sheet "Jelajahi Fitur".
-  Widget _buildExploreCard(BuildContext context, _HomeFeature f) {
+  Widget _buildExploreCard(BuildContext context, AppFeature f) {
     return Material(
       color: AppColors.card,
       borderRadius: BorderRadius.circular(22),
@@ -258,37 +244,24 @@ class HomeScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [f.color, f.color.withValues(alpha: 0.65)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: f.color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
-                ),
-                child: Icon(f.icon, color: Colors.white, size: 26),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: f.color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(f.icon, color: f.color, size: 24),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(f.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 2),
-                  Text(f.subtitle,
-                      style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12),
-                      maxLines: 2, overflow: TextOverflow.ellipsis),
-                ],
-              ),
+              const SizedBox(height: 6),
+              Text(f.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, height: 1.2),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 2),
+              Text(f.subtitle,
+                  style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12, height: 1.3),
+                  maxLines: 2, overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -312,7 +285,7 @@ class HomeScreen extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => context.push('/wellness/plan'),
+          onTap: () => context.push('/home/wellness/plan'),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -362,18 +335,19 @@ class HomeScreen extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
               ],
             ),
@@ -491,24 +465,20 @@ class HomeScreen extends StatelessWidget {
           onTap: () => context.push(route),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 24),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ],
-                ),
+                const SizedBox(height: 8),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -639,13 +609,3 @@ class _HomeXpCardState extends State<_HomeXpCard> {
 /// A soft, modern gradient backdrop is now provided globally via
 /// `GradientBackground` (see app.dart builder), so the home screen no longer
 /// needs its own backdrop widget.
-
-/// Data satu kartu fitur pada bottom sheet "Jelajahi Fitur".
-class _HomeFeature {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final String route;
-  const _HomeFeature(this.title, this.subtitle, this.icon, this.color, this.route);
-}

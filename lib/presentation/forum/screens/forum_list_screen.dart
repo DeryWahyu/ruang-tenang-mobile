@@ -7,6 +7,7 @@ import '../../common/widgets/app_skeleton.dart';
 import '../../common/widgets/app_empty_state.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../../domain/entities/forum.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../bloc/forum_bloc.dart';
 import '../bloc/forum_event.dart';
 import '../bloc/forum_state.dart';
@@ -105,7 +106,6 @@ class _ForumListViewState extends State<_ForumListView> {
 
   Widget _buildThreadCard(BuildContext context, ForumThread thread) {
     final authorName = thread.user?.name ?? 'Anonim';
-    final initial = authorName.isNotEmpty ? authorName.substring(0, 1).toUpperCase() : 'U';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -134,22 +134,10 @@ class _ForumListViewState extends State<_ForumListView> {
                 // Header: avatar + author + time + answered badge
                 Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [AppColors.red400, AppColors.red600],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        initial,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
+                    AppAvatar(
+                      name: authorName,
+                      imageUrl: thread.user?.avatar,
+                      size: 40,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

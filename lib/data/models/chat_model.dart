@@ -117,7 +117,7 @@ class ChatSessionModel extends Equatable {
   factory ChatSessionModel.fromJson(Map<String, dynamic> json) {
     return ChatSessionModel(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      uuid: json['uuid'] as String? ?? '',
+      uuid: json['uuid'] as String? ?? json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
       folderId: (json['folder_id'] as num?)?.toInt(),
       folderName: json['folder_name'] as String?,
@@ -234,7 +234,7 @@ class ChatSessionListItemModel extends Equatable {
   factory ChatSessionListItemModel.fromJson(Map<String, dynamic> json) {
     return ChatSessionListItemModel(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      uuid: json['uuid'] as String? ?? '',
+      uuid: json['uuid'] as String? ?? json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
       folderId: (json['folder_id'] as num?)?.toInt(),
       isFavorite: json['is_favorite'] as bool? ?? false,

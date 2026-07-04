@@ -157,7 +157,11 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
               backgroundColor: AppColors.primary,
             ),
           );
-          context.pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
         } else if (state.status == JournalStatus.failure && state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -175,11 +179,17 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.close_rounded, color: AppColors.foreground),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
           ),
           actions: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.only(right: 16.0),
               child: BlocBuilder<JournalBloc, JournalState>(
                 builder: (context, state) {
                   final isLoading = state.status == JournalStatus.loading;
@@ -189,7 +199,8 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      minimumSize: Size.zero,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
                     child: isLoading
@@ -214,21 +225,20 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
               // Meta bar (Tags & Mood)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _tagsController,
-                        decoration: InputDecoration(
-                          hintText: 'Tambah tag (pisahkan dengan koma)',
-                          hintStyle: TextStyle(color: AppColors.mutedForeground.withValues(alpha: 0.5), fontSize: 13),
-                          border: InputBorder.none,
-                          icon: Icon(Icons.sell_rounded, size: 18, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
-                        ),
-                        style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
+                    TextField(
+                      controller: _tagsController,
+                      decoration: InputDecoration(
+                        hintText: 'Tambah tag (pisahkan dengan koma)',
+                        hintStyle: TextStyle(color: AppColors.mutedForeground.withValues(alpha: 0.5), fontSize: 13),
+                        border: InputBorder.none,
+                        icon: Icon(Icons.sell_rounded, size: 18, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
                       ),
+                      style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 12),
                     InkWell(
                       onTap: _showMoodPicker,
                       borderRadius: BorderRadius.circular(20),
@@ -248,13 +258,13 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                               MoodEmoji(moodIndex: _selectedMoodId!, size: 20)
                             else
                               const Icon(Icons.mood_rounded, size: 18, color: AppColors.mutedForeground),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 8),
                             Text(
                               _selectedMoodId != null ? 'Mood' : 'Pilih Mood',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
                                 color: _selectedMoodId != null ? AppColors.foreground : AppColors.mutedForeground,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -321,7 +331,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                       TextField(
                         controller: _titleController,
                         style: const TextStyle(
-                          fontSize: 28,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: AppColors.foreground,
                         ),
@@ -332,6 +342,7 @@ class _JournalCreateScreenState extends State<JournalCreateScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                           border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
                         textCapitalization: TextCapitalization.sentences,
                       ),

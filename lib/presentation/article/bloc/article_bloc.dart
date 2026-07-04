@@ -102,7 +102,7 @@ class ArticleBloc extends Bloc<ArticleEvent, ArticleState> {
     ArticleCategorySelected event,
     Emitter<ArticleState> emit,
   ) async {
-    if (event.categoryId == state.selectedCategoryId) {
+    if (event.categoryId == null || event.categoryId == state.selectedCategoryId) {
       emit(state.copyWith(clearCategory: true));
     } else {
       emit(state.copyWith(selectedCategoryId: event.categoryId));

@@ -5,6 +5,7 @@ import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/helpers.dart';
 import '../../common/widgets/app_network_image.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../bloc/article_bloc.dart';
 import '../bloc/article_event.dart';
@@ -76,13 +77,10 @@ class _ArticleDetailView extends StatelessWidget {
                                     const SizedBox(height: 12),
                                     Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 16,
-                                          backgroundColor: AppColors.muted,
-                                          child: Text(
-                                            (article.author?.name ?? 'A').substring(0, 1).toUpperCase(),
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                          ),
+                                        AppAvatar(
+                                          name: article.author?.name ?? 'Anonim',
+                                          imageUrl: article.author?.avatar,
+                                          size: 32,
                                         ),
                                         const SizedBox(width: 10),
                                         Column(

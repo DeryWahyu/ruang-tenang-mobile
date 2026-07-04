@@ -44,9 +44,12 @@ class MainLayout extends StatelessWidget {
     }
   }
 
-  /// Tab yang memiliki FAB sendiri (Jurnal & Chat). Pada tab ini, FAB
-  /// daily-task dinaikkan agar tidak menumpuk dengan FAB milik screen.
-  static const _tabsWithOwnFab = {1, 2};
+  /// Tab yang memiliki FAB sendiri (Jurnal list & Chat list).
+  /// Pada layar tersebut, FAB daily-task dinaikkan agar tidak bertumpuk.
+  static bool _hasOwnFab(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    return location == '/journal' || location == '/chat';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +68,7 @@ class MainLayout extends StatelessWidget {
             // tab yang punya FAB sendiri (Jurnal/Chat) agar tidak bertumpuk.
             Positioned.fill(
               child: DailyTaskFab(
-                bottomOffset: _tabsWithOwnFab.contains(selectedIndex) ? 84 : 20,
+                bottomOffset: _hasOwnFab(context) ? 76 : 16,
               ),
             ),
           ],

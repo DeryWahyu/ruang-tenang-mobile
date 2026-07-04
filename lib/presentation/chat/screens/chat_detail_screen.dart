@@ -171,14 +171,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFB7185), Color(0xFFEF4444), Color(0xFFDC2626)],
-        ),
+        color: Colors.white,
         boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))],
       ),
-      child: Icon(Icons.auto_awesome, color: Colors.white, size: radius),
+      child: ClipOval(
+        child: Image.asset('assets/images/logo.webp', fit: BoxFit.cover),
+      ),
     );
   }
 

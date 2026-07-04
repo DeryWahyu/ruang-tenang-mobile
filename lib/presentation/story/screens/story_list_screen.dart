@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../common/widgets/app_network_image.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../../common/widgets/app_skeleton.dart';
 import '../../common/widgets/app_empty_state.dart';
 import '../../common/widgets/app_error_widget.dart';
@@ -129,10 +130,10 @@ class _StoryListView extends StatelessWidget {
                   Row(
                     children: [
                       if (story.author != null) ...[
-                        CircleAvatar(
-                          radius: 10,
-                          backgroundColor: AppColors.muted,
-                          child: Text(story.author!.name.isNotEmpty ? story.author!.name[0].toUpperCase() : 'A', style: const TextStyle(fontSize: 10)),
+                        AppAvatar(
+                          name: story.isAnonymous ? 'Anonim' : story.author!.name,
+                          imageUrl: story.isAnonymous ? null : story.author!.avatar,
+                          size: 20,
                         ),
                         const SizedBox(width: 6),
                         Text(story.isAnonymous ? 'Anonim' : story.author!.name, style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),

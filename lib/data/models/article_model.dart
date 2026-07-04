@@ -42,26 +42,30 @@ class ArticleCategoryModel extends Equatable {
 class ArticleAuthorModel extends Equatable {
   final int id;
   final String name;
+  final String? avatar;
 
   const ArticleAuthorModel({
     required this.id,
     required this.name,
+    this.avatar,
   });
 
   factory ArticleAuthorModel.fromJson(Map<String, dynamic> json) {
     return ArticleAuthorModel(
       id: (json['id'] as num?)?.toInt() ?? 0,
       name: json['name'] as String? ?? '',
+      avatar: json['avatar'] as String?,
     );
   }
 
   ArticleAuthor toEntity() => ArticleAuthor(
         id: id,
         name: name,
+        avatar: avatar,
       );
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, avatar];
 }
 
 class ArticleModel extends Equatable {

@@ -17,6 +17,7 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     on<StoryCategoriesRequested>(_onCategoriesRequested);
     on<StoryCommentsRequested>(_onCommentsRequested);
     on<StoryCommentCreateRequested>(_onCommentCreate);
+    on<StoryCommentHeartToggled>(_onCommentHeartToggled);
     on<StorySearchRequested>(_onSearchRequested);
   }
 
@@ -103,6 +104,31 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
         status: StoryStatus.failure,
         errorMessage: ErrorMessage.from(e, 'Gagal mengirim komentar'),
       ));
+    }
+  }
+
+  Future<void> _onCommentHeartToggled(StoryCommentHeartToggled event, Emitter<StoryState> emit) async {
+    final oldComments = state.comments;
+    final index = oldComments.indexWhere((c) => c.id == event.commentId);
+    if (index == -1) return;
+
+    final comment = oldComments[index];
+    final isHearted = !comment.hasHearted;
+    final newCount = comment.heartCount + (isHearted ? 1 : -1);
+
+    final newComments = List<StoryComment>.from(oldComments);
+    newComments[index] = comment.copyWith(
+      hasHearted: isHearted,
+      heartCount: newCount,
+    );
+
+    emit(state.copyWith(comments: newComments));
+
+    try {
+      await _repository.toggleCommentHeart(event.commentId);
+    } catch (_) {
+      // Revert on failure
+      emit(state.copyWith(comments: oldComments));
     }
   }
 

@@ -164,9 +164,30 @@ class _WellnessPlanView extends StatelessWidget {
 
   void _handleItemTap(BuildContext context, String route) {
     if (route.isNotEmpty && route != '#') {
-      // route examples: /journal/new, /breathing, /chat/new
-      if (route.startsWith('/')) {
-        context.push(route);
+      String mobileRoute = route;
+      // Map web backend routes to mobile routes
+      if (route.startsWith('/dashboard/mood-tracker')) {
+        mobileRoute = '/mood';
+      } else if (route.startsWith('/dashboard/breathing')) {
+        mobileRoute = '/breathing';
+      } else if (route.startsWith('/dashboard/journal/create')) {
+        mobileRoute = '/journal/create';
+      } else if (route.startsWith('/dashboard/chat')) {
+        mobileRoute = '/chat/new';
+      } else if (route.startsWith('/dashboard/music')) {
+        mobileRoute = '/music';
+      } else if (route.startsWith('/dashboard/progress-map')) {
+        mobileRoute = '/gamification/progress-map';
+      } else if (route == '/dashboard') {
+        mobileRoute = '/home';
+      } else if (route.startsWith('/dashboard')) {
+        mobileRoute = route.replaceFirst('/dashboard', '');
+      }
+      
+      if (mobileRoute.startsWith('/')) {
+        // Strip query parameters if present to avoid go_router 404s
+        final uri = Uri.parse(mobileRoute);
+        context.push(uri.path);
       }
     }
   }

@@ -17,4 +17,5 @@ abstract class StoryRepository {
     int limit = 10,
   });
   Future<StoryComment> createComment(String storyId, String content);
+  Future<void> toggleCommentHeart(String commentId);
 }

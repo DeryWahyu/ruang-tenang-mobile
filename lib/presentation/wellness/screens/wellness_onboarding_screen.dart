@@ -31,7 +31,7 @@ class _WellnessOnboardingScreenState extends State<WellnessOnboardingScreen> {
       child: BlocConsumer<WellnessBloc, WellnessState>(
         listener: (context, state) {
           if (state.status == WellnessStatus.success && state.plan != null) {
-            context.go('/wellness/plan'); // Redirect to plan once generated
+            context.go('/home/wellness/plan'); // Redirect to plan once generated
           } else if (state.status == WellnessStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage)));
           }
@@ -107,7 +107,7 @@ class _WellnessOnboardingScreenState extends State<WellnessOnboardingScreen> {
             spacing: 12,
             runSpacing: 12,
             children: _moodOptions.map((mood) => ChoiceChip(
-              label: Text(mood),
+              label: Text(mood, style: TextStyle(color: _selectedMood == mood ? AppColors.primary : AppColors.foreground, fontWeight: _selectedMood == mood ? FontWeight.bold : FontWeight.normal)),
               selected: _selectedMood == mood,
               onSelected: (selected) => setState(() => _selectedMood = selected ? mood : ''),
             )).toList(),
@@ -126,7 +126,7 @@ class _WellnessOnboardingScreenState extends State<WellnessOnboardingScreen> {
             spacing: 12,
             runSpacing: 12,
             children: _goalOptions.map((goal) => FilterChip(
-              label: Text(goal),
+              label: Text(goal, style: TextStyle(color: _selectedGoals.contains(goal) ? AppColors.primary : AppColors.foreground, fontWeight: _selectedGoals.contains(goal) ? FontWeight.bold : FontWeight.normal)),
               selected: _selectedGoals.contains(goal),
               onSelected: (selected) {
                 setState(() {
@@ -153,7 +153,7 @@ class _WellnessOnboardingScreenState extends State<WellnessOnboardingScreen> {
             spacing: 12,
             runSpacing: 12,
             children: _habitOptions.map((habit) => FilterChip(
-              label: Text(habit),
+              label: Text(habit, style: TextStyle(color: _selectedHabits.contains(habit) ? AppColors.primary : AppColors.foreground, fontWeight: _selectedHabits.contains(habit) ? FontWeight.bold : FontWeight.normal)),
               selected: _selectedHabits.contains(habit),
               onSelected: (selected) {
                 setState(() {

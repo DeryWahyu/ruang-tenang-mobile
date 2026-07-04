@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../domain/entities/mood.dart';
@@ -85,7 +85,7 @@ class MoodPicker extends StatelessWidget {
         crossAxisCount: 3,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.72,
         children: items,
       );
     }

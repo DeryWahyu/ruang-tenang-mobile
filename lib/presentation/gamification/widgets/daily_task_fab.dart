@@ -36,15 +36,15 @@ class _DailyTaskFabState extends State<DailyTaskFab> {
     super.dispose();
   }
 
+  bool _isNavigating = false;
+
   void _openTasks() {
-    // Defer to after the current frame so the route push doesn't mutate the
-    // widget tree synchronously inside the pointer/hover event — this avoids
-    // MouseTracker reentrancy assertions on desktop/web.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.push('/gamification/daily-tasks').then((_) {
-        if (mounted) _bloc.add(const GamificationDailyTasksRequested());
-      });
+    if (_isNavigating) return;
+    _isNavigating = true;
+    
+    context.push('/gamification/daily-tasks').then((_) {
+      _isNavigating = false;
+      if (mounted) _bloc.add(const GamificationDailyTasksRequested());
     });
   }
 

@@ -84,6 +84,42 @@ class ForumThread extends Equatable {
     required this.updatedAt,
   });
 
+  ForumThread copyWith({
+    int? id,
+    int? userId,
+    int? categoryId,
+    String? slug,
+    String? title,
+    String? content,
+    bool? isFlagged,
+    bool? hasAcceptedAnswer,
+    int? repliesCount,
+    int? likesCount,
+    bool? isLiked,
+    UserBrief? user,
+    ForumCategory? category,
+    String? createdAt,
+    String? updatedAt,
+  }) {
+    return ForumThread(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      categoryId: categoryId ?? this.categoryId,
+      slug: slug ?? this.slug,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      isFlagged: isFlagged ?? this.isFlagged,
+      hasAcceptedAnswer: hasAcceptedAnswer ?? this.hasAcceptedAnswer,
+      repliesCount: repliesCount ?? this.repliesCount,
+      likesCount: likesCount ?? this.likesCount,
+      isLiked: isLiked ?? this.isLiked,
+      user: user ?? this.user,
+      category: category ?? this.category,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id, userId, categoryId, slug, title, content,

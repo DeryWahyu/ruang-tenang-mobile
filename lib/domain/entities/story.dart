@@ -182,6 +182,26 @@ class StoryComment extends Equatable {
         isHidden,
         createdAt,
       ];
+
+  StoryComment copyWith({
+    String? id,
+    String? content,
+    int? heartCount,
+    StoryAuthor? author,
+    bool? hasHearted,
+    bool? isHidden,
+    DateTime? createdAt,
+  }) {
+    return StoryComment(
+      id: id ?? this.id,
+      content: content ?? this.content,
+      heartCount: heartCount ?? this.heartCount,
+      author: author ?? this.author,
+      hasHearted: hasHearted ?? this.hasHearted,
+      isHidden: isHidden ?? this.isHidden,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 class StoryStats extends Equatable {

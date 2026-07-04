@@ -319,10 +319,7 @@ class AppRouter {
           path: '/wellness/onboarding',
           builder: (context, state) => const WellnessOnboardingScreen(),
         ),
-        GoRoute(
-          path: '/wellness/plan',
-          builder: (context, state) => const WellnessPlanScreen(),
-        ),
+
         // Search
         GoRoute(
           path: '/search',
@@ -357,6 +354,12 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: HomeScreen(),
               ),
+              routes: [
+                GoRoute(
+                  path: 'wellness/plan',
+                  builder: (context, state) => const WellnessPlanScreen(),
+                ),
+              ],
             ),
             GoRoute(
               path: '/journal',

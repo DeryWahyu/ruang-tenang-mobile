@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/constants/app_features.dart';
 import '../../common/widgets/app_network_image.dart';
 import '../../../domain/entities/music.dart';
 import '../../music/bloc/music_bloc.dart';
@@ -32,10 +34,12 @@ class _GlobalSearchView extends StatefulWidget {
 
 class _GlobalSearchViewState extends State<_GlobalSearchView> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
   String _currentTab = 'Semua';
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -53,6 +57,7 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        titleSpacing: 0,
         title: TextField(
           controller: _searchController,
           autofocus: true,
@@ -67,6 +72,12 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
               },
             ),
           ),
+          onChanged: (value) {
+            if (_debounce?.isActive ?? false) _debounce!.cancel();
+            _debounce = Timer(const Duration(milliseconds: 500), () {
+              if (mounted) _onSearch(context);
+            });
+          },
           onSubmitted: (_) => _onSearch(context),
           textInputAction: TextInputAction.search,
         ),
@@ -89,10 +100,11 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
           final result = state.result!;
           final articles = result.articles;
           final songs = result.songs;
+          final features = result.features;
 
           return Column(
             children: [
-              _buildTabs(articles.length, songs.length),
+              _buildTabs(articles.length, songs.length, features.length),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(16),
@@ -107,6 +119,12 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
                       const Text('Lagu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       const SizedBox(height: 12),
                       ...songs.map((s) => _buildSongItem(context, s)),
+                      const SizedBox(height: 24),
+                    ],
+                    if ((_currentTab == 'Semua' || _currentTab == 'Fitur') && features.isNotEmpty) ...[
+                      const Text('Fitur Aplikasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(height: 12),
+                      ...features.map((f) => _buildFeatureItem(context, f)),
                     ],
                   ],
                 ),
@@ -131,15 +149,16 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
     );
   }
 
-  Widget _buildTabs(int articlesCount, int songsCount) {
+  Widget _buildTabs(int articlesCount, int songsCount, int featuresCount) {
     return Container(
       color: AppColors.card,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildTabItem('Semua', articlesCount + songsCount),
+          _buildTabItem('Semua', articlesCount + songsCount + featuresCount),
           _buildTabItem('Artikel', articlesCount),
           _buildTabItem('Lagu', songsCount),
+          _buildTabItem('Fitur', featuresCount),
         ],
       ),
     );
@@ -194,6 +213,28 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
       title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       subtitle: Text('Lagu', style: TextStyle(color: Colors.blue, fontSize: 12)),
       trailing: const Icon(Icons.play_circle_filled, color: AppColors.primary),
+    );
+  }
+
+  Widget _buildFeatureItem(BuildContext context, AppFeature feature) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      onTap: () {
+        context.pop(); // close search
+        context.push(feature.route);
+      },
+      leading: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: feature.color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(feature.icon, color: feature.color),
+      ),
+      title: Text(feature.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+      subtitle: Text('Fitur', style: TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
+      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
     );
   }
 }

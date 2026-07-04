@@ -1,7 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/chat.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../common/widgets/app_avatar.dart';
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
@@ -10,6 +13,7 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<AuthBloc>().state.user;
     final isUser = message.role == 'user';
     final timeStr = DateFormat('HH:mm').format(message.createdAt);
 
@@ -19,26 +23,30 @@ class ChatBubble extends StatelessWidget {
         mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isUser) ...[
+          if (!isUser)
             Container(
               margin: const EdgeInsets.only(right: 12),
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFB7185), Color(0xFFEF4444), Color(0xFFDC2626)],
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.2),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.primary,
-                child: Icon(Icons.auto_awesome, color: Colors.white, size: 16),
-              ),
-            ),
-          ],
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+            )
+          else
+            const SizedBox(width: 44),
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -82,7 +90,17 @@ class ChatBubble extends StatelessWidget {
               ),
             ),
           ),
-          if (isUser) const SizedBox(width: 28), // Spacer to balance AI avatar width on the left
+          if (isUser)
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: AppAvatar(
+                imageUrl: user?.avatar,
+                name: user?.name ?? 'User',
+                size: 32,
+              ),
+            )
+          else
+            const SizedBox(width: 44),
         ],
       ),
     );

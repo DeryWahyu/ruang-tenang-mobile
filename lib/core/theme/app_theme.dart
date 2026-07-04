@@ -142,7 +142,7 @@ class AppTheme {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        showDragHandle: true,
+        showDragHandle: false,
         dragHandleColor: AppColors.gray300,
       ),
       chipTheme: ChipThemeData(

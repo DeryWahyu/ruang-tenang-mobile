@@ -4,6 +4,7 @@ import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/forum.dart';
 import '../../common/widgets/app_error_widget.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../bloc/forum_bloc.dart';
 import '../bloc/forum_event.dart';
 import '../bloc/forum_state.dart';
@@ -124,13 +125,10 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: AppColors.red100,
-                  child: Text(
-                    (forum.user?.name ?? 'U').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
-                  ),
+                AppAvatar(
+                  name: forum.user?.name ?? 'Anonim',
+                  imageUrl: forum.user?.avatar,
+                  size: 40,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -154,7 +152,7 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
             Row(
               children: [
                 InkWell(
-                  onTap: () => context.read<ForumBloc>().add(ForumLikeToggled(forum.id)),
+                  onTap: () => context.read<ForumBloc>().add(ForumLikeToggled(forum.slug)),
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.all(4),
@@ -200,10 +198,10 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: AppColors.muted,
-                  child: Text((post.user?.name ?? 'U').substring(0, 1).toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                AppAvatar(
+                  name: post.user?.name ?? 'Anonim',
+                  imageUrl: post.user?.avatar,
+                  size: 28,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -289,7 +287,8 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   isDense: true,
                 ),
-                maxLines: null,
+                minLines: 1,
+                maxLines: 5,
               ),
             ),
             const SizedBox(width: 8),

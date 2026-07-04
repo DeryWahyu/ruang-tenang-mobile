@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../common/widgets/app_network_image.dart';
 import '../../../domain/entities/story.dart';
 import '../../common/widgets/app_error_widget.dart';
+import '../../common/widgets/app_avatar.dart';
 import '../bloc/story_bloc.dart';
 import '../bloc/story_event.dart';
 import '../bloc/story_state.dart';
@@ -104,13 +105,10 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
                                     const SizedBox(height: 12),
                                     Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 16,
-                                          backgroundColor: AppColors.muted,
-                                          child: Text(
-                                            story.isAnonymous ? 'A' : (story.author?.name ?? 'A').substring(0, 1).toUpperCase(),
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                          ),
+                                        AppAvatar(
+                                          name: story.isAnonymous ? 'Anonim' : (story.author?.name ?? 'Anonim'),
+                                          imageUrl: story.isAnonymous ? null : story.author?.avatar,
+                                          size: 32,
                                         ),
                                         const SizedBox(width: 10),
                                         Column(
@@ -175,7 +173,7 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
                                       Wrap(
                                         spacing: 6,
                                         children: story.categories.map((cat) => Chip(
-                                          label: Text(cat.name, style: const TextStyle(fontSize: 12)),
+                                          label: Text(cat.name, style: const TextStyle(fontSize: 12, color: AppColors.storyIcon, fontWeight: FontWeight.w600)),
                                           backgroundColor: AppColors.storyIconBg,
                                           side: BorderSide.none,
                                           padding: EdgeInsets.zero,
@@ -213,13 +211,10 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: AppColors.muted,
-            child: Text(
-              (comment.author?.name ?? 'A').substring(0, 1).toUpperCase(),
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-            ),
+          AppAvatar(
+            name: comment.author?.name ?? 'Anonim',
+            imageUrl: comment.author?.avatar,
+            size: 28,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -236,12 +231,21 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
                 const SizedBox(height: 4),
                 Text(comment.content, style: const TextStyle(fontSize: 13, height: 1.4)),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.favorite, size: 14, color: comment.hasHearted ? AppColors.primary : AppColors.mutedForeground),
-                    const SizedBox(width: 4),
-                    Text('${comment.heartCount}', style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
-                  ],
+                GestureDetector(
+                  onTap: () {
+                    context.read<StoryBloc>().add(StoryCommentHeartToggled(comment.id));
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        comment.hasHearted ? Icons.favorite : Icons.favorite_border,
+                        size: 14,
+                        color: comment.hasHearted ? AppColors.primary : AppColors.mutedForeground,
+                      ),
+                      const SizedBox(width: 4),
+                      Text('${comment.heartCount}', style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                    ],
+                  ),
                 ),
               ],
             ),

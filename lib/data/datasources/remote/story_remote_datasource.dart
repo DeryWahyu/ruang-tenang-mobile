@@ -115,4 +115,17 @@ class StoryRemoteDataSource {
 
     return StoryCommentModel.fromJson(response.data!);
   }
+
+  /// POST /stories/comments/:id/heart
+  Future<void> toggleCommentHeart(String commentId) async {
+    final response = await _apiClient.post<dynamic>(
+      '${ApiConstants.stories}/comments/$commentId/heart',
+      data: {},
+      fromJson: (json) => json,
+    );
+
+    if (!response.success) {
+      throw Exception(response.error ?? 'Gagal memproses permintaan');
+    }
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../../core/utils/media_url.dart';
 
 class AppAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -63,20 +64,8 @@ class AppAvatar extends StatelessWidget {
     this.badge,
   }) : size = AppDimensions.avatarXl;
 
-  String get _initials {
-    if (name == null || name!.isEmpty) return '?';
-    final parts = name!.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return parts[0][0].toUpperCase();
-  }
-
-  double get _fontSize {
-    if (size <= AppDimensions.avatarSm) return 12;
-    if (size <= AppDimensions.avatarMd) return 14;
-    if (size <= AppDimensions.avatarLg) return 20;
-    return 28;
+  String? get _fullImageUrl {
+    return resolveMediaUrl(imageUrl);
   }
 
   @override
@@ -91,10 +80,10 @@ class AppAvatar extends StatelessWidget {
             ? Border.all(color: AppColors.card, width: 2)
             : null,
       ),
-      child: imageUrl != null && imageUrl!.isNotEmpty
+      child: _fullImageUrl != null && _fullImageUrl!.isNotEmpty
           ? ClipOval(
               child: CachedNetworkImage(
-                imageUrl: imageUrl!,
+                imageUrl: _fullImageUrl!,
                 width: size,
                 height: size,
                 fit: BoxFit.cover,
@@ -127,14 +116,15 @@ class AppAvatar extends StatelessWidget {
   }
 
   Widget _buildInitials() {
-    return Center(
-      child: Text(
-        _initials,
-        style: TextStyle(
-          color: AppColors.primary,
-          fontSize: _fontSize,
-          fontWeight: FontWeight.w600,
-        ),
+    return Container(
+      width: size,
+      height: size,
+      color: backgroundColor ?? AppColors.card,
+      child: Image.asset(
+        'assets/images/dummy-profile.png',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
       ),
     );
   }

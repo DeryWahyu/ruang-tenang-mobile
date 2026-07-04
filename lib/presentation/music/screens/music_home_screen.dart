@@ -289,47 +289,45 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
   Widget _playlistCard(BuildContext context, PlaylistListItem playlist) {
     return AppCard(
       margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12.0),
       onTap: () => _openPlaylist(playlist.uuid),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            _thumb(playlist.thumbnail, Icons.queue_music, 56),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(playlist.name,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  if ((playlist.description ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(playlist.description!,
-                        maxLines: 2, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
-                  ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.music_note, size: 14, color: AppColors.mutedForeground),
-                      const SizedBox(width: 4),
-                      Text('${playlist.itemCount} lagu',
-                          style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
-                      if (playlist.isPublic) ...[
-                        const SizedBox(width: 12),
-                        const Icon(Icons.public, size: 14, color: AppColors.mutedForeground),
-                        const SizedBox(width: 4),
-                        const Text('Publik', style: TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
-                      ],
-                    ],
-                  ),
+      child: Row(
+        children: [
+          _thumb(playlist.thumbnail, Icons.queue_music, 56),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(playlist.name,
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                if ((playlist.description ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(playlist.description!,
+                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
                 ],
-              ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.music_note, size: 14, color: AppColors.mutedForeground),
+                    const SizedBox(width: 4),
+                    Text('${playlist.itemCount} lagu',
+                        style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                    if (playlist.isPublic) ...[
+                      const SizedBox(width: 12),
+                      const Icon(Icons.public, size: 14, color: AppColors.mutedForeground),
+                      const SizedBox(width: 4),
+                      const Text('Publik', style: TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                    ],
+                  ],
+                ),
+              ],
             ),
-            const Icon(Icons.chevron_right, color: AppColors.mutedForeground),
-          ],
-        ),
+          ),
+          const Icon(Icons.chevron_right, color: AppColors.mutedForeground),
+        ],
       ),
     );
   }

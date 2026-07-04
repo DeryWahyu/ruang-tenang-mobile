@@ -70,10 +70,10 @@ class ForumRemoteDataSource {
     return ForumThreadModel.fromJson(response.data!);
   }
 
-  /// PUT /forums/:id/like
-  Future<void> toggleLike(int id) async {
+  /// PUT /forums/:slug/like
+  Future<void> toggleLike(String slug) async {
     final response = await _apiClient.put<dynamic>(
-      '${ApiConstants.forums}/$id/like',
+      '${ApiConstants.forums}/$slug/like',
     );
 
     if (!response.success) {

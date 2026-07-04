@@ -13,7 +13,7 @@ abstract class ForumRepository {
     required String content,
     int? categoryId,
   });
-  Future<void> toggleLike(int id);
+  Future<void> toggleLike(String slug);
   Future<List<ForumCategory>> getCategories();
   Future<List<ForumPost>> getPosts(
     String slug, {

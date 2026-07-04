@@ -143,17 +143,36 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       currentSession: session,
     ));
 
+    final optimisticMessage = ChatMessage(
+      id: 0,
+      role: 'user',
+      content: content,
+      type: 'text',
+      isLiked: false,
+      isDisliked: false,
+      isPinned: false,
+      createdAt: DateTime.now(),
+    );
+    final optimisticSession = session.copyWith(
+      messages: [...session.messages, optimisticMessage],
+    );
+
     // 2. Kirim pesan pertama pada sesi yang baru dibuat.
-    emit(state.copyWith(status: ChatStatus.sendingMessage));
+    emit(state.copyWith(
+      status: ChatStatus.sendingMessage,
+      currentSession: optimisticSession,
+    ));
     try {
       final result = await _useCases.sendMessage(session.uuid, content);
 
+      // Remove the optimistic message (last item) and append the real ones
+      final originalMessages = optimisticSession.messages.sublist(0, optimisticSession.messages.length - 1);
       final updatedMessages = [
-        ...session.messages,
+        ...originalMessages,
         result.userMessage,
         result.aiMessage,
       ];
-      var updatedSession = session.copyWith(messages: updatedMessages);
+      var updatedSession = optimisticSession.copyWith(messages: updatedMessages);
 
       // Muat ulang sesi agar mendapat judul yang dibuat otomatis oleh backend
       // dari pesan pertama. Jika gagal, tetap pakai gabungan pesan lokal.
@@ -169,8 +188,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         currentSession: updatedSession,
       ));
     } catch (e) {
+      final originalSession = optimisticSession.copyWith(
+        messages: optimisticSession.messages.sublist(0, optimisticSession.messages.length - 1),
+      );
       emit(state.copyWith(
         status: ChatStatus.detailSuccess,
+        currentSession: originalSession,
         errorMessage: ErrorMessage.from(e, 'Gagal mengirim pesan.'),
       ));
     }
@@ -202,31 +225,52 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ChatMessageSendRequested event, Emitter<ChatState> emit) async {
     if (state.currentSession == null) return;
 
-    emit(state.copyWith(status: ChatStatus.sendingMessage));
+    final optimisticMessage = ChatMessage(
+      id: 0,
+      role: 'user',
+      content: event.content.trim(),
+      type: 'text',
+      isLiked: false,
+      isDisliked: false,
+      isPinned: false,
+      createdAt: DateTime.now(),
+    );
+    final optimisticSession = state.currentSession!.copyWith(
+      messages: [...state.currentSession!.messages, optimisticMessage],
+    );
+
+    emit(state.copyWith(
+      status: ChatStatus.sendingMessage,
+      currentSession: optimisticSession,
+    ));
 
     try {
       final result =
           await _useCases.sendMessage(event.uuid, event.content.trim());
 
+      // Remove the optimistic message (last item) and append the real ones
+      final originalMessages = optimisticSession.messages.sublist(0, optimisticSession.messages.length - 1);
       final updatedMessages = [
-        ...state.currentSession!.messages,
+        ...originalMessages,
         result.userMessage,
         result.aiMessage,
       ];
 
       final updatedSession =
-          state.currentSession!.copyWith(messages: updatedMessages);
+          optimisticSession.copyWith(messages: updatedMessages);
 
       emit(state.copyWith(
         status: ChatStatus.detailSuccess,
         currentSession: updatedSession,
       ));
     } catch (e) {
-      // Tetap di detailSuccess agar percakapan tetap tampil. Jalur ini juga
-      // menangani kuota chat habis — pesan error dari API (mis. "kuota habis")
-      // diteruskan apa adanya lewat ErrorMessage.from.
+      // Tetap di detailSuccess agar percakapan tetap tampil, hapus optimistic message jika gagal
+      final originalSession = optimisticSession.copyWith(
+        messages: optimisticSession.messages.sublist(0, optimisticSession.messages.length - 1),
+      );
       emit(state.copyWith(
         status: ChatStatus.detailSuccess,
+        currentSession: originalSession,
         errorMessage: ErrorMessage.from(e, 'Gagal mengirim pesan.'),
       ));
     }

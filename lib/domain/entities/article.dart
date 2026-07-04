@@ -22,14 +22,16 @@ class ArticleCategory extends Equatable {
 class ArticleAuthor extends Equatable {
   final int id;
   final String name;
+  final String? avatar;
 
   const ArticleAuthor({
     required this.id,
     required this.name,
+    this.avatar,
   });
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, avatar];
 }
 
 class Article extends Equatable {

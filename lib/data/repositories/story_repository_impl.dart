@@ -60,4 +60,9 @@ class StoryRepositoryImpl implements StoryRepository {
     final model = await _remote.createComment(storyId, content);
     return model.toEntity();
   }
+
+  @override
+  Future<void> toggleCommentHeart(String commentId) async {
+    await _remote.toggleCommentHeart(commentId);
+  }
 }

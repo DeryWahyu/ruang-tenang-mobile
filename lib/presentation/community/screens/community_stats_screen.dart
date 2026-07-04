@@ -146,13 +146,15 @@ class _StatsGrid extends StatelessWidget {
       ),
     ];
 
-    return GridView.extent(
-      maxCrossAxisExtent: 240,
+    return GridView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.35,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 240,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 140,
+      ),
       children: cards.map((c) => _StatCard(data: c)).toList(),
     );
   }

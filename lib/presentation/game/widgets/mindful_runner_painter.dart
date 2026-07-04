@@ -134,6 +134,11 @@ class MindfulRunnerPainter extends CustomPainter {
     final bobY = engine.isJumping ? 0.0 : sin(frame * 0.1) * 3;
     final pY = y + bobY;
 
+    canvas.save();
+    canvas.translate(x + 12, pY);
+    canvas.scale(1.5);
+    canvas.translate(-(x + 12), -pY);
+
     // Bayangan.
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(x + 12, kGroundY + 24), width: 28, height: 8),
@@ -196,6 +201,8 @@ class MindfulRunnerPainter extends CustomPainter {
       canvas.drawLine(Offset(x + 4, pY - 10), Offset(x - 2 + armSwing, pY + 4), armPaint);
       canvas.drawLine(Offset(x + 20, pY - 10), Offset(x + 26 - armSwing, pY + 4), armPaint);
     }
+    
+    canvas.restore();
   }
 
   void _drawObstacle(Canvas canvas, Obstacle obs) {
@@ -250,6 +257,11 @@ class MindfulRunnerPainter extends CustomPainter {
     final cx = c.x;
     final cy = c.y + bob;
 
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.scale(1.5);
+    canvas.translate(-cx, -cy);
+
     // Glow.
     canvas.drawCircle(
       Offset(cx, cy), 14,
@@ -280,6 +292,7 @@ class MindfulRunnerPainter extends CustomPainter {
         canvas.drawCircle(Offset(cx, cy), 3, Paint()..color = _flowerCenter);
         break;
     }
+    canvas.restore();
   }
 
   void _drawParticles(Canvas canvas) {
@@ -294,7 +307,7 @@ class MindfulRunnerPainter extends CustomPainter {
       _drawText(
         canvas, ft.text, Offset(ft.x, ft.y),
         color: _text.withValues(alpha: (ft.life / ft.maxLife).clamp(0.0, 1.0)),
-        fontSize: 14, bold: true, center: true,
+        fontSize: 20, bold: true, center: true,
       );
     }
   }
@@ -304,23 +317,23 @@ class MindfulRunnerPainter extends CustomPainter {
     final t = engine.affirmationTimer;
     final alpha = t > 100 ? (120 - t) / 20 : t > 20 ? 1.0 : t / 20;
     _drawText(
-      canvas, engine.affirmation, const Offset(kCanvasW / 2, 40),
+      canvas, engine.affirmation, const Offset(kCanvasW / 2, 80),
       color: _player.withValues(alpha: alpha.clamp(0.0, 1.0)),
-      fontSize: 18, bold: true, center: true,
+      fontSize: 28, bold: true, center: true,
     );
   }
 
   void _drawHud(Canvas canvas) {
-    _drawText(canvas, 'Skor: ${engine.score}', const Offset(12, 14), color: _text, fontSize: 14, bold: true);
+    _drawText(canvas, 'Skor: ${engine.score}', const Offset(20, 20), color: _text, fontSize: 24, bold: true);
     if (engine.highScore > 0) {
-      _drawText(canvas, 'Terbaik: ${engine.highScore}', const Offset(12, 32), color: _textLight, fontSize: 11);
+      _drawText(canvas, 'Terbaik: ${engine.highScore}', const Offset(20, 52), color: _textLight, fontSize: 18);
     }
     if (engine.combo > 1) {
-      _drawText(canvas, 'Combo x${engine.combo}', const Offset(12, 48), color: _player, fontSize: 12, bold: true);
+      _drawText(canvas, 'Combo x${engine.combo}', const Offset(20, 84), color: _player, fontSize: 20, bold: true);
     }
     if (engine.hasShield) {
       final secs = (engine.shieldFrames / 60).ceil();
-      _drawText(canvas, '🛡 Perisai ${secs}s', const Offset(12, 66), color: _flower, fontSize: 12, bold: true);
+      _drawText(canvas, '🛡 Perisai ${secs}s', const Offset(20, 116), color: _flower, fontSize: 20, bold: true);
     }
   }
 

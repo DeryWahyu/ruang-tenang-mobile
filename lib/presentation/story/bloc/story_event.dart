@@ -47,6 +47,13 @@ class StoryCommentCreateRequested extends StoryEvent {
   List<Object?> get props => [storyId, content];
 }
 
+class StoryCommentHeartToggled extends StoryEvent {
+  final String commentId;
+  const StoryCommentHeartToggled(this.commentId);
+  @override
+  List<Object?> get props => [commentId];
+}
+
 class StorySearchRequested extends StoryEvent {
   final String query;
   const StorySearchRequested(this.query);

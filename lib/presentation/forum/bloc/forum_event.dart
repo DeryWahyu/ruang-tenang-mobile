@@ -58,10 +58,10 @@ class ForumPostVoteRequested extends ForumEvent {
 }
 
 class ForumLikeToggled extends ForumEvent {
-  final int forumId;
-  const ForumLikeToggled(this.forumId);
+  final String slug;
+  const ForumLikeToggled(this.slug);
   @override
-  List<Object?> get props => [forumId];
+  List<Object?> get props => [slug];
 }
 
 class ForumSearchRequested extends ForumEvent {

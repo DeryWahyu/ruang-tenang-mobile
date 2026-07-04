@@ -10,9 +10,9 @@
 import 'dart:math';
 
 // ——— Konstanta dunia (selaras web, disempurnakan) ———
-const double kCanvasW = 1400;
-const double kCanvasH = 420;
-const double kGroundY = 330;
+const double kCanvasW = 800;
+const double kCanvasH = 1000;
+const double kGroundY = 750;
 const double kGravity = 0.6;
 const double kJumpForce = -11;
 const double kInitialSpeed = 4;
@@ -210,9 +210,9 @@ class MindfulRunnerEngine {
     clouds
       ..clear()
       ..addAll([
-        Cloud(x: 100, y: 40, width: 60, speed: 0.4),
-        Cloud(x: 350, y: 25, width: 80, speed: 0.3),
-        Cloud(x: 600, y: 55, width: 50, speed: 0.5),
+        Cloud(x: 100, y: 80, width: 60, speed: 0.4),
+        Cloud(x: 350, y: 50, width: 80, speed: 0.3),
+        Cloud(x: 600, y: 110, width: 50, speed: 0.5),
       ]);
     particles.clear();
     floatingTexts.clear();
@@ -301,8 +301,8 @@ class MindfulRunnerEngine {
     // Spawn obstacle
     if (_obstacleTravel >= _nextObstacleGap) {
       final type = ObstacleType.values[_rng.nextInt(ObstacleType.values.length)];
-      final w = type == ObstacleType.spiral ? 28.0 : 30 + _rng.nextDouble() * 20;
-      final h = type == ObstacleType.stress ? 40 + _rng.nextDouble() * 15 : 25 + _rng.nextDouble() * 20;
+      final w = type == ObstacleType.spiral ? 40.0 : 40 + _rng.nextDouble() * 30;
+      final h = type == ObstacleType.stress ? 60 + _rng.nextDouble() * 20 : 40 + _rng.nextDouble() * 30;
       obstacles.add(Obstacle(
         x: kCanvasW + 20, width: w, height: h, type: type,
         label: kObstacleLabels[_rng.nextInt(kObstacleLabels.length)],
@@ -383,7 +383,7 @@ class MindfulRunnerEngine {
     // Collision: obstacles (AABB dgn sedikit toleransi seperti web)
     bool collided = false;
     double colX = 0, colY = 0;
-    final pBox = _Rect(52, playerY - 32, 20, 48);
+    final pBox = _Rect(52, playerY - 48, 30, 72);
     for (final obs in obstacles) {
       final oBox = _Rect(obs.x, kGroundY + 24 - obs.height, obs.width, obs.height);
       final hit = pBox.x < oBox.x + oBox.w - 4 &&

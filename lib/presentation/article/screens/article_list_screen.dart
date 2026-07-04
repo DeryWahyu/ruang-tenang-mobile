@@ -85,6 +85,10 @@ class _ArticleListView extends StatelessWidget {
             onSelected: (_) => context.read<ArticleBloc>().add(const ArticleCategorySelected(null)),
             selectedColor: AppColors.red100,
             checkmarkColor: AppColors.primary,
+            labelStyle: TextStyle(
+              color: state.selectedCategoryId == null ? AppColors.primary : AppColors.foreground,
+              fontWeight: state.selectedCategoryId == null ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
           const SizedBox(width: 8),
           ...state.categories.map((cat) => Padding(
@@ -95,6 +99,10 @@ class _ArticleListView extends StatelessWidget {
                   onSelected: (_) => context.read<ArticleBloc>().add(ArticleCategorySelected(cat.id)),
                   selectedColor: AppColors.red100,
                   checkmarkColor: AppColors.primary,
+                  labelStyle: TextStyle(
+                    color: state.selectedCategoryId == cat.id ? AppColors.primary : AppColors.foreground,
+                    fontWeight: state.selectedCategoryId == cat.id ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
               )),
         ],
@@ -110,25 +118,28 @@ class _ArticleListView extends StatelessWidget {
       elevation: 0,
       child: InkWell(
         onTap: () => context.push('/articles/${article.slug}'),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-              child: article.thumbnail.isNotEmpty
-                  ? AppNetworkImage(
-                      url: article.thumbnail,
-                      width: 110,
-                      height: 110,
-                      fallbackIcon: Icons.article,
-                    )
-                  : Container(
-                      width: 110,
-                      height: 110,
-                      color: AppColors.muted,
-                      child: const Icon(Icons.article, color: AppColors.mutedForeground),
-                    ),
-            ),
-            Expanded(
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 110,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                  child: article.thumbnail.isNotEmpty
+                      ? AppNetworkImage(
+                          url: article.thumbnail,
+                          width: 110,
+                          fallbackIcon: Icons.article,
+                        )
+                      : Container(
+                          width: 110,
+                          color: AppColors.muted,
+                          child: const Icon(Icons.article, color: AppColors.mutedForeground),
+                        ),
+                ),
+              ),
+              Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -141,7 +152,7 @@ class _ArticleListView extends StatelessWidget {
                       ),
                     Text(article.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 6),
-                    Text(article.excerpt, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground, height: 1.3)),
+                    Text(article.excerpt.replaceAll(RegExp(r'<[^>]*>'), ''), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground, height: 1.3)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -159,6 +170,7 @@ class _ArticleListView extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
