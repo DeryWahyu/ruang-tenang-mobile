@@ -5,8 +5,13 @@ import 'package:flutter/material.dart';
 /// a transparent [Scaffold] background let this show through.
 class GradientBackground extends StatelessWidget {
   final Widget child;
+  final double intensity;
 
-  const GradientBackground({super.key, required this.child});
+  const GradientBackground({
+    super.key,
+    required this.child,
+    this.intensity = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +30,9 @@ class GradientBackground extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(top: -90, right: -70, child: _blob(const Color(0xFFEF4444), 0.10, 240)),
-          Positioned(top: 170, left: -80, child: _blob(const Color(0xFFF97316), 0.08, 220)),
-          Positioned(bottom: -110, right: -50, child: _blob(const Color(0xFFEF4444), 0.06, 260)),
+          Positioned(top: -90, right: -70, child: _blob(const Color(0xFFEF4444), 0.10 * intensity, 240)),
+          Positioned(top: 170, left: -80, child: _blob(const Color(0xFFF97316), 0.08 * intensity, 220)),
+          Positioned(bottom: -110, right: -50, child: _blob(const Color(0xFFEF4444), 0.06 * intensity, 260)),
           // Content (non-positioned → sizes the stack, painted on top).
           child,
         ],

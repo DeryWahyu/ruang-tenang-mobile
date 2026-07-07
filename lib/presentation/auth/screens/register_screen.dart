@@ -69,6 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       },
       child: GradientBackground(
+        intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
         appBar: AppBar(

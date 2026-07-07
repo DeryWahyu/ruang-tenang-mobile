@@ -75,6 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return GradientBackground(
+      intensity: 2.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
       body: SafeArea(

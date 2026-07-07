@@ -66,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: GradientBackground(
+        intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
         body: SafeArea(

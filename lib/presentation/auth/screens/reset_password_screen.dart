@@ -62,6 +62,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         }
       },
       child: GradientBackground(
+        intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
         appBar: AppBar(

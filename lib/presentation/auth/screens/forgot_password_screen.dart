@@ -56,6 +56,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         }
       },
       child: GradientBackground(
+        intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
         appBar: AppBar(
