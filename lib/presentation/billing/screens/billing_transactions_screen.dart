@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/error_message.dart';
@@ -344,21 +345,40 @@ class _TransactionCard extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 4),
-              InkWell(
-                onTap: onInvoice,
-                borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.download_rounded, size: 14, color: AppColors.primary),
-                      SizedBox(width: 3),
-                      Text('Invoice', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
-                    ],
+              if (tx.status.toLowerCase() == 'pending' && tx.snapUrl != null && tx.snapUrl!.isNotEmpty)
+                InkWell(
+                  onTap: () async {
+                    final uri = Uri.tryParse(tx.snapUrl!);
+                    if (uri != null) {
+                      await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Bayar', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              else
+                InkWell(
+                  onTap: onInvoice,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.download_rounded, size: 14, color: AppColors.primary),
+                        SizedBox(width: 3),
+                        Text('Invoice', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],

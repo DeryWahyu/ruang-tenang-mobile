@@ -135,6 +135,7 @@ class BillingTransaction extends Equatable {
   final String status; // pending | paid | failed | expired | ...
   final String paymentProvider;
   final String? failureReason;
+  final String? snapUrl;
   final DateTime? paidAt;
   final DateTime createdAt;
 
@@ -148,13 +149,14 @@ class BillingTransaction extends Equatable {
     required this.status,
     required this.paymentProvider,
     this.failureReason,
+    this.snapUrl,
     this.paidAt,
     required this.createdAt,
   });
 
   @override
   List<Object?> get props =>
-      [id, orderId, itemType, itemName, amount, currency, status, paymentProvider, failureReason, paidAt, createdAt];
+      [id, orderId, itemType, itemName, amount, currency, status, paymentProvider, failureReason, snapUrl, paidAt, createdAt];
 }
 
 /// Hasil paginasi daftar transaksi.

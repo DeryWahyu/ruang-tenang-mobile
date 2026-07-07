@@ -182,6 +182,11 @@ class BillingTransactionModel {
         failureReason: (j['failure_reason'] as String?)?.isNotEmpty == true
             ? j['failure_reason'] as String
             : null,
+        snapUrl: j['snap_url'] != null && j['snap_url'].toString().isNotEmpty
+            ? j['snap_url'] as String
+            : (j['snap_token'] != null && j['snap_token'].toString().isNotEmpty
+                ? 'https://app.sandbox.midtrans.com/snap/v3/redirection/${j['snap_token']}'
+                : null),
         paidAt: Json.date(j['paid_at']),
         createdAt: Json.date(j['created_at']) ?? DateTime.now(),
       );
