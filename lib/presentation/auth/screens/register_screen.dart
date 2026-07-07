@@ -6,6 +6,7 @@ import '../../../core/theme/app_dimensions.dart';
 import '../../../core/utils/validators.dart';
 import '../../common/widgets/app_button.dart';
 import '../../common/widgets/app_input.dart';
+import '../../common/widgets/gradient_background.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -67,8 +68,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
+      child: GradientBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -197,6 +199,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
