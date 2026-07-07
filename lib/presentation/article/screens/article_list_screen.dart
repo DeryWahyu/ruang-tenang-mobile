@@ -50,14 +50,30 @@ class _ArticleListView extends StatelessWidget {
                             onRetry: () => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
                           )
                         : state.items.isEmpty
-                            ? const AppEmptyState(
-                                icon: Icons.article_outlined,
-                                title: 'Belum Ada Artikel',
-                                subtitle: 'Artikel kesehatan mental akan muncul di sini.',
+                            ? RefreshIndicator(
+                                color: AppColors.primary,
+                                onRefresh: () async => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) => ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    children: [
+                                      Container(
+                                        height: constraints.maxHeight > 0 ? constraints.maxHeight : 400,
+                                        alignment: Alignment.center,
+                                        child: const AppEmptyState(
+                                          icon: Icons.article_outlined,
+                                          title: 'Belum Ada Artikel',
+                                          subtitle: 'Artikel kesehatan mental akan muncul di sini.',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               )
                             : RefreshIndicator(
                                 onRefresh: () async => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
                                 child: ListView.builder(
+                                  physics: const AlwaysScrollableScrollPhysics(),
                                   cacheExtent: 600,
                                   padding: const EdgeInsets.all(16),
                                   itemCount: state.items.length,

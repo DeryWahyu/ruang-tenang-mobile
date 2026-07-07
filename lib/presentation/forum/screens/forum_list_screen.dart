@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_search_bar.dart';
 import '../../common/widgets/app_skeleton.dart';
 import '../../common/widgets/app_empty_state.dart';
 import '../../common/widgets/app_error_widget.dart';
@@ -35,11 +37,24 @@ class _ForumListView extends StatefulWidget {
 
 class _ForumListViewState extends State<_ForumListView> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (query.trim().isEmpty) {
+        context.read<ForumBloc>().add(const ForumListRequested(refresh: true));
+      } else {
+        context.read<ForumBloc>().add(ForumSearchRequested(query.trim()));
+      }
+    });
   }
 
   @override
@@ -48,14 +63,23 @@ class _ForumListViewState extends State<_ForumListView> {
       appBar: AppBar(
         title: const Text('Forum Komunitas'),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearchDialog(context),
-          ),
-        ],
       ),
-      body: BlocConsumer<ForumBloc, ForumState>(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: AppSearchBar(
+              controller: _searchController,
+              hint: 'Cari Diskusi...',
+              onChanged: _onSearchChanged,
+              onClear: () {
+                _searchController.clear();
+                _onSearchChanged('');
+              },
+            ),
+          ),
+          Expanded(
+            child: BlocConsumer<ForumBloc, ForumState>(
         listener: (context, state) {
           if (state.status == ForumStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.successMessage)));
@@ -77,16 +101,32 @@ class _ForumListViewState extends State<_ForumListView> {
           }
 
           if (state.threads.isEmpty) {
-            return const AppEmptyState(
-              icon: Icons.forum_outlined,
-              title: 'Belum Ada Diskusi',
-              subtitle: 'Jadilah yang pertama memulai diskusi di komunitas.',
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async => context.read<ForumBloc>().add(const ForumListRequested(refresh: true)),
+              child: LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    Container(
+                      height: constraints.maxHeight > 0 ? constraints.maxHeight : 400,
+                      alignment: Alignment.center,
+                      child: const AppEmptyState(
+                        icon: Icons.forum_outlined,
+                        title: 'Belum Ada Diskusi',
+                        subtitle: 'Jadilah yang pertama memulai diskusi di komunitas.',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
           return RefreshIndicator(
             onRefresh: () async => context.read<ForumBloc>().add(const ForumListRequested(refresh: true)),
             child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
               cacheExtent: 600,
               padding: const EdgeInsets.all(16),
               itemCount: state.threads.length,
@@ -94,6 +134,9 @@ class _ForumListViewState extends State<_ForumListView> {
             ),
           );
         },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateDialog(context),
@@ -281,23 +324,6 @@ class _ForumListViewState extends State<_ForumListView> {
     );
   }
 
-  void _showSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cari Diskusi'),
-        content: TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(hintText: 'Kata kunci...', border: OutlineInputBorder()),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () { Navigator.pop(ctx); context.read<ForumBloc>().add(const ForumListRequested(refresh: true)); }, child: const Text('Reset')),
-          FilledButton(onPressed: () { Navigator.pop(ctx); context.read<ForumBloc>().add(ForumSearchRequested(_searchController.text.trim())); }, child: const Text('Cari')),
-        ],
-      ),
-    );
-  }
 
   String _formatDate(String dateStr) {
     try {

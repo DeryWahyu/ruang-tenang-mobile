@@ -73,6 +73,7 @@ class AppAvatar extends StatelessWidget {
     Widget avatar = Container(
       width: size,
       height: size,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: backgroundColor ?? AppColors.red100,

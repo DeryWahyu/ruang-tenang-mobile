@@ -96,8 +96,16 @@ class _PremiumPlansView extends StatelessWidget {
             return const Center(child: Text('Katalog tidak tersedia'));
           }
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<BillingBloc>()
+                ..add(const BillingCatalogRequested())
+                ..add(const BillingStatusRequested());
+              // Optional: wait a moment for animation if you don't want to wait for actual state change
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
+              padding: const EdgeInsets.all(16),
             children: [
               if (state.billingStatus != null) ...[
                 _buildStatusCard(context, state.billingStatus!),
@@ -121,6 +129,7 @@ class _PremiumPlansView extends StatelessWidget {
                 children: state.catalog!.topupPackages.map((pkg) => _buildCoinPackage(context, pkg)).toList(),
               ),
             ],
+            ),
           );
         },
       ),

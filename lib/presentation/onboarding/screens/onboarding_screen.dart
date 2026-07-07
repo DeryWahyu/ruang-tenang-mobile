@@ -194,9 +194,9 @@ class _OnboardingSlideView extends StatelessWidget {
         children: [
           // Ilustrasi: lingkaran gradient bertema merah + glow lembut.
           AnimatedScale(
-            scale: isActive ? 1 : 0.85,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutBack,
+            scale: isActive ? 1 : 0.4,
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.elasticOut,
             child: Container(
               width: 150,
               height: 150,
@@ -222,11 +222,11 @@ class _OnboardingSlideView extends StatelessWidget {
 
           AnimatedOpacity(
             opacity: isActive ? 1 : 0,
-            duration: const Duration(milliseconds: 400),
+            duration: const Duration(milliseconds: 600),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutBack,
-              transform: Matrix4.translationValues(0, isActive ? 0 : 40, 0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              transform: Matrix4.translationValues(0, isActive ? 0 : 80, 0),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                 child: Column(

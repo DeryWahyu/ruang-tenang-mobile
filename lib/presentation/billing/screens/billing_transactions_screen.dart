@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/error_message.dart';
+import '../../../core/utils/pdf_invoice_generator.dart';
 import '../../../domain/entities/billing.dart';
 import '../../../domain/repositories/billing_repository.dart';
 import '../../common/widgets/app_empty_state.dart';
@@ -92,12 +93,22 @@ class _BillingTransactionsViewState extends State<_BillingTransactionsView> {
     );
   }
 
-  void _downloadInvoice(String orderId) {
-    _shareCsv(
-      () => sl<BillingRepository>().getInvoiceCsv(orderId),
-      'invoice_$orderId.csv',
-      'Invoice $orderId',
-    );
+  Future<void> _downloadPdfInvoice(BillingTransaction tx) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final pdfBytes = await PdfInvoiceGenerator.generate(tx);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/invoice_${tx.orderId}.pdf');
+      await file.writeAsBytes(pdfBytes);
+      await Share.shareXFiles([XFile(file.path, mimeType: 'application/pdf')], subject: 'Invoice ${tx.orderId}');
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(ErrorMessage.from(e, 'Gagal mengekspor invoice')),
+          backgroundColor: AppColors.destructive,
+        ),
+      );
+    }
   }
 
   @override
@@ -144,10 +155,25 @@ class _BillingTransactionsViewState extends State<_BillingTransactionsView> {
                   );
                 }
                 if (state.transactions.isEmpty) {
-                  return const AppEmptyState(
-                    icon: Icons.receipt_long_rounded,
-                    title: 'Belum Ada Transaksi',
-                    subtitle: 'Pembelian premium dan top up koin akan muncul di sini.',
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () async => context.read<BillingBloc>().add(const BillingTransactionsRequested(refresh: true)),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          Container(
+                            height: constraints.maxHeight > 0 ? constraints.maxHeight : 400,
+                            alignment: Alignment.center,
+                            child: const AppEmptyState(
+                              icon: Icons.receipt_long_rounded,
+                              title: 'Belum Ada Transaksi',
+                              subtitle: 'Pembelian premium dan top up koin akan muncul di sini.',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
 
@@ -157,6 +183,7 @@ class _BillingTransactionsViewState extends State<_BillingTransactionsView> {
                       context.read<BillingBloc>().add(const BillingTransactionsRequested(refresh: true)),
                   child: ListView.separated(
                     controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
                     cacheExtent: 600,
                     padding: const EdgeInsets.all(16),
                     itemCount: state.transactions.length + (state.transactionsHasMore ? 1 : 0),
@@ -169,7 +196,7 @@ class _BillingTransactionsViewState extends State<_BillingTransactionsView> {
                         );
                       }
                       final tx = state.transactions[index];
-                      return _TransactionCard(tx: tx, onInvoice: () => _downloadInvoice(tx.orderId));
+                      return _TransactionCard(tx: tx, onInvoice: () => _downloadPdfInvoice(tx));
                     },
                   ),
                 );

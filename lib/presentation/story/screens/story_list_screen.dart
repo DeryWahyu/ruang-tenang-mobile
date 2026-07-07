@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../common/widgets/app_network_image.dart';
+
 import '../../common/widgets/app_avatar.dart';
 import '../../common/widgets/app_skeleton.dart';
 import '../../common/widgets/app_empty_state.dart';
@@ -53,16 +53,32 @@ class _StoryListView extends StatelessWidget {
           }
 
           if (state.stories.isEmpty) {
-            return const AppEmptyState(
-              icon: Icons.auto_stories_outlined,
-              title: 'Belum Ada Cerita',
-              subtitle: 'Kisah inspiratif dari komunitas akan muncul di sini.',
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async => context.read<StoryBloc>().add(const StoryListRequested(refresh: true)),
+              child: LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    Container(
+                      height: constraints.maxHeight > 0 ? constraints.maxHeight : 400,
+                      alignment: Alignment.center,
+                      child: const AppEmptyState(
+                        icon: Icons.auto_stories_outlined,
+                        title: 'Belum Ada Cerita',
+                        subtitle: 'Kisah inspiratif dari komunitas akan muncul di sini.',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
           return RefreshIndicator(
             onRefresh: () async => context.read<StoryBloc>().add(const StoryListRequested(refresh: true)),
             child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
               cacheExtent: 600,
               padding: const EdgeInsets.all(16),
               itemCount: state.stories.length,
@@ -85,25 +101,7 @@ class _StoryListView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (story.coverImage.isNotEmpty)
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: AppNetworkImage(
-                  url: story.coverImage,
-                  fit: BoxFit.cover,
-                  backgroundColor: AppColors.storyFrom,
-                  fallbackIcon: Icons.image,
-                  fallbackColor: AppColors.storyIcon,
-                ),
-              )
-            else
-              Container(
-                height: 140,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.storyFrom, AppColors.storyTo]),
-                ),
-                child: const Center(child: Icon(Icons.auto_stories, size: 40, color: AppColors.storyIcon)),
-              ),
+
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
