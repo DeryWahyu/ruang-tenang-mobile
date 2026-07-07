@@ -8,6 +8,7 @@ import '../../common/widgets/app_network_image.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
 import '../bloc/music_state.dart';
+import '../../../domain/entities/music.dart';
 
 /// Mini-player musik **global** yang mengikuti seluruh layar.
 ///

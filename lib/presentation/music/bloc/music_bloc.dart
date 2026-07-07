@@ -167,6 +167,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
 
     try {
       // Use LockCachingAudioSource to cache the downloaded audio locally
+      // ignore: experimental_member_use
       await _audioPlayer.setAudioSource(LockCachingAudioSource(Uri.parse(url)));
       await _audioPlayer.play();
     } catch (e) {
