@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,28 +24,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _slides = [
     _OnboardingSlide(
-      icon: Icons.chat_bubble_rounded,
+      icon: Icons.favorite_rounded,
       gradient: [Color(0xFFFB7185), Color(0xFFEF4444)],
-      title: 'Curhat dengan AI',
+      title: 'Ruang Aman untuk Bercerita',
       description:
-          'Ceritakan perasaanmu kapan saja kepada AI yang penuh empati. '
-          'Privasi terjaga, tanpa penghakiman.',
+          'AI pendengar setia kami siap memahami keluh kesahmu 24/7. '
+          'Privasi sepenuhnya terjaga, tanpa ada penghakiman.',
     ),
     _OnboardingSlide(
       icon: Icons.menu_book_rounded,
       gradient: [Color(0xFFFB923C), Color(0xFFF59E0B)],
-      title: 'Tulis Jurnal & Lacak Mood',
+      title: 'Kenali Dirimu Lebih Baik',
       description:
-          'Ekspresikan pikiranmu lewat jurnal harian dan pantau '
-          'perubahan suasana hatimu dari waktu ke waktu.',
+          'Catat perjalanan emosimu lewat jurnal harian. Pahami pola pikiranmu '
+          'dan lihat bagaimana kamu bertumbuh setiap harinya.',
+    ),
+    _OnboardingSlide(
+      icon: Icons.self_improvement_rounded,
+      gradient: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+      title: 'Tenangkan Pikiranmu',
+      description:
+          'Redakan stres seketika dengan panduan latihan pernapasan dan '
+          'alunan musik relaksasi yang menenangkan jiwa.',
     ),
     _OnboardingSlide(
       icon: Icons.groups_rounded,
       gradient: [Color(0xFFF87171), Color(0xFFDC2626)],
-      title: 'Bergabung dengan Komunitas',
+      title: 'Dukungan Sepenuh Hati',
       description:
-          'Temukan dukungan dari sesama, berbagi cerita inspiratif, '
-          'dan tumbuh bersama di komunitas yang aman.',
+          'Kamu tidak sendirian. Bergabunglah dengan komunitas yang positif '
+          'untuk saling menguatkan dan berbagi cerita.',
     ),
   ];
 
@@ -203,26 +213,52 @@ class _OnboardingSlideView extends StatelessWidget {
           AnimatedOpacity(
             opacity: isActive ? 1 : 0,
             duration: const Duration(milliseconds: 400),
-            child: Column(
-              children: [
-                Text(
-                  slide.title,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: AppColors.foreground,
-                        fontWeight: FontWeight.w700,
-                      ),
-                  textAlign: TextAlign.center,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutBack,
+              transform: Matrix4.translationValues(0, isActive ? 0 : 40, 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: slide.gradient.last.withValues(alpha: 0.1),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          slide.title,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                color: AppColors.foreground,
+                                fontWeight: FontWeight.bold,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingMd),
+                        Text(
+                          slide.description,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: AppColors.mutedForeground,
+                                height: 1.6,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: AppDimensions.spacingMd),
-                Text(
-                  slide.description,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.mutedForeground,
-                        height: 1.6,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+              ),
             ),
           ),
         ],
