@@ -48,6 +48,7 @@ dependencies:
 
   # Media
   just_audio: ^0.10.5
+  lottie: ^3.3.3
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +82,7 @@ flutter:
     - assets/images/illustrations/
     - assets/images/onboarding/
     - assets/icons/
+    - assets/lottie/
 
   fonts:
     - family: PlusJakartaSans

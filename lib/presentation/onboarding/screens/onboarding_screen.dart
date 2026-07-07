@@ -1,7 +1,7 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/storage_keys.dart';
 import '../../../core/di/injection_container.dart';
@@ -24,6 +24,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _slides = [
     _OnboardingSlide(
+      lottiePath: 'assets/lottie/chat.json',
       icon: Icons.favorite_rounded,
       gradient: [Color(0xFFFB7185), Color(0xFFEF4444)],
       title: 'Ruang Aman untuk Bercerita',
@@ -32,6 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Privasi sepenuhnya terjaga, tanpa ada penghakiman.',
     ),
     _OnboardingSlide(
+      lottiePath: 'assets/lottie/journal.json',
       icon: Icons.menu_book_rounded,
       gradient: [Color(0xFFFB923C), Color(0xFFF59E0B)],
       title: 'Kenali Dirimu Lebih Baik',
@@ -40,6 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'dan lihat bagaimana kamu bertumbuh setiap harinya.',
     ),
     _OnboardingSlide(
+      lottiePath: 'assets/lottie/relax.json',
       icon: Icons.self_improvement_rounded,
       gradient: [Color(0xFF38BDF8), Color(0xFF0284C7)],
       title: 'Tenangkan Pikiranmu',
@@ -48,6 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'alunan musik relaksasi yang menenangkan jiwa.',
     ),
     _OnboardingSlide(
+      lottiePath: 'assets/lottie/community.json',
       icon: Icons.groups_rounded,
       gradient: [Color(0xFFF87171), Color(0xFFDC2626)],
       title: 'Dukungan Sepenuh Hati',
@@ -205,7 +209,13 @@ class _OnboardingSlideView extends StatelessWidget {
                 ),
                 boxShadow: AppShadows.lg,
               ),
-              child: Icon(slide.icon, size: 68, color: Colors.white),
+              child: Lottie.asset(
+                slide.lottiePath,
+                width: 100,
+                height: 100,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stack) => Icon(slide.icon, size: 68, color: Colors.white),
+              ),
             ),
           ),
           const SizedBox(height: AppDimensions.spacing2xl),
@@ -217,46 +227,28 @@ class _OnboardingSlideView extends StatelessWidget {
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutBack,
               transform: Matrix4.translationValues(0, isActive ? 0 : 40, 0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.white, width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: slide.gradient.last.withValues(alpha: 0.1),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      slide.title,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: AppColors.foreground,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          slide.title,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: AppColors.foreground,
-                                fontWeight: FontWeight.bold,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppDimensions.spacingMd),
-                        Text(
-                          slide.description,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: AppColors.mutedForeground,
-                                height: 1.6,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                    const SizedBox(height: AppDimensions.spacingMd),
+                    Text(
+                      slide.description,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: AppColors.mutedForeground,
+                            height: 1.6,
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
@@ -268,12 +260,14 @@ class _OnboardingSlideView extends StatelessWidget {
 }
 
 class _OnboardingSlide {
+  final String lottiePath;
   final IconData icon;
   final List<Color> gradient;
   final String title;
   final String description;
 
   const _OnboardingSlide({
+    required this.lottiePath,
     required this.icon,
     required this.gradient,
     required this.title,
