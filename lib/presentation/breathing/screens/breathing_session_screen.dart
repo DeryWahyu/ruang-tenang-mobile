@@ -297,7 +297,7 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
   Color _phaseColor(_Phase p) {
     switch (p) {
       case _Phase.inhale:
-        return const Color(0xFF38BDF8);
+        return AppColors.primary;
       case _Phase.inhaleHold:
         return const Color(0xFFA78BFA);
       case _Phase.exhale:
@@ -309,7 +309,7 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
-    final color = _stage == _Stage.active ? _phaseColor(_phase) : const Color(0xFF38BDF8);
+    final color = _stage == _Stage.active ? _phaseColor(_phase) : AppColors.primary;
     return BlocListener<BreathingBloc, BreathingState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
