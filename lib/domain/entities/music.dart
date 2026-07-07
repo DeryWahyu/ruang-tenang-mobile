@@ -45,6 +45,7 @@ class Song extends Equatable {
   final int categoryId;
   final SongCategory? category;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Song({
     required this.id,
@@ -55,6 +56,7 @@ class Song extends Equatable {
     required this.categoryId,
     this.category,
     this.createdAt,
+    this.updatedAt,
   });
 
   @override
@@ -67,6 +69,7 @@ class Song extends Equatable {
         categoryId,
         category,
         createdAt,
+        updatedAt,
       ];
 }
 

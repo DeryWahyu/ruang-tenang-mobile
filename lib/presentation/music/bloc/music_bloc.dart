@@ -151,7 +151,13 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     final song = event.song;
 
     // Resolve a playable absolute URL from the (possibly relative) file path.
-    final url = resolveMediaUrl(song.filePath);
+    // Use updatedAt as a cache buster so that if the song data is updated, 
+    // it will invalidate the cached audio file and download the new one.
+    final url = resolveMediaUrl(
+      song.filePath, 
+      cacheBuster: song.updatedAt?.millisecondsSinceEpoch.toString(),
+    );
+    
     if (url == null) {
       emit(state.copyWith(errorMessage: 'Lagu tidak memiliki sumber audio yang valid'));
       return;
@@ -160,7 +166,8 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     emit(state.copyWith(currentPlayingSong: song));
 
     try {
-      await _audioPlayer.setUrl(url);
+      // Use LockCachingAudioSource to cache the downloaded audio locally
+      await _audioPlayer.setAudioSource(LockCachingAudioSource(Uri.parse(url)));
       await _audioPlayer.play();
     } catch (e) {
       if (kDebugMode) debugPrint('Music: gagal memutar audio: $e');

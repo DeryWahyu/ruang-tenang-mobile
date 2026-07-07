@@ -20,6 +20,7 @@ class AppNetworkImage extends StatelessWidget {
   final double? height;
   final BoxFit fit;
   final BorderRadius? borderRadius;
+  final String? cacheBuster;
 
   /// Ikon fallback saat URL kosong / gagal dimuat.
   final IconData fallbackIcon;
@@ -33,6 +34,7 @@ class AppNetworkImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius,
+    this.cacheBuster,
     this.fallbackIcon = Icons.image_rounded,
     this.fallbackColor,
     this.backgroundColor,
@@ -40,7 +42,7 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolved = resolveMediaUrl(url);
+    final resolved = resolveMediaUrl(url, cacheBuster: cacheBuster);
     final media = MediaQuery.of(context);
 
     Widget content;

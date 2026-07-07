@@ -72,7 +72,7 @@ class GlobalMiniPlayer extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: Row(
                           children: [
-                            _thumb(song.thumbnail, 40),
+                            _thumb(song, 40),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -122,9 +122,10 @@ class GlobalMiniPlayer extends StatelessWidget {
     );
   }
 
-  Widget _thumb(String? url, double size) {
+  Widget _thumb(Song song, double size) {
     return AppNetworkImage(
-      url: url,
+      url: song.thumbnail,
+      cacheBuster: song.updatedAt?.millisecondsSinceEpoch.toString(),
       width: size,
       height: size,
       borderRadius: BorderRadius.circular(10),

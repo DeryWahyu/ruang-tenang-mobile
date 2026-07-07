@@ -39,7 +39,7 @@ class _LeaderboardView extends StatelessWidget {
       ),
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
-          if (state.status == GamificationStatus.loading) {
+          if ((state.status == GamificationStatus.initial || state.status == GamificationStatus.loading) && state.leaderboard.isEmpty) {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: List.generate(8, (_) => const AppSkeletonListItem()),

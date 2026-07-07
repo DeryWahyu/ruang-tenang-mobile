@@ -33,7 +33,8 @@ class _PremiumPlansView extends StatelessWidget {
   /// eksternal agar pengguna menyelesaikan pembayaran. Tanpa ini, alur
   /// pembayaran menjadi buntu (dead-end).
   Future<void> _openPaymentPage(BuildContext context, Map<String, dynamic> checkoutResult) async {
-    final redirectUrl = checkoutResult['redirect_url'] as String?;
+    // Backend mengembalikan snap_url untuk Midtrans
+    final redirectUrl = checkoutResult['snap_url'] as String? ?? checkoutResult['redirect_url'] as String?;
     final messenger = ScaffoldMessenger.of(context);
 
     if (redirectUrl == null || redirectUrl.isEmpty) {
@@ -45,7 +46,7 @@ class _PremiumPlansView extends StatelessWidget {
 
     final uri = Uri.tryParse(redirectUrl);
     final launched = uri != null &&
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
 
     if (!launched) {
       messenger.showSnackBar(

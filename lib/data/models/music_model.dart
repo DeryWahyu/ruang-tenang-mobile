@@ -51,6 +51,7 @@ class SongModel extends Song {
     required super.categoryId,
     super.category,
     super.createdAt,
+    super.updatedAt,
   });
 
   factory SongModel.fromJson(Map<String, dynamic> json) {
@@ -67,6 +68,9 @@ class SongModel extends Song {
       createdAt: json['created_at'] != null 
           ? DateTime.tryParse(json['created_at'].toString()) 
           : null,
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.tryParse(json['updated_at'].toString()) 
+          : null,
     );
   }
 
@@ -79,6 +83,7 @@ class SongModel extends Song {
     categoryId: categoryId,
     category: category,
     createdAt: createdAt,
+    updatedAt: updatedAt,
   );
 
   Map<String, dynamic> toJson() => {

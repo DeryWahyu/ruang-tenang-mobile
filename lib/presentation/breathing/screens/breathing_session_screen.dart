@@ -419,6 +419,7 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
             children: _moodOptions.map((m) {
               final selected = _moodBefore == m.id;
               return ChoiceChip(
+                showCheckmark: false,
                 avatar: Icon(m.icon, size: 16, color: selected ? color : AppColors.mutedForeground),
                 label: Text(m.label),
                 selected: selected,
@@ -564,21 +565,27 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
                   ],
                 ),
                 alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'IKUTI RITME',
-                      style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'IKUTI RITME',
+                          style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _phaseLabel,
+                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1),
+                        ),
+                        const SizedBox(height: 8),
+                        _pacingDots(),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _phaseLabel,
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1),
-                    ),
-                    const SizedBox(height: 8),
-                    _pacingDots(),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -674,6 +681,7 @@ class _SessionViewState extends State<_SessionView> with SingleTickerProviderSta
             children: _moodOptions.map((m) {
               final selected = _moodAfter == m.id;
               return ChoiceChip(
+                showCheckmark: false,
                 avatar: Icon(m.icon, size: 16, color: selected ? color : AppColors.mutedForeground),
                 label: Text(m.label),
                 selected: selected,
