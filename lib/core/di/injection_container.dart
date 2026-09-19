@@ -32,7 +32,6 @@ import '../../data/datasources/remote/auth_remote_datasource.dart';
 import '../../data/datasources/remote/journal_remote_datasource.dart';
 import '../../data/datasources/remote/mood_remote_datasource.dart';
 import '../../data/datasources/remote/chat_remote_datasource.dart';
-import '../../data/datasources/remote/breathing_remote_datasource.dart';
 import '../../data/datasources/remote/article_remote_datasource.dart';
 import '../../data/datasources/remote/forum_remote_datasource.dart';
 import '../../data/datasources/remote/story_remote_datasource.dart';
@@ -42,7 +41,6 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/journal_repository.dart';
 import '../../domain/repositories/mood_repository.dart';
 import '../../domain/repositories/chat_repository.dart';
-import '../../domain/repositories/breathing_repository.dart';
 import '../../domain/repositories/article_repository.dart';
 import '../../domain/repositories/forum_repository.dart';
 import '../../domain/repositories/story_repository.dart';
@@ -52,7 +50,6 @@ import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/journal_repository_impl.dart';
 import '../../data/repositories/mood_repository_impl.dart';
 import '../../data/repositories/chat_repository_impl.dart';
-import '../../data/repositories/breathing_repository_impl.dart';
 import '../../data/repositories/article_repository_impl.dart';
 import '../../data/repositories/forum_repository_impl.dart';
 import '../../data/repositories/story_repository_impl.dart';
@@ -90,7 +87,6 @@ import '../../presentation/auth/bloc/auth_event.dart';
 import '../../presentation/journal/bloc/journal_bloc.dart';
 import '../../presentation/mood/bloc/mood_bloc.dart';
 import '../../presentation/chat/bloc/chat_bloc.dart';
-import '../../presentation/breathing/bloc/breathing_bloc.dart';
 import '../../presentation/article/bloc/article_bloc.dart';
 import '../../presentation/forum/bloc/forum_bloc.dart';
 import '../../presentation/story/bloc/story_bloc.dart';
@@ -134,9 +130,6 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ChatRemoteDataSource>(
     () => ChatRemoteDataSource(sl<ApiClient>()),
   );
-  sl.registerLazySingleton<BreathingRemoteDataSource>(
-    () => BreathingRemoteDataSource(sl<ApiClient>()),
-  );
   sl.registerLazySingleton<ArticleRemoteDataSource>(
     () => ArticleRemoteDataSource(sl<ApiClient>()),
   );
@@ -172,11 +165,6 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(
       remote: sl<ChatRemoteDataSource>(),
-    ),
-  );
-  sl.registerLazySingleton<BreathingRepository>(
-    () => BreathingRepositoryImpl(
-      remote: sl<BreathingRemoteDataSource>(),
     ),
   );
   sl.registerLazySingleton<ArticleRepository>(
@@ -260,9 +248,6 @@ Future<void> initDependencies() async {
   sl.registerFactory<ChatBloc>(
     () => ChatBloc(chatUseCases: sl<ChatUseCases>()),
   );
-  sl.registerFactory<BreathingBloc>(
-    () => BreathingBloc(repository: sl<BreathingRepository>()),
-  );
   sl.registerFactory<ArticleBloc>(
     () => ArticleBloc(repository: sl<ArticleRepository>()),
   );
@@ -312,14 +297,13 @@ Future<void> initDependencies() async {
     () => BillingBloc(repository: sl<BillingRepository>()),
   );
 
-  // === Secondary Gamification (Guild, XP Boost) ===
+  // === Secondary Gamification (XP Boost) ===
   sl.registerLazySingleton<SecondaryGamificationRemoteDataSource>(
     () => SecondaryGamificationRemoteDataSource(sl<ApiClient>()),
   );
   sl.registerLazySingleton<SecondaryGamificationRepository>(
     () => SecondaryGamificationRepositoryImpl(remote: sl<SecondaryGamificationRemoteDataSource>()),
   );
-  sl.registerFactory<GuildCubit>(() => GuildCubit(sl<SecondaryGamificationRepository>()));
   sl.registerFactory<XpBoostCubit>(() => XpBoostCubit(sl<SecondaryGamificationRepository>()));
 
   // === Community (Statistik Komunitas) ===

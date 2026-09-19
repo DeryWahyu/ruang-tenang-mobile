@@ -1,380 +1,613 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import '../engine/mindful_runner_engine.dart';
 
-/// Menggambar dunia [MindfulRunnerEngine] memakai kanvas logis 1400×420
-/// lalu menskalakannya agar pas pada ukuran widget. Meniru tampilan versi web
-/// (langit gradient, matahari, awan, tanah bertitik, pemain, rintangan
-/// "pikiran negatif", collectible, partikel, afirmasi, HUD).
+/// Renderer visual Calm Journey untuk Mindful Runner.
+///
+/// Engine tetap memakai koordinat logis 800×1000. Painter hanya mengatur
+/// presentasi: dunia netral, aksen tema, siluet pemain, obstacle emosi, dan
+/// collectible yang konsisten dengan versi web.
 class MindfulRunnerPainter extends CustomPainter {
+  const MindfulRunnerPainter(
+    this.engine, {
+    required this.accent,
+    this.reduceMotion = false,
+  });
+
   final MindfulRunnerEngine engine;
+  final Color accent;
+  final bool reduceMotion;
 
-  MindfulRunnerPainter(this.engine) : super(repaint: null);
-
-  // Palet warna selaras tema merah web.
-  static const _sky = Color(0xFFFEF2F2);
-  static const _skyTop = Color(0xFFEFF6FF);
-  static const _ground = Color(0xFFFCA5A5);
-  static const _groundLine = Color(0xFFEF4444);
-  static const _player = Color(0xFFEF4444);
-  static const _playerAlt = Color(0xFFDC2626);
-  static const _obstacle = Color(0xFF6B7280);
-  static const _obstacleDark = Color(0xFF374151);
-  static const _collectibleGlow = Color(0xFFFEE2E2);
-  static const _cloud = Color(0xFFFFFFFF);
-  static const _text = Color(0xFF111827);
-  static const _textLight = Color(0xFF6B7280);
-  static const _sun = Color(0xFFFBBF24);
-  static const _sunGlow = Color(0xFFFEF3C7);
-  static const _flower = Color(0xFFF472B6);
-  static const _flowerCenter = Color(0xFFFBBF24);
-  static const _leaf = Color(0xFF34D399);
-  static const _heart = Color(0xFFEF4444);
+  static const _skyTop = Color(0xFFF8FAFC);
+  static const _white = Color(0xFFFFFFFF);
+  static const _path = Color(0xFFF8FAFC);
+  static const _pathDeep = Color(0xFFE2E8F0);
+  static const _ink = Color(0xFF334155);
+  static const _inkSoft = Color(0xFF64748B);
+  static const _obstacle = Color(0xFF64748B);
+  static const _obstacleDark = Color(0xFF334155);
+  static const _heart = Color(0xFFFB7185);
   static const _star = Color(0xFFFBBF24);
+  static const _playerX = 72.0;
+
+  Color get _accentDark => Color.lerp(accent, Colors.black, 0.22)!;
+  Color get _accentLight => Color.lerp(accent, Colors.white, 0.78)!;
+  Color get _accentSoft => Color.lerp(accent, Colors.white, 0.92)!;
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Skala kanvas logis → ukuran widget (jaga rasio dengan fit lebar).
-    final scale = size.width / kCanvasW;
-    canvas.save();
-    canvas.scale(scale, scale);
-    // Tinggi terlihat = size.height / scale; gambar tetap pakai koordinat logis.
+    final scale = min(size.width / kCanvasW, size.height / kCanvasH);
+    final offsetX = (size.width - kCanvasW * scale) / 2;
+    final offsetY = (size.height - kCanvasH * scale) / 2;
 
-    if (engine.shakeLife > 0) {
+    canvas
+      ..save()
+      ..translate(offsetX, offsetY)
+      ..scale(scale, scale);
+
+    if (engine.shakeLife > 0 && !reduceMotion) {
       canvas.translate(engine.shakeX, engine.shakeY);
     }
 
     _drawBackground(canvas);
-    for (final c in engine.collectibles) {
-      _drawCollectible(canvas, c, engine.frameCount);
+    for (final collectible in engine.collectibles) {
+      _drawCollectible(canvas, collectible, engine.frameCount);
     }
-    for (final o in engine.obstacles) {
-      _drawObstacle(canvas, o);
+    for (final obstacle in engine.obstacles) {
+      _drawObstacle(canvas, obstacle);
     }
     _drawPlayer(canvas, engine.playerY, engine.playerFrame);
     _drawParticles(canvas);
     _drawFloatingTexts(canvas);
     _drawAffirmation(canvas);
-    _drawHud(canvas);
 
     if (engine.status == GameStatus.over) {
-      // Kilatan merah halus saat tabrakan.
-      final p = Paint()..color = const Color(0xFFEF4444).withValues(alpha: 0.14);
-      canvas.drawRect(const Rect.fromLTWH(0, 0, kCanvasW, kCanvasH), p);
+      canvas.drawRect(
+        const Rect.fromLTWH(0, 0, kCanvasW, kCanvasH),
+        Paint()..color = _heart.withValues(alpha: 0.10),
+      );
     }
 
     canvas.restore();
   }
 
   void _drawBackground(Canvas canvas) {
-    // Langit gradient.
     final skyRect = const Rect.fromLTWH(0, 0, kCanvasW, kCanvasH);
     final skyPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [_skyTop, _sky],
-      ).createShader(const Rect.fromLTWH(0, 0, kCanvasW, kGroundY));
+        colors: [_skyTop, _accentSoft, _white],
+        stops: const [0, 0.62, 1],
+      ).createShader(const Rect.fromLTWH(0, 0, kCanvasW, kGroundY + 40));
     canvas.drawRect(skyRect, skyPaint);
 
-    // Matahari + glow.
-    canvas.drawCircle(const Offset(kCanvasW - 80, 50), 30,
-        Paint()..color = _sunGlow.withValues(alpha: 0.4));
-    canvas.drawCircle(const Offset(kCanvasW - 80, 50), 18, Paint()..color = _sun);
+    final haloCenter = const Offset(kCanvasW - 115, 110);
+    final haloPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [_accentLight, _accentLight.withValues(alpha: 0)],
+      ).createShader(Rect.fromCircle(center: haloCenter, radius: 92));
+    canvas.drawCircle(haloCenter, 92, haloPaint);
+    canvas.drawCircle(
+      haloCenter,
+      27,
+      Paint()..color = _white.withValues(alpha: 0.76),
+    );
 
-    // Lapisan awan jauh (parallax lambat) untuk kedalaman.
-    final farCloud = Paint()..color = _cloud.withValues(alpha: 0.4);
-    for (var i = 0; i < 3; i++) {
-      final fx = ((i * 520 + 120 - engine.frameCount * 0.4) % (kCanvasW + 240)) - 120;
-      final fy = 30.0 + i * 22;
-      canvas.drawCircle(Offset(fx, fy), 26, farCloud);
-      canvas.drawCircle(Offset(fx + 26, fy - 6), 20, farCloud);
-      canvas.drawCircle(Offset(fx + 52, fy), 26, farCloud);
+    final backOffset = reduceMotion
+        ? 0.0
+        : (engine.frameCount * engine.speed * 0.045) % 260;
+    final backPath = Path()..moveTo(-260 - backOffset, kGroundY + 24);
+    for (var index = -1; index < 5; index++) {
+      final x = index * 260.0 - backOffset;
+      backPath
+        ..quadraticBezierTo(x + 65, kGroundY - 180, x + 130, kGroundY - 72)
+        ..quadraticBezierTo(x + 195, kGroundY + 2, x + 260, kGroundY - 45);
     }
+    backPath
+      ..lineTo(kCanvasW, kGroundY + 24)
+      ..close();
+    canvas.drawPath(
+      backPath,
+      Paint()..color = _accentLight.withValues(alpha: 0.42),
+    );
 
-    // Awan (parallax dekat).
+    final frontOffset = reduceMotion
+        ? 0.0
+        : (engine.frameCount * engine.speed * 0.09) % 210;
+    final frontPath = Path()..moveTo(-210 - frontOffset, kGroundY + 24);
+    for (var index = -1; index < 6; index++) {
+      final x = index * 210.0 - frontOffset;
+      frontPath
+        ..quadraticBezierTo(x + 52, kGroundY - 95, x + 105, kGroundY - 38)
+        ..quadraticBezierTo(x + 158, kGroundY + 7, x + 210, kGroundY - 22);
+    }
+    frontPath
+      ..lineTo(kCanvasW, kGroundY + 24)
+      ..close();
+    canvas.drawPath(frontPath, Paint()..color = accent.withValues(alpha: 0.14));
+
     for (final cloud in engine.clouds) {
-      final cp = Paint()..color = _cloud.withValues(alpha: 0.7);
-      canvas.drawCircle(Offset(cloud.x, cloud.y), cloud.width * 0.3, cp);
-      canvas.drawCircle(Offset(cloud.x + cloud.width * 0.3, cloud.y - 5), cloud.width * 0.25, cp);
-      canvas.drawCircle(Offset(cloud.x + cloud.width * 0.6, cloud.y), cloud.width * 0.3, cp);
+      final cloudPath = Path()
+        ..moveTo(cloud.x, cloud.y + 76)
+        ..cubicTo(
+          cloud.x + cloud.width * 0.2,
+          cloud.y + 56,
+          cloud.x + cloud.width * 0.42,
+          cloud.y + 91,
+          cloud.x + cloud.width * 0.62,
+          cloud.y + 73,
+        )
+        ..cubicTo(
+          cloud.x + cloud.width * 0.75,
+          cloud.y + 61,
+          cloud.x + cloud.width * 0.9,
+          cloud.y + 78,
+          cloud.x + cloud.width,
+          cloud.y + 70,
+        );
+      canvas.drawPath(
+        cloudPath,
+        Paint()
+          ..color = _white.withValues(alpha: 0.72)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = max(10.0, cloud.width * 0.14)
+          ..strokeCap = StrokeCap.round,
+      );
     }
 
-    // Tanah.
+    final groundRect = const Rect.fromLTWH(
+      0,
+      kGroundY + 24,
+      kCanvasW,
+      kCanvasH - kGroundY - 24,
+    );
     canvas.drawRect(
-      const Rect.fromLTWH(0, kGroundY + 24, kCanvasW, kCanvasH - kGroundY - 24),
-      Paint()..color = _ground,
+      groundRect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [_path, _pathDeep],
+        ).createShader(groundRect),
     );
     canvas.drawLine(
       const Offset(0, kGroundY + 24),
       const Offset(kCanvasW, kGroundY + 24),
       Paint()
-        ..color = _groundLine
-        ..strokeWidth = 2,
+        ..color = accent.withValues(alpha: 0.34)
+        ..strokeWidth = 3,
     );
 
-    // Titik tanah bergerak (kesan berlari).
-    final dotPaint = Paint()..color = _groundLine.withValues(alpha: 0.3);
-    final scrollOffset = (engine.frameCount * engine.speed) % 20;
-    for (var i = -1; i < kCanvasW / 20 + 1; i++) {
-      canvas.drawCircle(Offset(i * 20 - scrollOffset, kGroundY + 40), 1.5, dotPaint);
-    }
-
-    // Bunga kecil di tanah (parallax lambat).
-    for (var i = 0; i < 5; i++) {
-      final fx = ((i * 173 + 50 - engine.frameCount * engine.speed * 0.3) % (kCanvasW + 100)) - 50;
-      canvas.drawRect(Rect.fromLTWH(fx, kGroundY + 18, 2, 6), Paint()..color = _leaf);
-      canvas.drawCircle(Offset(fx + 1, kGroundY + 16), 3,
-          Paint()..color = i.isEven ? _flower : _player);
+    final trailOffset = reduceMotion
+        ? 0.0
+        : (engine.frameCount * engine.speed * 0.55) % 64;
+    final trailPaint = Paint()
+      ..color = _inkSoft.withValues(alpha: 0.16)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    for (var x = -64.0; x < kCanvasW + 64; x += 64) {
+      canvas.drawLine(
+        Offset(x - trailOffset, kGroundY + 68),
+        Offset(x + 22 - trailOffset, kGroundY + 68),
+        trailPaint,
+      );
     }
   }
 
   void _drawPlayer(Canvas canvas, double y, int frame) {
-    const x = 60.0;
-    final bobY = engine.isJumping ? 0.0 : sin(frame * 0.1) * 3;
-    final pY = y + bobY;
+    final bob = engine.isJumping || reduceMotion ? 0.0 : sin(frame * 0.1) * 2;
+    final playerY = y + bob;
+    final groundDistance = max(0.0, kGroundY - y);
+    final shadowScale = max(0.45, 1 - groundDistance / 180);
 
-    canvas.save();
-    canvas.translate(x + 12, pY);
-    canvas.scale(1.5);
-    canvas.translate(-(x + 12), -pY);
-
-    // Bayangan.
     canvas.drawOval(
-      Rect.fromCenter(center: const Offset(x + 12, kGroundY + 24), width: 28, height: 8),
-      Paint()..color = Colors.black.withValues(alpha: 0.1),
+      Rect.fromCenter(
+        center: const Offset(_playerX, kGroundY + 25),
+        width: 46 * shadowScale,
+        height: 12 * shadowScale,
+      ),
+      Paint()..color = _ink.withValues(alpha: 0.12 * shadowScale),
     );
 
-    // Aura perisai (lotus) — cincin bercahaya berdenyut di sekeliling pemain.
     if (engine.hasShield) {
-      final pulse = 0.5 + sin(frame * 0.2) * 0.2;
+      final pulse = reduceMotion ? 0.72 : 0.68 + sin(frame * 0.16) * 0.08;
       canvas.drawCircle(
-        Offset(x + 12, pY - 12), 26,
-        Paint()..color = _flower.withValues(alpha: 0.18 * pulse),
+        Offset(_playerX, playerY - 11),
+        43,
+        Paint()..color = _accentLight.withValues(alpha: 0.20),
       );
       canvas.drawCircle(
-        Offset(x + 12, pY - 12), 24,
+        Offset(_playerX, playerY - 11),
+        38,
         Paint()
-          ..color = _flower.withValues(alpha: 0.5)
+          ..color = accent.withValues(alpha: pulse)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
+          ..strokeWidth = 3,
       );
     }
 
-    // Badan & kepala.
-    canvas.drawCircle(Offset(x + 12, pY - 8), 10, Paint()..color = _player);
-    canvas.drawCircle(Offset(x + 12, pY - 24), 8, Paint()..color = _playerAlt);
+    final stride = engine.isJumping ? 0.0 : sin(frame * 0.24);
+    final armSwing = engine.isJumping ? -5.0 : stride * 7;
 
-    // Mata (terpejam/tenang) & senyum.
-    final face = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawArc(Rect.fromCircle(center: Offset(x + 9, pY - 25), radius: 2), 0, pi, false, face);
-    canvas.drawArc(Rect.fromCircle(center: Offset(x + 15, pY - 25), radius: 2), 0, pi, false, face);
-    canvas.drawArc(Rect.fromCircle(center: Offset(x + 12, pY - 22), radius: 3), 0.1 * pi, 0.8 * pi, false, face);
-
-    // Kaki.
-    final legPaint = Paint()
-      ..color = _player
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-    if (!engine.isJumping) {
-      final legAngle = sin(frame * 0.25) * 0.5;
-      canvas.drawLine(Offset(x + 8, pY + 2), Offset(x + 8 + sin(legAngle) * 8, pY + 20), legPaint);
-      canvas.drawLine(Offset(x + 16, pY + 2), Offset(x + 16 + sin(-legAngle) * 8, pY + 20), legPaint);
-    } else {
-      canvas.drawLine(Offset(x + 8, pY + 2), Offset(x + 4, pY + 12), legPaint);
-      canvas.drawLine(Offset(x + 16, pY + 2), Offset(x + 20, pY + 12), legPaint);
-    }
-
-    // Lengan.
-    final armPaint = Paint()
-      ..color = _playerAlt
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-    if (engine.isJumping) {
-      canvas.drawLine(Offset(x + 4, pY - 10), Offset(x - 4, pY - 20), armPaint);
-      canvas.drawLine(Offset(x + 20, pY - 10), Offset(x + 28, pY - 20), armPaint);
-    } else {
-      final armSwing = sin(frame * 0.25) * 6;
-      canvas.drawLine(Offset(x + 4, pY - 10), Offset(x - 2 + armSwing, pY + 4), armPaint);
-      canvas.drawLine(Offset(x + 20, pY - 10), Offset(x + 26 - armSwing, pY + 4), armPaint);
-    }
-    
-    canvas.restore();
-  }
-
-  void _drawObstacle(Canvas canvas, Obstacle obs) {
-    final bx = obs.x;
-    final by = kGroundY + 24 - obs.height;
-    final paint = Paint()..color = _obstacle;
-
-    if (obs.type == ObstacleType.spiral) {
-      canvas.drawCircle(Offset(bx + obs.width / 2, by + obs.height / 2), obs.width / 2, paint);
-      final stroke = Paint()
-        ..color = _obstacleDark
+    final scarfPath = Path()
+      ..moveTo(_playerX - 3, playerY - 19)
+      ..cubicTo(
+        _playerX - 17,
+        playerY - 17,
+        _playerX - 27 - stride.abs() * 4,
+        playerY - 11,
+        _playerX - 37,
+        playerY - 17 + stride * 2,
+      );
+    canvas.drawPath(
+      scarfPath,
+      Paint()
+        ..color = accent
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      for (var i = 0; i < 3; i++) {
-        final r = (obs.width / 2) * (0.3 + i * 0.2);
-        canvas.drawArc(
-          Rect.fromCircle(center: Offset(bx + obs.width / 2, by + obs.height / 2), radius: r),
-          i * 0.5, pi, false, stroke,
-        );
-      }
-    } else if (obs.type == ObstacleType.stress) {
-      final cx = bx + obs.width / 2;
-      final path = Path()
-        ..moveTo(cx - 5, by)
-        ..lineTo(cx + 8, by + obs.height * 0.35)
-        ..lineTo(cx + 2, by + obs.height * 0.35)
-        ..lineTo(cx + 10, by + obs.height)
-        ..lineTo(cx - 3, by + obs.height * 0.55)
-        ..lineTo(cx + 3, by + obs.height * 0.55)
-        ..close();
-      canvas.drawPath(path, paint);
-    } else {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, obs.width, obs.height), const Radius.circular(8)),
-        paint,
-      );
-      final dark = Paint()..color = _obstacleDark;
-      canvas.drawCircle(Offset(bx + 8, by + obs.height + 4), 4, dark);
-      canvas.drawCircle(Offset(bx + 2, by + obs.height + 10), 2, dark);
-    }
+        ..strokeWidth = 7
+        ..strokeCap = StrokeCap.round,
+    );
 
-    // Label pikiran negatif.
-    _drawText(
-      canvas, obs.label, Offset(bx + obs.width / 2, by + obs.height / 2),
-      color: Colors.white, fontSize: 9, bold: true, center: true,
+    final limbPaint = Paint()
+      ..color = _ink
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round;
+    canvas
+      ..drawLine(
+        Offset(_playerX - 5, playerY + 3),
+        Offset(_playerX - 7 + stride * 9, playerY + 26),
+        limbPaint,
+      )
+      ..drawLine(
+        Offset(_playerX + 5, playerY + 3),
+        Offset(_playerX + 8 - stride * 9, playerY + 26),
+        limbPaint,
+      );
+
+    final armPaint = Paint()
+      ..color = _ink
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    canvas
+      ..drawLine(
+        Offset(_playerX - 9, playerY - 12),
+        Offset(
+          _playerX - 19 + armSwing,
+          playerY + (engine.isJumping ? -25 : 5),
+        ),
+        armPaint,
+      )
+      ..drawLine(
+        Offset(_playerX + 9, playerY - 12),
+        Offset(
+          _playerX + 19 - armSwing,
+          playerY + (engine.isJumping ? -25 : 5),
+        ),
+        armPaint,
+      );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(_playerX - 11, playerY - 23, 22, 32),
+        const Radius.circular(11),
+      ),
+      Paint()..color = _ink,
+    );
+    canvas.drawCircle(
+      Offset(_playerX, playerY - 38),
+      11,
+      Paint()..color = _ink,
+    );
+
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(_playerX + 2, playerY - 37), radius: 4),
+      0.1 * pi,
+      0.72 * pi,
+      false,
+      Paint()
+        ..color = _white.withValues(alpha: 0.76)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8,
     );
   }
 
-  void _drawCollectible(Canvas canvas, Collectible c, int frame) {
-    if (c.collected) return;
-    final bob = sin(frame * 0.08 + c.x) * 4;
-    final cx = c.x;
-    final cy = c.y + bob;
+  void _drawObstacle(Canvas canvas, Obstacle obstacle) {
+    final x = obstacle.x;
+    final y = kGroundY + 24 - obstacle.height;
+    final centerX = x + obstacle.width / 2;
+    final centerY = y + obstacle.height / 2;
 
-    canvas.save();
-    canvas.translate(cx, cy);
-    canvas.scale(1.5);
-    canvas.translate(-cx, -cy);
-
-    // Glow.
-    canvas.drawCircle(
-      Offset(cx, cy), 14,
-      Paint()..color = _collectibleGlow.withValues(alpha: 0.3 + sin(frame * 0.1) * 0.15),
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX, kGroundY + 27),
+        width: obstacle.width * 1.15,
+        height: 10,
+      ),
+      Paint()..color = _ink.withValues(alpha: 0.12),
     );
 
-    switch (c.type) {
+    switch (obstacle.type) {
+      case ObstacleType.spiral:
+        canvas.drawCircle(
+          Offset(centerX, centerY),
+          obstacle.width / 2,
+          Paint()..color = _obstacle,
+        );
+        final spiralPath = Path();
+        for (var angle = 0.0; angle < pi * 4.2; angle += 0.16) {
+          final radius = 2 + angle * 1.25;
+          final point = Offset(
+            centerX + cos(angle) * radius,
+            centerY + sin(angle) * radius,
+          );
+          if (angle == 0) {
+            spiralPath.moveTo(point.dx, point.dy);
+          } else {
+            spiralPath.lineTo(point.dx, point.dy);
+          }
+        }
+        canvas.drawPath(
+          spiralPath,
+          Paint()
+            ..color = _accentLight
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3
+            ..strokeCap = StrokeCap.round,
+        );
+        break;
+      case ObstacleType.stress:
+        final barHeight = max(9.0, obstacle.height / 5);
+        for (var index = 0; index < 3; index++) {
+          final inset = index == 1 ? 0.0 : 7.0;
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(
+                x + inset,
+                y + index * (barHeight + 6),
+                obstacle.width - inset * 2,
+                barHeight,
+              ),
+              const Radius.circular(7),
+            ),
+            Paint()..color = _obstacle,
+          );
+        }
+        break;
+      case ObstacleType.thought:
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(x, y + 5, obstacle.width, obstacle.height - 5),
+            const Radius.circular(15),
+          ),
+          Paint()..color = _obstacle,
+        );
+        final knotPath = Path()
+          ..moveTo(x + 8, centerY + 2)
+          ..cubicTo(
+            x + 14,
+            centerY - 10,
+            centerX - 5,
+            centerY + 12,
+            centerX,
+            centerY,
+          )
+          ..cubicTo(
+            centerX + 6,
+            centerY - 12,
+            x + obstacle.width - 14,
+            centerY + 10,
+            x + obstacle.width - 8,
+            centerY - 2,
+          );
+        canvas.drawPath(
+          knotPath,
+          Paint()
+            ..color = _accentLight
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3
+            ..strokeCap = StrokeCap.round,
+        );
+        break;
+    }
+
+    final labelWidth = (obstacle.label.length * 6.4 + 22)
+        .clamp(72.0, 118.0)
+        .toDouble();
+    final labelRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(centerX, y - 18),
+        width: labelWidth,
+        height: 25,
+      ),
+      const Radius.circular(13),
+    );
+    canvas.drawRRect(
+      labelRect,
+      Paint()..color = _white.withValues(alpha: 0.94),
+    );
+    canvas.drawRRect(
+      labelRect,
+      Paint()
+        ..color = _accentLight
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+    _drawText(
+      canvas,
+      obstacle.label,
+      Offset(centerX, y - 18),
+      color: _obstacleDark,
+      fontSize: 11,
+      bold: true,
+      center: true,
+    );
+  }
+
+  void _drawCollectible(Canvas canvas, Collectible collectible, int frame) {
+    if (collectible.collected) return;
+    final bob = reduceMotion ? 0.0 : sin(frame * 0.08 + collectible.x) * 4;
+    final centerX = collectible.x;
+    final centerY = collectible.y + bob;
+    final color = switch (collectible.type) {
+      CollectibleType.heart => _heart,
+      CollectibleType.star => _star,
+      CollectibleType.lotus => accent,
+    };
+
+    canvas.drawCircle(
+      Offset(centerX, centerY),
+      29,
+      Paint()..color = color.withValues(alpha: 0.16),
+    );
+    canvas.drawCircle(
+      Offset(centerX, centerY),
+      20,
+      Paint()..color = _white.withValues(alpha: 0.96),
+    );
+
+    switch (collectible.type) {
       case CollectibleType.heart:
-        final path = Path()
-          ..moveTo(cx, cy + 4)
-          ..cubicTo(cx - 8, cy - 4, cx - 8, cy - 10, cx, cy - 6)
-          ..cubicTo(cx + 8, cy - 10, cx + 8, cy - 4, cx, cy + 4);
-        canvas.drawPath(path, Paint()..color = _heart);
+        _drawHeart(canvas, centerX, centerY);
         break;
       case CollectibleType.star:
-        _drawStar(canvas, cx, cy, 5, 8, 4, Paint()..color = _star);
+        _drawStar(canvas, centerX, centerY);
         break;
       case CollectibleType.lotus:
-        final petal = Paint()..color = _flower;
-        for (var i = 0; i < 5; i++) {
-          final a = (i * pi * 2) / 5 - pi / 2;
-          canvas.save();
-          canvas.translate(cx + cos(a) * 4, cy + sin(a) * 4);
-          canvas.rotate(a);
-          canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 10, height: 6), petal);
-          canvas.restore();
-        }
-        canvas.drawCircle(Offset(cx, cy), 3, Paint()..color = _flowerCenter);
+        _drawShield(canvas, centerX, centerY);
         break;
     }
-    canvas.restore();
+  }
+
+  void _drawHeart(Canvas canvas, double x, double y) {
+    final path = Path()
+      ..moveTo(x, y + 9)
+      ..cubicTo(x - 15, y - 1, x - 14, y - 15, x, y - 8)
+      ..cubicTo(x + 14, y - 15, x + 15, y - 1, x, y + 9);
+    canvas.drawPath(path, Paint()..color = _heart);
+  }
+
+  void _drawStar(Canvas canvas, double centerX, double centerY) {
+    var rotation = -pi / 2;
+    final path = Path();
+    for (var index = 0; index < 10; index++) {
+      final radius = index.isEven ? 13.0 : 6.0;
+      final point = Offset(
+        centerX + cos(rotation) * radius,
+        centerY + sin(rotation) * radius,
+      );
+      if (index == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+      rotation += pi / 5;
+    }
+    path.close();
+    canvas.drawPath(path, Paint()..color = _star);
+  }
+
+  void _drawShield(Canvas canvas, double centerX, double centerY) {
+    final path = Path()
+      ..moveTo(centerX, centerY - 14)
+      ..lineTo(centerX + 13, centerY - 9)
+      ..lineTo(centerX + 10, centerY + 7)
+      ..quadraticBezierTo(centerX, centerY + 17, centerX, centerY + 17)
+      ..quadraticBezierTo(centerX, centerY + 17, centerX - 10, centerY + 7)
+      ..lineTo(centerX - 13, centerY - 9)
+      ..close();
+    canvas.drawPath(path, Paint()..color = accent);
+    canvas.drawLine(
+      Offset(centerX, centerY - 7),
+      Offset(centerX, centerY + 9),
+      Paint()
+        ..color = _white
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   void _drawParticles(Canvas canvas) {
-    for (final p in engine.particles) {
-      final paint = Paint()..color = Color(p.colorValue).withValues(alpha: (p.life / p.maxLife).clamp(0.0, 1.0));
-      canvas.drawCircle(Offset(p.x, p.y), p.size, paint);
+    for (final particle in engine.particles) {
+      final sourceColor = Color(particle.colorValue);
+      final displayColor = particle.colorValue == GameColors.shield
+          ? accent
+          : sourceColor;
+      canvas.drawCircle(
+        Offset(particle.x, particle.y),
+        particle.size,
+        Paint()
+          ..color = displayColor.withValues(
+            alpha: (particle.life / particle.maxLife).clamp(0.0, 1.0),
+          ),
+      );
     }
   }
 
   void _drawFloatingTexts(Canvas canvas) {
-    for (final ft in engine.floatingTexts) {
+    for (final text in engine.floatingTexts) {
       _drawText(
-        canvas, ft.text, Offset(ft.x, ft.y),
-        color: _text.withValues(alpha: (ft.life / ft.maxLife).clamp(0.0, 1.0)),
-        fontSize: 20, bold: true, center: true,
+        canvas,
+        text.text,
+        Offset(text.x, text.y),
+        color: _ink.withValues(
+          alpha: (text.life / text.maxLife).clamp(0.0, 1.0),
+        ),
+        fontSize: 17,
+        bold: true,
+        center: true,
       );
     }
   }
 
   void _drawAffirmation(Canvas canvas) {
     if (engine.affirmationTimer <= 0 || engine.affirmation.isEmpty) return;
-    final t = engine.affirmationTimer;
-    final alpha = t > 100 ? (120 - t) / 20 : t > 20 ? 1.0 : t / 20;
+    final timer = engine.affirmationTimer;
+    final alpha = timer > 100
+        ? (120 - timer) / 20
+        : timer > 20
+        ? 1.0
+        : timer / 20;
     _drawText(
-      canvas, engine.affirmation, const Offset(kCanvasW / 2, 80),
-      color: _player.withValues(alpha: alpha.clamp(0.0, 1.0)),
-      fontSize: 28, bold: true, center: true,
+      canvas,
+      engine.affirmation,
+      const Offset(kCanvasW / 2, 88),
+      color: _accentDark.withValues(alpha: alpha.clamp(0.0, 1.0)),
+      fontSize: 24,
+      bold: true,
+      center: true,
     );
-  }
-
-  void _drawHud(Canvas canvas) {
-    _drawText(canvas, 'Skor: ${engine.score}', const Offset(20, 20), color: _text, fontSize: 24, bold: true);
-    if (engine.highScore > 0) {
-      _drawText(canvas, 'Terbaik: ${engine.highScore}', const Offset(20, 52), color: _textLight, fontSize: 18);
-    }
-    if (engine.combo > 1) {
-      _drawText(canvas, 'Combo x${engine.combo}', const Offset(20, 84), color: _player, fontSize: 20, bold: true);
-    }
-    if (engine.hasShield) {
-      final secs = (engine.shieldFrames / 60).ceil();
-      _drawText(canvas, '🛡 Perisai ${secs}s', const Offset(20, 116), color: _flower, fontSize: 20, bold: true);
-    }
-  }
-
-  void _drawStar(Canvas canvas, double cx, double cy, int spikes, double outerR, double innerR, Paint paint) {
-    var rot = (pi / 2) * 3;
-    final step = pi / spikes;
-    final path = Path()..moveTo(cx, cy - outerR);
-    for (var i = 0; i < spikes; i++) {
-      path.lineTo(cx + cos(rot) * outerR, cy + sin(rot) * outerR);
-      rot += step;
-      path.lineTo(cx + cos(rot) * innerR, cy + sin(rot) * innerR);
-      rot += step;
-    }
-    path
-      ..lineTo(cx, cy - outerR)
-      ..close();
-    canvas.drawPath(path, paint);
   }
 
   void _drawText(
     Canvas canvas,
     String text,
-    Offset pos, {
+    Offset position, {
     required Color color,
     required double fontSize,
     bool bold = false,
     bool center = false,
   }) {
-    final tp = TextPainter(
+    final painter = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
           color: color,
           fontSize: fontSize,
-          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    final offset = center ? Offset(pos.dx - tp.width / 2, pos.dy - tp.height / 2) : pos;
-    tp.paint(canvas, offset);
+    final offset = center
+        ? Offset(
+            position.dx - painter.width / 2,
+            position.dy - painter.height / 2,
+          )
+        : position;
+    painter.paint(canvas, offset);
   }
 
   @override

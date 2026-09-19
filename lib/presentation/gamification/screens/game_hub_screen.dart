@@ -362,15 +362,6 @@ class _GameHubView extends StatelessWidget {
       children: [
         _buildListCard(
           context,
-          title: 'Guild',
-          subtitle: 'Bergabung & tumbuh bersama komunitas',
-          icon: Icons.shield_rounded,
-          color: Colors.indigo,
-          onTap: () => context.push('/gamification/guild'),
-        ),
-        const SizedBox(height: 12),
-        _buildListCard(
-          context,
           title: 'Statistik Komunitas',
           subtitle: 'Lihat pencapaian & pertumbuhan komunitas',
           icon: Icons.insights_rounded,
@@ -491,8 +482,6 @@ class _GameHubView extends StatelessWidget {
         return Icons.edit_note_rounded;
       case 'forum_comment':
         return Icons.forum_outlined;
-      case 'breathing':
-        return Icons.air_rounded;
       case 'accepted_answer':
         return Icons.check_circle_outline_rounded;
       case 'post_upvote_given':

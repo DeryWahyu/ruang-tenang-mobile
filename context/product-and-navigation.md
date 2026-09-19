@@ -5,9 +5,9 @@ Aplikasi ini adalah client mobile khusus member/pengguna akhir. Admin, moderator
 
 ## Fitur aktif
 
-Home, journal, mood check-in/statistics, chat AI, music/playlist, breathing, articles, stories, forum, wellness onboarding/plan, global search, community statistics, premium/billing/top-up, profile/settings, dan game offline.
+Home, journal, mood check-in/statistics, chat AI, music/playlist, articles, stories, forum, wellness onboarding/plan, global search, community statistics, premium/billing/top-up, profile/settings, dan game offline.
 
-Gamifikasi yang dipertahankan dan selaras dengan web: game hub, daily tasks, badges, leaderboard, progress map, rewards, guild, EXP history, dan XP boost. Jangan menghidupkan kembali screen secondary gamification yang sudah dihapus dari product scope tanpa keputusan baru.
+Gamifikasi yang dipertahankan dan selaras dengan web: game hub, daily tasks, badges, leaderboard, progress map, rewards, EXP history, dan XP boost. Jangan menghidupkan kembali screen secondary gamification yang sudah dihapus dari product scope tanpa keputusan baru.
 
 ## Bottom navigation
 

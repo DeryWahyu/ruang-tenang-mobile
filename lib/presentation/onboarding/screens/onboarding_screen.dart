@@ -47,7 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       gradient: [Color(0xFF38BDF8), Color(0xFF0284C7)],
       title: 'Tenangkan Pikiranmu',
       description:
-          'Redakan stres seketika dengan panduan latihan pernapasan dan '
+          'Redakan stres dengan refleksi singkat, bacaan bermakna, dan '
           'alunan musik relaksasi yang menenangkan jiwa.',
     ),
     _OnboardingSlide(

@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/storage_keys.dart';
 import '../../core/di/injection_container.dart';
 import '../../domain/entities/journal.dart';
-import '../../domain/entities/breathing.dart';
 import '../../presentation/auth/bloc/auth_bloc.dart';
 import '../../presentation/auth/bloc/auth_state.dart';
 import '../../presentation/auth/screens/login_screen.dart';
@@ -29,8 +28,6 @@ import '../../presentation/profile/screens/change_password_screen.dart';
 import '../../presentation/profile/screens/settings_screen.dart';
 import '../../presentation/splash_screen.dart';
 
-import '../../presentation/breathing/screens/breathing_list_screen.dart';
-import '../../presentation/breathing/screens/breathing_session_screen.dart';
 import '../../presentation/forum/screens/forum_list_screen.dart';
 import '../../presentation/forum/screens/forum_detail_screen.dart';
 import '../../presentation/story/screens/story_list_screen.dart';
@@ -45,7 +42,6 @@ import '../../presentation/gamification/screens/exp_history_screen.dart';
 import '../../presentation/gamification/screens/leaderboard_screen.dart';
 import '../../presentation/gamification/screens/progress_map_screen.dart';
 import '../../presentation/gamification/screens/rewards_screen.dart';
-import '../../presentation/gamification/screens/guild_screen.dart';
 import '../../presentation/gamification/screens/xp_boost_screen.dart';
 import '../../presentation/billing/screens/premium_plans_screen.dart';
 import '../../presentation/billing/screens/billing_transactions_screen.dart';
@@ -204,21 +200,6 @@ class AppRouter {
           builder: (context, state) => const MoodStatsScreen(),
         ),
 
-        // Breathing
-        GoRoute(
-          path: '/breathing',
-          builder: (context, state) => const BreathingListScreen(),
-          routes: [
-            GoRoute(
-              path: 'session',
-              builder: (context, state) {
-                final technique = state.extra as BreathingTechnique?;
-                return BreathingSessionScreen(technique: technique);
-              },
-            ),
-          ],
-        ),
-
         // Forum
         GoRoute(
           path: '/forum',
@@ -289,10 +270,6 @@ class AppRouter {
             GoRoute(
               path: 'rewards',
               builder: (context, state) => const RewardsScreen(),
-            ),
-            GoRoute(
-              path: 'guild',
-              builder: (context, state) => const GuildScreen(),
             ),
             GoRoute(
               path: 'xp-boost',

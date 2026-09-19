@@ -51,7 +51,7 @@ Alur standar adalah screen → BLoC/Cubit → use case/repository → remote dat
 
 ## Fitur member
 
-Home, jurnal, mood tracker/check-in, chat AI, musik/playlist, breathing session, artikel, stories, forum, wellness, global search, statistik komunitas, billing/premium, profil/settings, dan gamifikasi berupa daily tasks, badge, leaderboard, progress map, rewards, guild, EXP history, XP boost, serta game offline Mindful Runner.
+Home, jurnal, mood tracker/check-in, chat AI, musik/playlist, artikel, stories, forum, wellness, global search, statistik komunitas, billing/premium, profil/settings, dan gamifikasi berupa daily tasks, badge, leaderboard, progress map, rewards, EXP history, XP boost, serta game offline Mindful Runner.
 
 Admin dan mitra memakai web. Jangan menambahkan screen mobile yang memerlukan role tersebut tanpa keputusan produk baru.
 

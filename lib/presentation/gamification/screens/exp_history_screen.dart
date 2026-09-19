@@ -175,8 +175,6 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
         return Icons.edit_note_rounded;
       case 'forum_comment':
         return Icons.forum_outlined;
-      case 'breathing':
-        return Icons.air_rounded;
       case 'accepted_answer':
         return Icons.check_circle_outline_rounded;
       case 'post_upvote_given':

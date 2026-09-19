@@ -2,11 +2,12 @@
 //
 // Meniru mekanik versi web: endless runner ala "dino jump" — pemain berlari
 // otomatis, melompati rintangan "pikiran negatif", dan mengumpulkan
-// hati/bintang/lotus untuk poin + combo. Seluruh logika di sini **murni
+// hati/bintang/perisai untuk poin + combo. `lotus` dipertahankan sebagai nama
+// tipe internal agar kompatibel dengan implementasi lama. Seluruh logika **murni
 // Dart** (tanpa Flutter) agar mudah diuji & dipisah dari rendering.
 //
-// Sistem koordinat memakai kanvas logis 1400×420 (sama seperti web); layar
-// menskalakan kanvas ini agar pas di perangkat.
+// Sistem koordinat memakai kanvas logis portrait 800×1000; layar menskalakan
+// kanvas ini agar pas di perangkat.
 import 'dart:math';
 
 // ——— Konstanta dunia (selaras web, disempurnakan) ———
@@ -25,14 +26,14 @@ const double kDifficultyScalePerTier = 0.3;
 // - Variable jump: menahan tombol saat naik mengurangi gravitasi → lompat
 //   lebih tinggi; melepas tombol mempercepat turun (terasa responsif).
 const double kJumpHoldGravityMult = 0.45; // gravitasi saat naik & ditahan
-const double kFastFallGravityMult = 1.6;   // gravitasi turun saat tidak ditahan
-const double kDoubleJumpForce = -9.5;      // dorongan lompatan kedua
-const int kCoyoteFrames = 6;               // toleransi lompat sesaat setelah jatuh
-const int kMaxJumps = 2;                   // lompatan ganda (1 lompatan udara)
+const double kFastFallGravityMult = 1.6; // gravitasi turun saat tidak ditahan
+const double kDoubleJumpForce = -9.5; // dorongan lompatan kedua
+const int kCoyoteFrames = 6; // toleransi lompat sesaat setelah jatuh
+const int kMaxJumps = 2; // lompatan ganda (1 lompatan udara)
 
 // Power-up & bonus
-const int kShieldDurationFrames = 600;     // ~10 detik perisai dari lotus
-const double kNearMissDistance = 14;       // jarak "nyaris" untuk bonus
+const int kShieldDurationFrames = 600; // ~10 detik Perisai Tenang
+const double kNearMissDistance = 14; // jarak "nyaris" untuk bonus
 
 enum GameStatus { idle, playing, over }
 
@@ -41,23 +42,37 @@ enum ObstacleType { thought, stress, spiral }
 enum CollectibleType { heart, star, lotus }
 
 const List<String> kObstacleLabels = [
-  'Overthinking', 'Cemas', 'Stres', 'Panik', 'Takut',
-  'Sedih', 'Marah', 'Insomnia', 'Lelah', 'Ragu',
+  'Overthinking',
+  'Cemas',
+  'Stres',
+  'Panik',
+  'Takut',
+  'Sedih',
+  'Marah',
+  'Insomnia',
+  'Lelah',
+  'Ragu',
 ];
 
 const List<String> kPlayAffirmations = [
-  'Kamu hebat!', 'Tetap tenang', 'Terus melangkah', 'Kamu berharga',
-  'Hari ini indah', 'Napas dalam...', 'Kamu kuat', 'Semangat!',
+  'Kamu hebat',
+  'Tetap tenang',
+  'Terus melangkah',
+  'Kamu berharga',
+  'Nikmati momennya',
+  'Satu langkah lagi',
+  'Kamu kuat',
+  'Jaga ritmemu',
 ];
 
 const List<String> kGameOverMessages = [
   'Setiap langkah kecil tetap berarti',
   'Istirahat juga bagian dari perjalanan',
   'Kamu sudah berusaha dengan baik hari ini',
-  'Jatuh bukan berarti gagal, coba lagi ya',
+  'Jatuh bukan berarti gagal. Coba lagi saat siap.',
   'Kamu lebih kuat dari yang kamu kira',
-  'Tidak apa-apa, ambil napas dan coba lagi',
-  'Semangat! Ketenangan ada di setiap langkah',
+  'Tidak apa-apa. Ambil jeda, lalu coba lagi.',
+  'Ketenangan dapat ditemukan di setiap langkah.',
   'Perjalananmu unik dan berharga',
 ];
 
@@ -85,7 +100,12 @@ class Collectible {
   final double y;
   final CollectibleType type;
   bool collected;
-  Collectible({required this.x, required this.y, required this.type, this.collected = false});
+  Collectible({
+    required this.x,
+    required this.y,
+    required this.type,
+    this.collected = false,
+  });
 }
 
 class Cloud {
@@ -93,7 +113,12 @@ class Cloud {
   final double y;
   final double width;
   final double speed;
-  Cloud({required this.x, required this.y, required this.width, required this.speed});
+  Cloud({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.speed,
+  });
 }
 
 class Particle {
@@ -106,8 +131,14 @@ class Particle {
   final int colorValue;
   final double size;
   Particle({
-    required this.x, required this.y, required this.vx, required this.vy,
-    required this.life, required this.maxLife, required this.colorValue, required this.size,
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    required this.life,
+    required this.maxLife,
+    required this.colorValue,
+    required this.size,
   });
 }
 
@@ -117,7 +148,13 @@ class FloatingText {
   final String text;
   double life;
   final double maxLife;
-  FloatingText({required this.x, required this.y, required this.text, required this.life, required this.maxLife});
+  FloatingText({
+    required this.x,
+    required this.y,
+    required this.text,
+    required this.life,
+    required this.maxLife,
+  });
 }
 
 /// Hasil satu langkah update — dipakai screen untuk efek (shake) & SFX/haptic.
@@ -133,7 +170,7 @@ class GameColors {
   static const int obstacleDark = 0xFF374151;
   static const int heart = 0xFFEF4444;
   static const int star = 0xFFFBBF24;
-  static const int flower = 0xFFF472B6;
+  static const int shield = 0xFFF97316;
   static const int gray = 0xFF9CA3AF;
 }
 
@@ -155,11 +192,11 @@ class MindfulRunnerEngine {
   int frameCount = 0;
 
   // Lompat lanjutan
-  bool jumpHeld = false;   // tombol sedang ditahan (variable jump)
-  int jumpsUsed = 0;       // jumlah lompatan sejak menapak (utk double jump)
-  int coyoteCounter = 0;   // sisa frame "coyote time"
+  bool jumpHeld = false; // tombol sedang ditahan (variable jump)
+  int jumpsUsed = 0; // jumlah lompatan sejak menapak (utk double jump)
+  int coyoteCounter = 0; // sisa frame "coyote time"
 
-  // Power-up perisai (dari lotus): menyerap satu tabrakan.
+  // Power-up Perisai Tenang (`lotus` secara internal): menyerap satu tabrakan.
   int shieldFrames = 0;
   bool get hasShield => shieldFrames > 0;
 
@@ -300,34 +337,51 @@ class MindfulRunnerEngine {
 
     // Spawn obstacle
     if (_obstacleTravel >= _nextObstacleGap) {
-      final type = ObstacleType.values[_rng.nextInt(ObstacleType.values.length)];
-      final w = type == ObstacleType.spiral ? 40.0 : 40 + _rng.nextDouble() * 30;
-      final h = type == ObstacleType.stress ? 60 + _rng.nextDouble() * 20 : 40 + _rng.nextDouble() * 30;
-      obstacles.add(Obstacle(
-        x: kCanvasW + 20, width: w, height: h, type: type,
-        label: kObstacleLabels[_rng.nextInt(kObstacleLabels.length)],
-      ));
+      final type =
+          ObstacleType.values[_rng.nextInt(ObstacleType.values.length)];
+      final w = type == ObstacleType.spiral
+          ? 40.0
+          : 40 + _rng.nextDouble() * 30;
+      final h = type == ObstacleType.stress
+          ? 60 + _rng.nextDouble() * 20
+          : 40 + _rng.nextDouble() * 30;
+      obstacles.add(
+        Obstacle(
+          x: kCanvasW + 20,
+          width: w,
+          height: h,
+          type: type,
+          label: kObstacleLabels[_rng.nextInt(kObstacleLabels.length)],
+        ),
+      );
       _obstacleTravel = 0;
       _nextObstacleGap = _randObstacleGap();
     }
 
     // Spawn collectible
     if (_collectibleTravel >= _nextCollectibleGap) {
-      collectibles.add(Collectible(
-        x: kCanvasW + 20,
-        y: kGroundY - 20 - _rng.nextDouble() * 60,
-        type: CollectibleType.values[_rng.nextInt(CollectibleType.values.length)],
-      ));
+      collectibles.add(
+        Collectible(
+          x: kCanvasW + 20,
+          y: kGroundY - 20 - _rng.nextDouble() * 60,
+          type: CollectibleType
+              .values[_rng.nextInt(CollectibleType.values.length)],
+        ),
+      );
       _collectibleTravel = 0;
       _nextCollectibleGap = _randCollectibleGap();
     }
 
     // Spawn cloud
     if (clouds.length < 4 && _rng.nextDouble() < 0.005) {
-      clouds.add(Cloud(
-        x: kCanvasW + 50, y: 20 + _rng.nextDouble() * 60,
-        width: 40 + _rng.nextDouble() * 60, speed: 0.3 + _rng.nextDouble() * 0.5,
-      ));
+      clouds.add(
+        Cloud(
+          x: kCanvasW + 50,
+          y: 20 + _rng.nextDouble() * 60,
+          width: 40 + _rng.nextDouble() * 60,
+          speed: 0.3 + _rng.nextDouble() * 0.5,
+        ),
+      );
     }
 
     // Update obstacles
@@ -385,8 +439,14 @@ class MindfulRunnerEngine {
     double colX = 0, colY = 0;
     final pBox = _Rect(52, playerY - 48, 30, 72);
     for (final obs in obstacles) {
-      final oBox = _Rect(obs.x, kGroundY + 24 - obs.height, obs.width, obs.height);
-      final hit = pBox.x < oBox.x + oBox.w - 4 &&
+      final oBox = _Rect(
+        obs.x,
+        kGroundY + 24 - obs.height,
+        obs.width,
+        obs.height,
+      );
+      final hit =
+          pBox.x < oBox.x + oBox.w - 4 &&
           pBox.x + pBox.w > oBox.x + 4 &&
           pBox.y + pBox.h > oBox.y + 4 &&
           pBox.y < oBox.y + oBox.h - 4;
@@ -401,13 +461,22 @@ class MindfulRunnerEngine {
       if (!obs.passed && oBox.x + oBox.w < pBox.x) {
         obs.passed = true;
         final gap = (pBox.y + pBox.h) - oBox.y; // seberapa "nyaris" di atasnya
-        if (!obs.nearMissScored && gap > 0 && gap < kNearMissDistance + 12 && isJumping) {
+        if (!obs.nearMissScored &&
+            gap > 0 &&
+            gap < kNearMissDistance + 12 &&
+            isJumping) {
           obs.nearMissScored = true;
           score += 5;
           combo = min(combo + 1, 5);
-          floatingTexts.add(FloatingText(
-            x: pBox.x, y: pBox.y - 6, text: 'Nyaris! +5', life: 45, maxLife: 45,
-          ));
+          floatingTexts.add(
+            FloatingText(
+              x: pBox.x,
+              y: pBox.y - 6,
+              text: 'Nyaris! +5',
+              life: 45,
+              maxLife: 45,
+            ),
+          );
         }
       }
     }
@@ -423,27 +492,46 @@ class MindfulRunnerEngine {
           return ox < 110 && ox + o.width > 40;
         });
         for (var i = 0; i < 16; i++) {
-          particles.add(Particle(
-            x: colX, y: colY,
-            vx: (_rng.nextDouble() - 0.5) * 8, vy: (_rng.nextDouble() - 0.5) * 6,
-            life: 18 + _rng.nextDouble() * 12, maxLife: 30,
-            colorValue: GameColors.flower, size: 2 + _rng.nextDouble() * 3,
-          ));
+          particles.add(
+            Particle(
+              x: colX,
+              y: colY,
+              vx: (_rng.nextDouble() - 0.5) * 8,
+              vy: (_rng.nextDouble() - 0.5) * 6,
+              life: 18 + _rng.nextDouble() * 12,
+              maxLife: 30,
+              colorValue: GameColors.shield,
+              size: 2 + _rng.nextDouble() * 3,
+            ),
+          );
         }
-        floatingTexts.add(FloatingText(
-          x: colX, y: colY - 10, text: 'Perisai!', life: 45, maxLife: 45,
-        ));
+        floatingTexts.add(
+          FloatingText(
+            x: colX,
+            y: colY - 10,
+            text: 'Perisai!',
+            life: 45,
+            maxLife: 45,
+          ),
+        );
         collided = false; // batalkan tabrakan
       } else {
         shakeLife = 8;
         for (var i = 0; i < 14; i++) {
-          particles.add(Particle(
-            x: colX, y: colY,
-            vx: (_rng.nextDouble() - 0.5) * 7, vy: (_rng.nextDouble() - 0.5) * 5,
-            life: 16 + _rng.nextDouble() * 10, maxLife: 26,
-            colorValue: i.isEven ? GameColors.player : GameColors.obstacleDark,
-            size: 2 + _rng.nextDouble() * 3,
-          ));
+          particles.add(
+            Particle(
+              x: colX,
+              y: colY,
+              vx: (_rng.nextDouble() - 0.5) * 7,
+              vy: (_rng.nextDouble() - 0.5) * 5,
+              life: 16 + _rng.nextDouble() * 10,
+              maxLife: 26,
+              colorValue: i.isEven
+                  ? GameColors.player
+                  : GameColors.obstacleDark,
+              size: 2 + _rng.nextDouble() * 3,
+            ),
+          );
         }
         _endGame();
         return const StepResult(collided: true);
@@ -461,32 +549,58 @@ class MindfulRunnerEngine {
         gotCollectible = true;
         collected++;
         combo++;
-        final bonus = c.type == CollectibleType.lotus ? 5 : c.type == CollectibleType.star ? 3 : 2;
+        final bonus = c.type == CollectibleType.lotus
+            ? 5
+            : c.type == CollectibleType.star
+            ? 3
+            : 2;
         score += bonus * min(combo, 5);
-        // Lotus memberi perisai pelindung (menyerap satu tabrakan).
+        // Perisai Tenang (`lotus` secara internal) menyerap satu tabrakan.
         if (c.type == CollectibleType.lotus) {
           shieldFrames = kShieldDurationFrames;
-          floatingTexts.add(FloatingText(
-            x: c.x, y: c.y - 24, text: 'Perisai aktif', life: 50, maxLife: 50,
-          ));
+          floatingTexts.add(
+            FloatingText(
+              x: c.x,
+              y: c.y - 24,
+              text: 'Perisai aktif',
+              life: 50,
+              maxLife: 50,
+            ),
+          );
         }
         final colorVal = c.type == CollectibleType.heart
             ? GameColors.heart
             : c.type == CollectibleType.star
-                ? GameColors.star
-                : GameColors.flower;
+            ? GameColors.star
+            : GameColors.shield;
         for (var i = 0; i < 8; i++) {
-          particles.add(Particle(
-            x: c.x, y: c.y,
-            vx: (_rng.nextDouble() - 0.5) * 4, vy: (_rng.nextDouble() - 0.5) * 4,
-            life: 20 + _rng.nextDouble() * 15, maxLife: 35,
-            colorValue: colorVal, size: 2 + _rng.nextDouble() * 3,
-          ));
+          particles.add(
+            Particle(
+              x: c.x,
+              y: c.y,
+              vx: (_rng.nextDouble() - 0.5) * 4,
+              vy: (_rng.nextDouble() - 0.5) * 4,
+              life: 20 + _rng.nextDouble() * 15,
+              maxLife: 35,
+              colorValue: colorVal,
+              size: 2 + _rng.nextDouble() * 3,
+            ),
+          );
         }
-        floatingTexts.add(FloatingText(
-          x: c.x, y: c.y - 10,
-          text: '+${bonus * min(combo, 5)}', life: 40, maxLife: 40,
-        ));
+        floatingTexts.add(
+          FloatingText(
+            x: c.x,
+            y: c.y - 10,
+            text:
+                '${c.type == CollectibleType.heart
+                    ? 'Self-care'
+                    : c.type == CollectibleType.star
+                    ? 'Clarity'
+                    : 'Shield'} +${bonus * min(combo, 5)}',
+            life: 40,
+            maxLife: 40,
+          ),
+        );
       }
     }
 

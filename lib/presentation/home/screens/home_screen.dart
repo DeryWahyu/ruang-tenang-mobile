@@ -114,10 +114,6 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Breathing / Meditation Widget
-                  _buildBreathingWidget(context),
-                  const SizedBox(height: 12),
-
                   // Music / Relaxation Widget
                   _buildMusicWidget(context),
                   const SizedBox(height: 12),
@@ -349,46 +345,6 @@ class HomeScreen extends StatelessWidget {
                 Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 2),
                 Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBreathingWidget(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4), // Sangat soft teal/green
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.teal.withValues(alpha: 0.2)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push('/breathing'),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.teal.withValues(alpha: 0.15), shape: BoxShape.circle),
-                  child: const Icon(Icons.air_rounded, color: Colors.teal, size: 32),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Sesi Pernapasan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.teal)),
-                      SizedBox(height: 4),
-                      Text('Ambil jeda sejenak untuk menenangkan pikiranmu.', style: TextStyle(fontSize: 13, color: Colors.black54)),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

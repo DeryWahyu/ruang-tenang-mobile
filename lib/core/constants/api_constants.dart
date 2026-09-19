@@ -59,16 +59,6 @@ class ApiConstants {
   // Stories
   static const String stories = '/stories';
 
-  // Breathing
-  static const String breathing = '/breathing';
-  static const String breathingTechniques = '/breathing/techniques';
-  static const String breathingSessions = '/breathing/sessions';
-  static const String breathingStats = '/breathing/stats';
-  static const String breathingPreferences = '/breathing/preferences';
-  static const String breathingFavorites = '/breathing/favorites';
-  static const String breathingCalendar = '/breathing/calendar';
-  static const String breathingRecommendations = '/breathing/recommendations';
-
   // Wellness
   static const String wellness = '/wellness';
 
@@ -77,7 +67,6 @@ class ApiConstants {
   static const String badges = '/badges';
   static const String features = '/features';
   static const String map = '/map';
-  static const String guilds = '/guilds';
   static const String leaderboard = '/leaderboard';
   static const String levelConfigs = '/level-configs';
   static const String expHistory = '/exp-history';

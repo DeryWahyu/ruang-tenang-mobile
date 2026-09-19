@@ -155,7 +155,6 @@ class _WellnessPlanView extends StatelessWidget {
   IconData _getIconForAction(String type) {
     switch (type) {
       case 'journal': return Icons.book;
-      case 'breathing': return Icons.air;
       case 'music': return Icons.music_note;
       case 'chat': return Icons.chat;
       default: return Icons.task_alt;
@@ -168,8 +167,6 @@ class _WellnessPlanView extends StatelessWidget {
       // Map web backend routes to mobile routes
       if (route.startsWith('/dashboard/mood-tracker')) {
         mobileRoute = '/mood';
-      } else if (route.startsWith('/dashboard/breathing')) {
-        mobileRoute = '/breathing';
       } else if (route.startsWith('/dashboard/journal/create')) {
         mobileRoute = '/journal/create';
       } else if (route.startsWith('/dashboard/chat')) {

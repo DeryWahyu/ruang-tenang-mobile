@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/utils/media_url.dart';
 
 /// Renders a level/tier badge. The backend stores the level badge as an image
-/// URL (e.g. `/uploads/images/badge_level_3.png`), but some sources still use
+/// URL (e.g. `/storage/badge-image/3.png`), but some sources still use
 /// an emoji. This widget handles both, with a medal fallback on error/empty.
 class LevelBadge extends StatelessWidget {
   final String? icon;
