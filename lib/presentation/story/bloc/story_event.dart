@@ -28,10 +28,6 @@ class StoryHeartToggled extends StoryEvent {
   List<Object?> get props => [id];
 }
 
-class StoryCategoriesRequested extends StoryEvent {
-  const StoryCategoriesRequested();
-}
-
 class StoryCommentsRequested extends StoryEvent {
   final String storyId;
   const StoryCommentsRequested(this.storyId);

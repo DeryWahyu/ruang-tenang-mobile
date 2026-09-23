@@ -14,7 +14,7 @@ class AppFeature {
 
 /// Daftar lengkap fitur aplikasi yang digunakan di halaman Home dan Global Search.
 const kAllAppFeatures = <AppFeature>[
-  AppFeature('Konseling AI', 'Teman cerita virtual', Icons.auto_awesome, AppColors.primary, '/chat'),
+  AppFeature('Konseling AI', 'Teman cerita virtual', Icons.psychology_alt_rounded, AppColors.primary, '/chat'),
   AppFeature('Jurnal', 'Tulis & refleksi harian', Icons.auto_stories_rounded, Color(0xFF6366F1), '/journal'),
   AppFeature('Mood Tracker', 'Pantau suasana hati', Icons.mood_rounded, Color(0xFFF59E0B), '/mood/stats'),
   AppFeature('Musik Relaksasi', 'Dengarkan & rileks', Icons.headphones_rounded, Color(0xFF8B5CF6), '/music'),

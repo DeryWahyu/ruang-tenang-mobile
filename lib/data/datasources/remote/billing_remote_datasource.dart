@@ -80,8 +80,4 @@ class BillingRemoteDataSource {
     );
   }
 
-  /// Unduh CSV satu invoice berdasarkan order ID.
-  Future<String> getInvoiceCsv(String orderId) {
-    return _apiClient.fetchRaw('${ApiConstants.billing}/transactions/$orderId/invoice');
-  }
 }

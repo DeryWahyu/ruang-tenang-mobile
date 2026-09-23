@@ -11,5 +11,4 @@ abstract class BillingRepository {
     String? itemType,
   });
   Future<String> exportTransactionsCsv({String? status, String? itemType});
-  Future<String> getInvoiceCsv(String orderId);
 }

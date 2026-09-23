@@ -149,8 +149,4 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<String?> getToken() async {
-    return await _secureStorage.read(key: StorageKeys.authToken);
-  }
 }

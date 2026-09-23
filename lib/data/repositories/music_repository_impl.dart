@@ -20,12 +20,6 @@ class MusicRepositoryImpl implements MusicRepository {
   }
 
   @override
-  Future<Song> getSong(int id) async {
-    final model = await _remote.getSong(id);
-    return model.toEntity();
-  }
-
-  @override
   Future<List<PlaylistListItem>> getMyPlaylists() async {
     final models = await _remote.getMyPlaylists();
     return models.map((e) => e.toEntity()).toList();
@@ -59,8 +53,4 @@ class MusicRepositoryImpl implements MusicRepository {
     return model.toEntity();
   }
 
-  @override
-  Future<void> addSongToPlaylist(String uuid, int songId) async {
-    await _remote.addSongToPlaylist(uuid, songId);
-  }
 }

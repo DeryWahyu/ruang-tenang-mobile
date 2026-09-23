@@ -39,12 +39,6 @@ class StoryRepositoryImpl implements StoryRepository {
   }
 
   @override
-  Future<List<StoryCategory>> getCategories() async {
-    final models = await _remote.getCategories();
-    return models.map((e) => e.toEntity()).toList();
-  }
-
-  @override
   Future<List<StoryComment>> getComments(
     String storyId, {
     int page = 1,

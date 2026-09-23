@@ -14,7 +14,6 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     on<StoryListRequested>(_onListRequested);
     on<StoryDetailRequested>(_onDetailRequested);
     on<StoryHeartToggled>(_onHeartToggled);
-    on<StoryCategoriesRequested>(_onCategoriesRequested);
     on<StoryCommentsRequested>(_onCommentsRequested);
     on<StoryCommentCreateRequested>(_onCommentCreate);
     on<StoryCommentHeartToggled>(_onCommentHeartToggled);
@@ -73,13 +72,6 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
         );
         emit(state.copyWith(detail: updated));
       }
-    } catch (_) {}
-  }
-
-  Future<void> _onCategoriesRequested(StoryCategoriesRequested event, Emitter<StoryState> emit) async {
-    try {
-      final categories = await _repository.getCategories();
-      emit(state.copyWith(categories: categories));
     } catch (_) {}
   }
 

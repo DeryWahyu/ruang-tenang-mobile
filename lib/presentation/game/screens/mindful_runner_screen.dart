@@ -374,7 +374,7 @@ class _MindfulRunnerScreenState extends State<MindfulRunnerScreen>
                   ),
                   if (_engine.combo > 1)
                     _buildHudPill(
-                      Icons.auto_awesome_rounded,
+                      Icons.bolt_rounded,
                       '×${_engine.combo}',
                       accent,
                     ),
@@ -467,7 +467,7 @@ class _MindfulRunnerScreenState extends State<MindfulRunnerScreen>
                   child: Icon(
                     isOver
                         ? Icons.favorite_rounded
-                        : Icons.auto_awesome_rounded,
+                        : Icons.self_improvement_rounded,
                     size: 22,
                     color: isOver ? AppColors.red400 : accent,
                   ),

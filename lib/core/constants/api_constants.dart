@@ -5,11 +5,7 @@ class ApiConstants {
 
   // Base URL - centralized in AppConfig (dart-define -> .env -> default)
   static String get baseUrl => AppConfig.baseUrl;
-  static const String apiPrefix = AppConfig.apiPrefix;
   static String get apiBaseUrl => AppConfig.apiBaseUrl;
-
-  // Health check
-  static const String health = '/health';
 
   // Auth
   static const String login = '/auth/login';
@@ -22,23 +18,18 @@ class ApiConstants {
 
   // Upload
   static const String uploadImage = '/upload/image';
-  static const String uploadAudio = '/upload/audio';
 
   // Articles
   static const String articles = '/articles';
   static const String articleCategories = '/article-categories';
-  static const String myArticles = '/my-articles';
 
   // Chat
   static const String chatSessions = '/chat-sessions';
   static const String chatMessages = '/chat-messages';
-  static const String chatFolders = '/chat-folders';
-  static const String chatPrompts = '/chat-prompts';
 
   // Journal
   static const String journals = '/journals';
   static const String journalSearch = '/journals/search';
-  static const String journalPrompt = '/journals/prompt';
 
   // Mood
   static const String userMoods = '/user-moods';
@@ -48,7 +39,6 @@ class ApiConstants {
 
   // Music
   static const String songCategories = '/song-categories';
-  static const String songs = '/songs';
   static const String playlists = '/playlists';
 
   // Forum
@@ -65,10 +55,7 @@ class ApiConstants {
   // Gamification
   static const String dailyTasks = '/daily-tasks';
   static const String badges = '/badges';
-  static const String features = '/features';
   static const String map = '/map';
-  static const String leaderboard = '/leaderboard';
-  static const String levelConfigs = '/level-configs';
   static const String expHistory = '/exp-history';
   static const String rewards = '/rewards';
   static const String xpBoost = '/xp-boost';
@@ -78,21 +65,6 @@ class ApiConstants {
   // Billing
   static const String billing = '/billing';
 
-  // Notifications
-  static const String notifications = '/notifications';
-  static const String push = '/push';
-
   // Search
   static const String search = '/search';
-
-  // User
-  static const String user = '/user';
-
-  // Moderation
-  static const String reports = '/reports';
-  static const String appeals = '/appeals';
-  static const String blocks = '/blocks';
-
-  // B2B
-  static const String b2b = '/b2b';
 }

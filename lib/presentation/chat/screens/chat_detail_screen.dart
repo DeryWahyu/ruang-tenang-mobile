@@ -234,7 +234,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ),
               boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10))],
             ),
-            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 40),
+            child: const Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 40),
           ),
           const SizedBox(height: 20),
           const Text('Halo! Saya AI Ruang Tenang',

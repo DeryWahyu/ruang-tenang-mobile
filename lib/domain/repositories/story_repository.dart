@@ -10,7 +10,6 @@ abstract class StoryRepository {
   });
   Future<Story> getStory(String id);
   Future<void> toggleHeart(String id);
-  Future<List<StoryCategory>> getCategories();
   Future<List<StoryComment>> getComments(
     String storyId, {
     int page = 1,

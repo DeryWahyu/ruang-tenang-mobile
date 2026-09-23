@@ -33,7 +33,4 @@ class BillingRepositoryImpl implements BillingRepository {
   @override
   Future<String> exportTransactionsCsv({String? status, String? itemType}) =>
       _remote.exportTransactionsCsv(status: status, itemType: itemType);
-
-  @override
-  Future<String> getInvoiceCsv(String orderId) => _remote.getInvoiceCsv(orderId);
 }

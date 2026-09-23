@@ -166,7 +166,7 @@ class JournalCard extends StatelessWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: const [
-                                    Icon(Icons.auto_awesome_rounded, size: 12, color: AppColors.primary),
+                                    Icon(Icons.psychology_alt_rounded, size: 12, color: AppColors.primary),
                                     SizedBox(width: 4),
                                     Text('AI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
                                   ],

@@ -37,6 +37,19 @@ class ApiClient {
 
   Dio get dio => _dio;
 
+  /// Runs an API request and normalizes transport failures into the domain
+  /// exceptions used by repositories and presentation layers.
+  ///
+  /// Keeping this conversion in one place prevents each HTTP verb helper from
+  /// drifting in how it handles Dio errors.
+  Future<T> _guard<T>(Future<T> Function() request) async {
+    try {
+      return await request();
+    } on DioException catch (e) {
+      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
+    }
+  }
+
   /// Fetch raw JSON body (for endpoints that don't follow the
   /// standard `{success, data}` envelope, e.g. Journal which returns
   /// `{data: [...], total, page, limit}` directly). Throws the same
@@ -47,7 +60,7 @@ class ApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
   }) async {
-    try {
+    return _guard(() async {
       final Response<dynamic> response;
       switch (method.toUpperCase()) {
         case 'POST':
@@ -70,9 +83,7 @@ class ApiClient {
           response = await _dio.get(path, queryParameters: queryParameters);
       }
       return Map<String, dynamic>.from(response.data as Map);
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   /// Mengambil body respons mentah sebagai String (mis. CSV export billing).
@@ -81,16 +92,14 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? queryParameters,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.get<dynamic>(
         path,
         queryParameters: queryParameters,
         options: Options(responseType: ResponseType.plain),
       );
       return response.data?.toString() ?? '';
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<ApiResponse<T>> get<T>(
@@ -98,7 +107,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.get(
         path,
         queryParameters: queryParameters,
@@ -107,9 +116,7 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<PaginatedResponse<T>> getPaginated<T>(
@@ -117,7 +124,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     required T Function(Map<String, dynamic> json) fromJson,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.get(
         path,
         queryParameters: queryParameters,
@@ -126,9 +133,7 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<ApiResponse<T>> post<T>(
@@ -137,7 +142,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.post(
         path,
         data: data,
@@ -147,9 +152,7 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<ApiResponse<T>> put<T>(
@@ -158,7 +161,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.put(
         path,
         data: data,
@@ -168,9 +171,7 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<ApiResponse<T>> patch<T>(
@@ -179,7 +180,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.patch(
         path,
         data: data,
@@ -189,9 +190,7 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<ApiResponse<T>> delete<T>(
@@ -200,7 +199,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.delete(
         path,
         data: data,
@@ -210,9 +209,7 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 
   Future<ApiResponse<T>> uploadFile<T>(
@@ -221,7 +218,7 @@ class ApiClient {
     T Function(dynamic json)? fromJson,
     void Function(int, int)? onSendProgress,
   }) async {
-    try {
+    return _guard(() async {
       final response = await _dio.post(
         path,
         data: formData,
@@ -234,8 +231,6 @@ class ApiClient {
         response.data as Map<String, dynamic>,
         fromJson,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException ? e.error as ApiException : const NetworkException();
-    }
+    });
   }
 }

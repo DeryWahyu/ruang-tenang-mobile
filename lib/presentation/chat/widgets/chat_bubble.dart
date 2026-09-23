@@ -43,7 +43,7 @@ class ChatBubble extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+              child: const Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 16),
             )
           else
             const SizedBox(width: 44),

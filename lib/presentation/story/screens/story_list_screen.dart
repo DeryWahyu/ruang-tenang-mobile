@@ -20,8 +20,7 @@ class StoryListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<StoryBloc>()
-        ..add(const StoryListRequested())
-        ..add(const StoryCategoriesRequested()),
+        ..add(const StoryListRequested()),
       child: const _StoryListView(),
     );
   }

@@ -60,22 +60,6 @@ class StoryRemoteDataSource {
     }
   }
 
-  /// GET /stories/categories
-  Future<List<StoryCategoryModel>> getCategories() async {
-    final response = await _apiClient.get<List<dynamic>>(
-      '${ApiConstants.stories}/categories',
-      fromJson: (json) => json as List<dynamic>,
-    );
-
-    if (!response.success || response.data == null) {
-      throw Exception(response.error ?? 'Gagal memuat kategori cerita');
-    }
-
-    return response.data!
-        .map((e) => StoryCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
-  }
-
   /// GET /stories/:id/comments
   Future<Map<String, dynamic>> getComments(
     String storyId, {

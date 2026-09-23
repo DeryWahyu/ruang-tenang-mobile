@@ -177,7 +177,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+              child: const Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 16),
             const Expanded(
@@ -318,7 +318,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     ),
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Icon(Icons.auto_awesome, color: Colors.white, size: 22),
+                  child: const Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -348,4 +348,3 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 }
-
