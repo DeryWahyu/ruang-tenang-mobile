@@ -115,7 +115,7 @@ class _StoryListView extends StatelessWidget {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.star_rounded, size: 13, color: AppColors.storyHeading),
+                            Icon(Icons.verified_rounded, size: 13, color: AppColors.storyHeading),
                             SizedBox(width: 3),
                             Text('Featured', style: TextStyle(fontSize: 11, color: AppColors.storyHeading, fontWeight: FontWeight.w600)),
                           ],

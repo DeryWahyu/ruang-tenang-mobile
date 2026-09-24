@@ -8,7 +8,12 @@ class RegisterUseCase {
   Future<User> call({
     required String name,
     required String email,
+    required String whatsappNumber,
     required String password,
-  }) =>
-      _repository.register(name: name, email: email, password: password);
+  }) => _repository.register(
+    name: name,
+    email: email,
+    whatsappNumber: whatsappNumber,
+    password: password,
+  );
 }

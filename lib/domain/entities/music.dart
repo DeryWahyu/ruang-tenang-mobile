@@ -41,6 +41,9 @@ class Song extends Equatable {
   final String? slug;
   final String title;
   final String? filePath;
+  final String? attribution;
+  final String? sourceUrl;
+  final String? licenseUrl;
   final String thumbnail;
   final int categoryId;
   final SongCategory? category;
@@ -52,6 +55,9 @@ class Song extends Equatable {
     this.slug,
     required this.title,
     this.filePath,
+    this.attribution,
+    this.sourceUrl,
+    this.licenseUrl,
     required this.thumbnail,
     required this.categoryId,
     this.category,
@@ -65,6 +71,9 @@ class Song extends Equatable {
         slug,
         title,
         filePath,
+        attribution,
+        sourceUrl,
+        licenseUrl,
         thumbnail,
         categoryId,
         category,

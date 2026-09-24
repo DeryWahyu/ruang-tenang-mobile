@@ -360,6 +360,20 @@ class _TransactionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 _StatusChip(status: tx.status),
+                if (tx.refundStatus != 'none') ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    tx.refundedAmount > 0
+                        ? 'Refund terkonfirmasi: ${currency.format(tx.refundedAmount)}'
+                        : 'Refund menunggu konfirmasi Midtrans',
+                    style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11),
+                  ),
+                  if (tx.refundReconciliationStatus == 'pending')
+                    const Text(
+                      'Sedang ditinjau operator',
+                      style: TextStyle(color: AppColors.accentOrange, fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                ],
               ],
             ),
           ),

@@ -624,7 +624,7 @@ class _MindfulRunnerScreenState extends State<MindfulRunnerScreen>
                 'Kepedulian diri',
                 AppColors.red400,
               ),
-              _buildLegend(Icons.star_rounded, 'Kejernihan', AppColors.warning),
+              _buildLegend(Icons.visibility_rounded, 'Kejernihan', AppColors.warning),
               _buildLegend(Icons.shield_rounded, 'Perisai Tenang', accent),
             ],
           ),

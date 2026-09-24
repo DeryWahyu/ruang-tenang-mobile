@@ -9,6 +9,7 @@ import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
 import '../bloc/music_state.dart';
 import '../../../domain/entities/music.dart';
+import 'track_attribution.dart';
 
 /// Mini-player musik **global** yang mengikuti seluruh layar.
 ///
@@ -84,10 +85,7 @@ class GlobalMiniPlayer extends StatelessWidget {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const Text('Ruang Tenang',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 11, color: AppColors.mutedForeground)),
+                                  TrackAttribution(song: song),
                                 ],
                               ),
                             ),

@@ -12,6 +12,7 @@ import '../../../domain/entities/music.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
 import '../bloc/music_state.dart';
+import '../widgets/track_attribution.dart';
 
 class MusicHomeScreen extends StatelessWidget {
   const MusicHomeScreen({super.key});
@@ -199,12 +200,18 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
               _thumb(song.thumbnail, Icons.music_note, 40),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: isPlaying ? AppColors.primary : AppColors.foreground)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: isPlaying ? AppColors.primary : AppColors.foreground)),
+                    TrackAttribution(song: song),
+                  ],
+                ),
               ),
               Icon(isPlaying && state.isPlaying ? Icons.pause_circle_filled : Icons.play_arrow_rounded,
                   color: AppColors.primary),

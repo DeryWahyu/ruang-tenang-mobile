@@ -22,20 +22,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _emailSent = false;
+  final _tokenController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
+    _tokenController.dispose();
     super.dispose();
   }
 
   void _onSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            AuthForgotPasswordRequested(
-              email: _emailController.text.trim(),
-            ),
-          );
+        AuthForgotPasswordRequested(email: _emailController.text.trim()),
+      );
     }
   }
 
@@ -59,22 +59,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.pop(),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => context.pop(),
+            ),
           ),
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimensions.spacingXl),
-            child: _emailSent ? _buildSuccessView() : _buildFormView(),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppDimensions.spacingXl),
+              child: _emailSent ? _buildSuccessView() : _buildFormView(),
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildFormView() {
@@ -104,17 +105,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           // Title
           Text(
             'Lupa Password?',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.foreground,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.displaySmall?.copyWith(color: AppColors.foreground),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppDimensions.spacingSm),
           Text(
-            'Masukkan email yang terdaftar dan kami akan mengirimkan link untuk reset password',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.mutedForeground,
-                ),
+            'Masukkan email akun. Kode reset akan dikirim ke nomor WhatsApp yang terdaftar.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppDimensions.spacing2xl),
@@ -136,7 +137,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               return AppButton.primary(
-                label: 'Kirim Link Reset',
+                label: 'Kirim Kode Reset',
                 isLoading: state.isLoading,
                 prefixIcon: Icons.send_rounded,
                 onPressed: _onSubmit,
@@ -173,7 +174,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.mark_email_read_rounded,
+              Icons.chat_rounded,
               size: 40,
               color: AppColors.success,
             ),
@@ -182,21 +183,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: AppDimensions.spacingXl),
 
         Text(
-          'Email Terkirim!',
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: AppColors.foreground,
-              ),
+          'Periksa WhatsApp',
+          style: Theme.of(
+            context,
+          ).textTheme.displaySmall?.copyWith(color: AppColors.foreground),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppDimensions.spacingSm),
         Text(
-          'Kami telah mengirimkan link reset password ke ${_emailController.text}. Silakan cek inbox atau folder spam kamu.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.mutedForeground,
-              ),
+          'Jika akun memiliki nomor WhatsApp terverifikasi, kode reset telah dikirim. Masukkan kode dari pesan tersebut.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppDimensions.spacing2xl),
+
+        AppInput(
+          label: 'Kode reset',
+          hint: 'Masukkan kode dari WhatsApp',
+          controller: _tokenController,
+        ),
+        const SizedBox(height: AppDimensions.spacingBase),
+
+        AppButton.primary(
+          label: 'Lanjut reset password',
+          onPressed: () {
+            final token = _tokenController.text.trim();
+            if (token.isNotEmpty) {
+              context.go('/reset-password?token=${Uri.encodeComponent(token)}');
+            }
+          },
+        ),
+        const SizedBox(height: AppDimensions.spacingBase),
 
         AppButton.primary(
           label: 'Kembali ke Login',

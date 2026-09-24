@@ -33,11 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            AuthLoginRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+        AuthLoginRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -47,6 +47,9 @@ class _LoginScreenState extends State<LoginScreen> {
       listener: (context, state) {
         if (state.isAuthenticated) {
           context.go('/home');
+        }
+        if (state.status == AuthStatus.verificationRequired) {
+          context.go('/verify-phone');
         }
         if (state.status == AuthStatus.failure && state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -69,124 +72,123 @@ class _LoginScreenState extends State<LoginScreen> {
         intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimensions.spacingXl),
-              child: ConstrainedBox(
-                // Batasi lebar agar form tetap nyaman dibaca di tablet/lanskap.
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                    // Logo
-                    Center(
-                      child: Image.asset(
-                        'assets/images/logo.webp',
-                        width: 80,
-                        height: 80,
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.spacingXl),
-
-                    // Title
-                    Text(
-                      'Selamat Datang',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: AppColors.foreground,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingSm),
-                    Text(
-                      'Masuk ke akunmu untuk melanjutkan',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.mutedForeground,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppDimensions.spacing2xl),
-
-                    // Email
-                    AppInput(
-                      label: 'Email',
-                      hint: 'Masukkan email kamu',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      validator: Validators.email,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingBase),
-
-                    // Password
-                    AppInput(
-                      label: 'Password',
-                      hint: 'Masukkan password',
-                      controller: _passwordController,
-                      obscureText: true,
-                      prefixIcon: Icons.lock_outline_rounded,
-                      validator: Validators.password,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _onLogin(),
-                    ),
-                    const SizedBox(height: AppDimensions.spacingSm),
-
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => context.push('/forgot-password'),
-                        child: const Text('Lupa Password?'),
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.spacingBase),
-
-                    // Login button
-                    BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        return AppButton.primary(
-                          label: 'Masuk',
-                          isLoading: state.isLoading,
-                          onPressed: _onLogin,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppDimensions.spacingXl),
-
-                    // Register link
-                    Row(
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppDimensions.spacingXl),
+                child: ConstrainedBox(
+                  // Batasi lebar agar form tetap nyaman dibaca di tablet/lanskap.
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'Belum punya akun? ',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.mutedForeground,
-                              ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.push('/register'),
-                          child: Text(
-                            'Daftar',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        // Logo
+                        Center(
+                          child: Image.asset(
+                            'assets/images/logo.webp',
+                            width: 80,
+                            height: 80,
                           ),
+                        ),
+                        const SizedBox(height: AppDimensions.spacingXl),
+
+                        // Title
+                        Text(
+                          'Selamat Datang',
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(color: AppColors.foreground),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingSm),
+                        Text(
+                          'Masuk ke akunmu untuk melanjutkan',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.mutedForeground),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppDimensions.spacing2xl),
+
+                        // Email
+                        AppInput(
+                          label: 'Email',
+                          hint: 'Masukkan email kamu',
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.email_outlined,
+                          validator: Validators.email,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingBase),
+
+                        // Password
+                        AppInput(
+                          label: 'Password',
+                          hint: 'Masukkan password',
+                          controller: _passwordController,
+                          obscureText: true,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          validator: Validators.password,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _onLogin(),
+                        ),
+                        const SizedBox(height: AppDimensions.spacingSm),
+
+                        // Forgot password
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: const Text('Lupa Password?'),
+                          ),
+                        ),
+                        const SizedBox(height: AppDimensions.spacingBase),
+
+                        // Login button
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            return AppButton.primary(
+                              label: 'Masuk',
+                              isLoading: state.isLoading,
+                              onPressed: _onLogin,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppDimensions.spacingXl),
+
+                        // Register link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Belum punya akun? ',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.mutedForeground),
+                            ),
+                            GestureDetector(
+                              onTap: () => context.push('/register'),
+                              child: Text(
+                                'Daftar',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

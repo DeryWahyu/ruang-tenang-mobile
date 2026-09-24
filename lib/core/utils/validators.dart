@@ -1,6 +1,14 @@
 class Validators {
   Validators._();
 
+  static String? whatsappNumber(String? value) {
+    if (value == null ||
+        !RegExp(r'^(\+62|62|0)8[0-9]{8,13}$').hasMatch(value.trim())) {
+      return 'Nomor WhatsApp Indonesia tidak valid';
+    }
+    return null;
+  }
+
   static String? email(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Email tidak boleh kosong';
@@ -39,7 +47,11 @@ class Validators {
     return null;
   }
 
-  static String? minLength(String? value, int min, [String fieldName = 'Field']) {
+  static String? minLength(
+    String? value,
+    int min, [
+    String fieldName = 'Field',
+  ]) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName tidak boleh kosong';
     }
@@ -49,7 +61,11 @@ class Validators {
     return null;
   }
 
-  static String? maxLength(String? value, int max, [String fieldName = 'Field']) {
+  static String? maxLength(
+    String? value,
+    int max, [
+    String fieldName = 'Field',
+  ]) {
     if (value != null && value.trim().length > max) {
       return '$fieldName maksimal $max karakter';
     }

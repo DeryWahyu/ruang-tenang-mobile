@@ -9,6 +9,7 @@ import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
 import '../bloc/music_state.dart';
 import '../bloc/playlist_detail_cubit.dart';
+import '../widgets/track_attribution.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
   final String uuid;
@@ -192,8 +193,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                           fontSize: 15,
                           color: isCurrent ? AppColors.primary : AppColors.foreground)),
                   const SizedBox(height: 2),
-                  const Text('Ruang Tenang',
-                      style: TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                  TrackAttribution(song: song),
                 ],
               ),
             ),

@@ -120,7 +120,7 @@ class ProfileScreen extends StatelessWidget {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                                Icon(Icons.person_outline_rounded, color: Colors.amber, size: 16),
                                 SizedBox(width: 4),
                                 Text(
                                   'Member Biasa', 

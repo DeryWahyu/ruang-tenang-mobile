@@ -145,7 +145,7 @@ class _DailyTasksView extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.star_rounded, color: Colors.white, size: 16),
+              const Icon(Icons.bolt_rounded, color: Colors.white, size: 16),
               const SizedBox(width: 4),
               Text('${s.totalXpEarned}/${s.totalXpPossible} XP',
                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),

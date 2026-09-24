@@ -22,3 +22,5 @@ Fitur lain diakses dari Home, Profile, atau Game Hub. Route truth berada di lib/
 ## UX invariants
 
 Setiap feature harus memiliki loading/error/empty state, mendukung dark/light theme yang tersedia, tidak menabrak global mini-player/FAB, dan menangani offline secara aman. Game Mindful Runner boleh berjalan offline; data server tetap membutuhkan koneksi.
+Login member yang membutuhkan verifikasi nomor diarahkan ke `/verify-phone`. Nomor WhatsApp diminta saat registrasi dan dapat diubah pada edit profil. Akun lama tanpa nomor dapat mengisinya pada layar verifikasi. OTP diterbitkan backend melalui Fonnte; aplikasi menyimpan token login hanya setelah OTP benar. Reset kata sandi dikirim ke WhatsApp terverifikasi.
+Riwayat billing menampilkan jumlah refund yang terkonfirmasi atau masih menunggu konfirmasi Midtrans, serta memberi tahu member saat transaksi sedang ditinjau operator.

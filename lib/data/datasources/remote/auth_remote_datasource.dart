@@ -14,10 +14,7 @@ class AuthRemoteDataSource {
   }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       ApiConstants.login,
-      data: {
-        'email': email,
-        'password': password,
-      },
+      data: {'email': email, 'password': password},
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -28,10 +25,39 @@ class AuthRemoteDataSource {
     return response.data!;
   }
 
+  Future<void> setVerificationPhone({
+    required String challenge,
+    required String whatsappNumber,
+  }) async {
+    await _apiClient.post<dynamic>(
+      '/auth/verification/phone',
+      data: {
+        'verification_token': challenge,
+        'whatsapp_number': whatsappNumber,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> verifyPhone({
+    required String challenge,
+    required String code,
+  }) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      '/auth/verification/verify',
+      data: {'verification_token': challenge, 'code': code},
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Kode OTP tidak valid');
+    }
+    return response.data!;
+  }
+
   /// POST /auth/register
   Future<UserModel> register({
     required String name,
     required String email,
+    required String whatsappNumber,
     required String password,
   }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
@@ -39,6 +65,7 @@ class AuthRemoteDataSource {
       data: {
         'name': name,
         'email': email,
+        'whatsapp_number': whatsappNumber,
         'password': password,
         'role': 'user',
       },
@@ -59,7 +86,7 @@ class AuthRemoteDataSource {
       data: {'email': email},
     );
 
-    return response.message ?? 'Link reset password telah dikirim ke email Anda';
+    return response.message ?? 'Kode reset dikirim ke WhatsApp yang terdaftar';
   }
 
   /// POST /auth/reset-password
@@ -72,7 +99,7 @@ class AuthRemoteDataSource {
       ApiConstants.resetPassword,
       data: {
         'token': token,
-        'password': password,
+        'new_password': password,
         'password_confirmation': passwordConfirmation,
       },
     );
@@ -97,12 +124,14 @@ class AuthRemoteDataSource {
   /// PUT /auth/profile
   Future<UserModel> updateProfile({
     String? name,
+    String? whatsappNumber,
     String? avatar,
     String? bio,
     String? tagline,
   }) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
+    if (whatsappNumber != null) data['whatsapp_number'] = whatsappNumber;
     if (avatar != null) data['avatar'] = avatar;
     if (bio != null) data['bio'] = bio;
     if (tagline != null) data['tagline'] = tagline;

@@ -18,19 +18,27 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
     required FlutterSecureStorage secureStorage,
-  })  : _remoteDataSource = remoteDataSource,
-        _secureStorage = secureStorage;
+  }) : _remoteDataSource = remoteDataSource,
+       _secureStorage = secureStorage;
 
   @override
-  Future<User> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<User> login({required String email, required String password}) async {
     final data = await _remoteDataSource.login(
       email: email,
       password: password,
     );
 
+    if (data['verification_required'] == true) {
+      throw PhoneVerificationRequired(
+        data['verification_token'] as String? ?? '',
+        data['phone_required'] as bool? ?? false,
+      );
+    }
+
+    return _storeLogin(data);
+  }
+
+  Future<User> _storeLogin(Map<String, dynamic> data) async {
     final token = data['token'] as String?;
     final userData = data['user'] as Map<String, dynamic>?;
 
@@ -50,14 +58,37 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> setVerificationPhone({
+    required String challenge,
+    required String whatsappNumber,
+  }) => _remoteDataSource.setVerificationPhone(
+    challenge: challenge,
+    whatsappNumber: whatsappNumber,
+  );
+
+  @override
+  Future<User> verifyPhone({
+    required String challenge,
+    required String code,
+  }) async {
+    final data = await _remoteDataSource.verifyPhone(
+      challenge: challenge,
+      code: code,
+    );
+    return _storeLogin(data);
+  }
+
+  @override
   Future<User> register({
     required String name,
     required String email,
+    required String whatsappNumber,
     required String password,
   }) async {
     final user = await _remoteDataSource.register(
       name: name,
       email: email,
+      whatsappNumber: whatsappNumber,
       password: password,
     );
     return user.toEntity();
@@ -94,12 +125,14 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> updateProfile({
     String? name,
+    String? whatsappNumber,
     String? avatar,
     String? bio,
     String? tagline,
   }) async {
     final user = await _remoteDataSource.updateProfile(
       name: name,
+      whatsappNumber: whatsappNumber,
       avatar: avatar,
       bio: bio,
       tagline: tagline,
@@ -148,5 +181,4 @@ class AuthRepositoryImpl implements AuthRepository {
       return null;
     }
   }
-
 }

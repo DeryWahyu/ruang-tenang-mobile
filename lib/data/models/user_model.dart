@@ -8,6 +8,7 @@ class UserModel extends Equatable {
   final int id;
   final String name;
   final String email;
+  final String whatsappNumber;
   final String avatar;
   final String role;
   final int exp;
@@ -24,6 +25,7 @@ class UserModel extends Equatable {
     required this.id,
     required this.name,
     required this.email,
+    this.whatsappNumber = '',
     this.avatar = '',
     this.role = 'user',
     this.exp = 0,
@@ -42,6 +44,7 @@ class UserModel extends Equatable {
       id: json['id'] as int? ?? 0,
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      whatsappNumber: json['whatsapp_number'] as String? ?? '',
       avatar: json['avatar'] as String? ?? '',
       role: json['role'] as String? ?? 'user',
       exp: (json['exp'] as num?)?.toInt() ?? 0,
@@ -61,6 +64,7 @@ class UserModel extends Equatable {
       'id': id,
       'name': name,
       'email': email,
+      'whatsapp_number': whatsappNumber,
       'avatar': avatar,
       'role': role,
       'exp': exp,
@@ -79,6 +83,7 @@ class UserModel extends Equatable {
     int? id,
     String? name,
     String? email,
+    String? whatsappNumber,
     String? avatar,
     String? role,
     int? exp,
@@ -95,6 +100,7 @@ class UserModel extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      whatsappNumber: whatsappNumber ?? this.whatsappNumber,
       avatar: avatar ?? this.avatar,
       role: role ?? this.role,
       exp: exp ?? this.exp,
@@ -110,43 +116,54 @@ class UserModel extends Equatable {
   }
 
   User toEntity() => User(
-        id: id,
-        name: name,
-        email: email,
-        avatar: avatar,
-        role: role,
-        exp: exp,
-        goldCoins: goldCoins,
-        isPremium: isPremium,
-        premiumUntil: premiumUntil,
-        level: level,
-        badgeName: badgeName,
-        badgeIcon: badgeIcon,
-        profileTheme: profileTheme,
-        createdAt: createdAt,
-      );
+    id: id,
+    name: name,
+    email: email,
+    whatsappNumber: whatsappNumber,
+    avatar: avatar,
+    role: role,
+    exp: exp,
+    goldCoins: goldCoins,
+    isPremium: isPremium,
+    premiumUntil: premiumUntil,
+    level: level,
+    badgeName: badgeName,
+    badgeIcon: badgeIcon,
+    profileTheme: profileTheme,
+    createdAt: createdAt,
+  );
 
   static UserModel fromEntity(User user) => UserModel(
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        role: user.role,
-        exp: user.exp,
-        goldCoins: user.goldCoins,
-        isPremium: user.isPremium,
-        premiumUntil: user.premiumUntil,
-        level: user.level,
-        badgeName: user.badgeName,
-        badgeIcon: user.badgeIcon,
-        profileTheme: user.profileTheme,
-        createdAt: user.createdAt,
-      );
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    whatsappNumber: user.whatsappNumber,
+    avatar: user.avatar,
+    role: user.role,
+    exp: user.exp,
+    goldCoins: user.goldCoins,
+    isPremium: user.isPremium,
+    premiumUntil: user.premiumUntil,
+    level: user.level,
+    badgeName: user.badgeName,
+    badgeIcon: user.badgeIcon,
+    profileTheme: user.profileTheme,
+    createdAt: user.createdAt,
+  );
 
   bool get isAdmin => role == 'admin';
   bool get isMitra => role == 'mitra';
   bool get isUser => role == 'user';
 
   @override
-  List<Object?> get props => [id, name, email, role, exp, goldCoins, isPremium, level];
+  List<Object?> get props => [
+    id,
+    name,
+    email,
+    role,
+    exp,
+    goldCoins,
+    isPremium,
+    level,
+  ];
 }

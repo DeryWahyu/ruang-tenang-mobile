@@ -50,3 +50,4 @@ CLAUDE.md, GEMINI.md, dan .github/copilot-instructions.md adalah adapter tipis y
 - Flag route private yang lolos tanpa auth redirect.
 - Flag state mutation langsung dari widget yang melewati BLoC/use case.
 - Flag penggunaan credential, data journal/chat/mood, atau generated artifact sebagai source perubahan.
+- Jangan gunakan ikon UI `Icons.star_*`, `Icons.auto_awesome*`, atau padanan Sparkles/Star sebagai penanda AI generik, aksen dekoratif, pilihan/featured, EXP, atau badge. Pilih ikon sesuai fungsi, misalnya `Icons.chat_bubble_outline_rounded` untuk percakapan, `Icons.calendar_today_rounded` untuk check-in, `Icons.lightbulb_outline_rounded` untuk insight, `Icons.verified_rounded` untuk konten pilihan, serta `Icons.workspace_premium_rounded`/`Icons.emoji_events_rounded` untuk pencapaian. Bintang yang digambar sebagai objek koleksi di dalam artwork game bukan ikon UI dan boleh dipertahankan.

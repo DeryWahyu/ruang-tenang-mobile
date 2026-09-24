@@ -186,7 +186,7 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
       case 'heart_received':
         return Icons.favorite_border_rounded;
       default:
-        return Icons.star_rounded;
+        return Icons.bolt_rounded;
     }
   }
 

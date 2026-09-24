@@ -17,10 +17,7 @@ class AuthLoginRequested extends AuthEvent {
   final String email;
   final String password;
 
-  const AuthLoginRequested({
-    required this.email,
-    required this.password,
-  });
+  const AuthLoginRequested({required this.email, required this.password});
 
   @override
   List<Object?> get props => [email, password];
@@ -30,16 +27,18 @@ class AuthLoginRequested extends AuthEvent {
 class AuthRegisterRequested extends AuthEvent {
   final String name;
   final String email;
+  final String whatsappNumber;
   final String password;
 
   const AuthRegisterRequested({
     required this.name,
     required this.email,
+    required this.whatsappNumber,
     required this.password,
   });
 
   @override
-  List<Object?> get props => [name, email, password];
+  List<Object?> get props => [name, email, whatsappNumber, password];
 }
 
 /// Forgot password

@@ -9,6 +9,7 @@ class User extends Equatable {
   final int id;
   final String name;
   final String email;
+  final String whatsappNumber;
   final String avatar;
   final String role;
   final int exp;
@@ -25,6 +26,7 @@ class User extends Equatable {
     required this.id,
     required this.name,
     required this.email,
+    this.whatsappNumber = '',
     this.avatar = '',
     this.role = 'user',
     this.exp = 0,
@@ -42,6 +44,7 @@ class User extends Equatable {
     int? id,
     String? name,
     String? email,
+    String? whatsappNumber,
     String? avatar,
     String? role,
     int? exp,
@@ -58,6 +61,7 @@ class User extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      whatsappNumber: whatsappNumber ?? this.whatsappNumber,
       avatar: avatar ?? this.avatar,
       role: role ?? this.role,
       exp: exp ?? this.exp,
@@ -77,5 +81,15 @@ class User extends Equatable {
   bool get isUser => role == 'user';
 
   @override
-  List<Object?> get props => [id, name, email, role, exp, goldCoins, isPremium, level];
+  List<Object?> get props => [
+    id,
+    name,
+    email,
+    whatsappNumber,
+    role,
+    exp,
+    goldCoins,
+    isPremium,
+    level,
+  ];
 }

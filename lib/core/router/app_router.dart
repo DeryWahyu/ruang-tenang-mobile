@@ -10,6 +10,7 @@ import '../../presentation/auth/screens/login_screen.dart';
 import '../../presentation/auth/screens/register_screen.dart';
 import '../../presentation/auth/screens/forgot_password_screen.dart';
 import '../../presentation/auth/screens/reset_password_screen.dart';
+import '../../presentation/auth/screens/verify_phone_screen.dart';
 import '../../presentation/onboarding/screens/onboarding_screen.dart';
 import '../../presentation/home/screens/home_screen.dart';
 import '../../presentation/common/layouts/main_layout.dart';
@@ -50,6 +51,7 @@ import '../../presentation/wellness/screens/wellness_plan_screen.dart';
 import '../../presentation/search/screens/global_search_screen.dart';
 import '../../presentation/community/screens/community_stats_screen.dart';
 import '../../presentation/game/screens/mindful_runner_screen.dart';
+
 class AppRouter {
   AppRouter._();
 
@@ -63,13 +65,11 @@ class AppRouter {
     '/register',
     '/forgot-password',
     '/reset-password',
+    '/verify-phone',
   };
 
   /// Rute publik non-auth yang boleh diakses tanpa login (alur awal aplikasi).
-  static const _publicRoutes = <String>{
-    '/splash',
-    '/onboarding',
-  };
+  static const _publicRoutes = <String>{'/splash', '/onboarding'};
 
   /// Menentukan apakah [location] adalah rute publik (boleh tanpa login).
   ///
@@ -83,7 +83,9 @@ class AppRouter {
 
   /// Apakah [location] termasuk salah satu rute autentikasi.
   static bool _isAuthLocation(String location) {
-    return _authRoutes.any((route) => location == route || location.startsWith('$route?'));
+    return _authRoutes.any(
+      (route) => location == route || location.startsWith('$route?'),
+    );
   }
 
   /// Apakah [location] dirender di dalam shell (MainLayout). Dipakai untuk
@@ -192,6 +194,10 @@ class AppRouter {
           },
         ),
         GoRoute(
+          path: '/verify-phone',
+          builder: (context, state) => const VerifyPhoneScreen(),
+        ),
+        GoRoute(
           path: '/mood',
           builder: (context, state) => const MoodTrackerScreen(),
         ),
@@ -207,9 +213,8 @@ class AppRouter {
           routes: [
             GoRoute(
               path: ':slug',
-              builder: (context, state) => ForumDetailScreen(
-                slug: state.pathParameters['slug']!,
-              ),
+              builder: (context, state) =>
+                  ForumDetailScreen(slug: state.pathParameters['slug']!),
             ),
           ],
         ),
@@ -221,9 +226,8 @@ class AppRouter {
           routes: [
             GoRoute(
               path: ':id',
-              builder: (context, state) => StoryDetailScreen(
-                id: state.pathParameters['id']!,
-              ),
+              builder: (context, state) =>
+                  StoryDetailScreen(id: state.pathParameters['id']!),
             ),
           ],
         ),
@@ -235,9 +239,8 @@ class AppRouter {
           routes: [
             GoRoute(
               path: ':slug',
-              builder: (context, state) => ArticleDetailScreen(
-                slug: state.pathParameters['slug']!,
-              ),
+              builder: (context, state) =>
+                  ArticleDetailScreen(slug: state.pathParameters['slug']!),
             ),
           ],
         ),
@@ -279,9 +282,8 @@ class AppRouter {
         ),
         GoRoute(
           path: '/music/playlist/:uuid',
-          builder: (context, state) => PlaylistDetailScreen(
-            uuid: state.pathParameters['uuid']!,
-          ),
+          builder: (context, state) =>
+              PlaylistDetailScreen(uuid: state.pathParameters['uuid']!),
         ),
         GoRoute(
           path: '/billing/premium',
@@ -328,9 +330,8 @@ class AppRouter {
           routes: [
             GoRoute(
               path: '/home',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: HomeScreen(),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: HomeScreen()),
               routes: [
                 GoRoute(
                   path: 'wellness/plan',
@@ -340,9 +341,8 @@ class AppRouter {
             ),
             GoRoute(
               path: '/journal',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: JournalListScreen(),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: JournalListScreen()),
               routes: [
                 GoRoute(
                   path: 'create',
@@ -356,41 +356,37 @@ class AppRouter {
                 ),
                 GoRoute(
                   path: ':uuid',
-                  builder: (context, state) => JournalDetailScreen(
-                    uuid: state.pathParameters['uuid']!,
-                  ),
+                  builder: (context, state) =>
+                      JournalDetailScreen(uuid: state.pathParameters['uuid']!),
                 ),
               ],
             ),
             GoRoute(
               path: '/chat',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: ChatListScreen(),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: ChatListScreen()),
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (context, state) => ChatDetailScreen(initialPrompt: state.extra as String?),
+                  builder: (context, state) =>
+                      ChatDetailScreen(initialPrompt: state.extra as String?),
                 ),
                 GoRoute(
                   path: ':uuid',
-                  builder: (context, state) => ChatDetailScreen(
-                    uuid: state.pathParameters['uuid']!,
-                  ),
+                  builder: (context, state) =>
+                      ChatDetailScreen(uuid: state.pathParameters['uuid']!),
                 ),
               ],
             ),
             GoRoute(
               path: '/music',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: MusicHomeScreen(),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: MusicHomeScreen()),
             ),
             GoRoute(
               path: '/profile',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: ProfileScreen(),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: ProfileScreen()),
             ),
           ],
         ),

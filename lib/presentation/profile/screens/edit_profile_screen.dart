@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/media_url.dart';
+import '../../../core/utils/validators.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/repositories/upload_repository.dart';
 import '../../auth/bloc/auth_bloc.dart';
@@ -21,6 +22,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameCtrl = TextEditingController();
+  final _whatsAppCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   final _taglineCtrl = TextEditingController();
   File? _pickedImage;
@@ -30,6 +32,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _whatsAppCtrl.dispose();
     _bioCtrl.dispose();
     _taglineCtrl.dispose();
     super.dispose();
@@ -56,6 +59,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _snack('Nama tidak boleh kosong', AppColors.destructive);
       return;
     }
+    final numberError = Validators.whatsappNumber(_whatsAppCtrl.text);
+    if (numberError != null) {
+      _snack(numberError, AppColors.destructive);
+      return;
+    }
     setState(() => _saving = true);
     try {
       String? avatarUrl;
@@ -64,13 +72,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       await sl<AuthRepository>().updateProfile(
         name: name,
+        whatsappNumber: _whatsAppCtrl.text.trim(),
         avatar: avatarUrl,
         bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
-        tagline: _taglineCtrl.text.trim().isEmpty ? null : _taglineCtrl.text.trim(),
+        tagline: _taglineCtrl.text.trim().isEmpty
+            ? null
+            : _taglineCtrl.text.trim(),
       );
       if (!mounted) return;
       context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
-      _snack('Profil berhasil diperbarui', AppColors.success);
+      _snack('Profil diperbarui. Jika nomor berubah, verifikasi saat login berikutnya.', AppColors.success);
       context.pop();
     } catch (e) {
       _snack('Gagal memperbarui profil', AppColors.destructive);
@@ -91,13 +102,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = context.select((AuthBloc b) => b.state.user);
     if (!_init && user != null) {
       _nameCtrl.text = user.name;
+      _whatsAppCtrl.text = user.whatsappNumber;
       _init = true;
     }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Edit Profil', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Edit Profil',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -111,10 +126,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
                   child: _pickedImage != null
-                      ? CircleAvatar(radius: 56, backgroundImage: FileImage(_pickedImage!))
+                      ? CircleAvatar(
+                          radius: 56,
+                          backgroundImage: FileImage(_pickedImage!),
+                        )
                       : AppAvatar(
                           imageUrl: resolveMediaUrl(user?.avatar),
                           name: user?.name,
@@ -133,7 +157,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.card, width: 3),
                       ),
-                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -149,11 +177,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _field(label: 'Nama', controller: _nameCtrl, hint: 'Nama lengkap', icon: Icons.person_outline_rounded),
+          _field(
+            label: 'Nama',
+            controller: _nameCtrl,
+            hint: 'Nama lengkap',
+            icon: Icons.person_outline_rounded,
+          ),
           const SizedBox(height: 16),
-          _field(label: 'Tagline', controller: _taglineCtrl, hint: 'Motivasi singkat (opsional)', icon: Icons.short_text_rounded),
+          _field(
+            label: 'Nomor WhatsApp',
+            controller: _whatsAppCtrl,
+            hint: '081234567890',
+            icon: Icons.phone_outlined,
+          ),
           const SizedBox(height: 16),
-          _field(label: 'Bio', controller: _bioCtrl, hint: 'Ceritakan tentang dirimu (opsional)', icon: Icons.notes_rounded, maxLines: 4),
+          _field(
+            label: 'Tagline',
+            controller: _taglineCtrl,
+            hint: 'Motivasi singkat (opsional)',
+            icon: Icons.short_text_rounded,
+          ),
+          const SizedBox(height: 16),
+          _field(
+            label: 'Bio',
+            controller: _bioCtrl,
+            hint: 'Ceritakan tentang dirimu (opsional)',
+            icon: Icons.notes_rounded,
+            maxLines: 4,
+          ),
           const SizedBox(height: 28),
           SizedBox(
             width: double.infinity,
@@ -163,11 +214,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: _saving
-                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Simpan Perubahan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Simpan Perubahan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -185,19 +251,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.foreground)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+            color: AppColors.foreground,
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: maxLines == 1 ? Icon(icon, color: AppColors.mutedForeground) : null,
+            prefixIcon: maxLines == 1
+                ? Icon(icon, color: AppColors.mutedForeground)
+                : null,
             filled: true,
             fillColor: AppColors.card,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.6))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: AppColors.border.withValues(alpha: 0.6),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
+            ),
           ),
         ),
       ],

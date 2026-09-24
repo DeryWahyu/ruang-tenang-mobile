@@ -189,6 +189,11 @@ class BillingTransactionModel {
                 : null),
         paidAt: Json.date(j['paid_at']),
         createdAt: Json.date(j['created_at']) ?? DateTime.now(),
+        refundedAmount: Json.intValue(j['refunded_amount']),
+        refundRequestedAmount: Json.intValue(j['refund_requested_amount']),
+        providerRefundAmountReported: Json.intValue(j['provider_refund_amount_reported']),
+        refundStatus: Json.string(j['refund_status'], fallback: 'none'),
+        refundReconciliationStatus: Json.string(j['refund_reconciliation_status'], fallback: 'not_required'),
       );
 }
 

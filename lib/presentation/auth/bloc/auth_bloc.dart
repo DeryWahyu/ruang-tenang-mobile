@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_exceptions.dart';
 import '../../../domain/usecases/auth/auth_usecases.dart';
+import '../../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -8,8 +9,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthUseCases _useCases;
 
   AuthBloc({required AuthUseCases authUseCases})
-      : _useCases = authUseCases,
-        super(const AuthState.initial()) {
+    : _useCases = authUseCases,
+      super(const AuthState.initial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
@@ -31,6 +32,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         try {
           final freshUser = await _useCases.getProfile();
           emit(AuthState.authenticated(freshUser));
+        } on UnauthorizedException {
+          await _useCases.logout();
+          emit(const AuthState.unauthenticated());
         } catch (_) {
           // Keep cached user if refresh fails.
         }
@@ -53,6 +57,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       emit(AuthState.authenticated(user));
+    } on PhoneVerificationRequired catch (e) {
+      emit(AuthState.verificationRequired(e.challenge, e.phoneRequired));
     } on ApiException catch (e) {
       emit(AuthState.failure(e.message));
     } catch (e) {
@@ -69,12 +75,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _useCases.register(
         name: event.name,
         email: event.email,
+        whatsappNumber: event.whatsappNumber,
         password: event.password,
       );
-      emit(state.copyWith(
-        status: AuthStatus.unauthenticated,
-        successMessage: 'Registrasi berhasil! Silakan login.',
-      ));
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          successMessage: 'Registrasi berhasil! Silakan login.',
+        ),
+      );
     } on ApiException catch (e) {
       emit(AuthState.failure(e.message));
     } catch (e) {
@@ -89,14 +98,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthState.loading());
     try {
       final message = await _useCases.forgotPassword(email: event.email);
-      emit(state.copyWith(
-        status: AuthStatus.unauthenticated,
-        successMessage: message,
-      ));
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          successMessage: message,
+        ),
+      );
     } on ApiException catch (e) {
       emit(AuthState.failure(e.message));
     } catch (e) {
-      emit(AuthState.failure('Gagal mengirim link reset password.'));
+      emit(AuthState.failure('Gagal mengirim kode reset password.'));
     }
   }
 
@@ -111,10 +122,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
         passwordConfirmation: event.passwordConfirmation,
       );
-      emit(state.copyWith(
-        status: AuthStatus.unauthenticated,
-        successMessage: message,
-      ));
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          successMessage: message,
+        ),
+      );
     } on ApiException catch (e) {
       emit(AuthState.failure(e.message));
     } catch (e) {

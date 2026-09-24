@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _whatsAppController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -29,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _whatsAppController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -37,12 +39,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            AuthRegisterRequested(
-              name: _nameController.text.trim(),
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+        AuthRegisterRequested(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          whatsappNumber: _whatsAppController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -72,134 +75,144 @@ class _RegisterScreenState extends State<RegisterScreen> {
         intensity: 2.5,
         child: Scaffold(
           backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.pop(),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => context.pop(),
+            ),
           ),
-        ),
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimensions.spacingXl),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                  // Title
-                  Text(
-                    'Buat Akun',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: AppColors.foreground,
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppDimensions.spacingXl),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Title
+                        Text(
+                          'Buat Akun',
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(color: AppColors.foreground),
                         ),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingSm),
-                  Text(
-                    'Daftar untuk mulai merawat kesehatan mentalmu',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.mutedForeground,
+                        const SizedBox(height: AppDimensions.spacingSm),
+                        Text(
+                          'Daftar untuk mulai merawat kesehatan mentalmu',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.mutedForeground),
                         ),
-                  ),
-                  const SizedBox(height: AppDimensions.spacing2xl),
+                        const SizedBox(height: AppDimensions.spacing2xl),
 
-                  // Name
-                  AppInput(
-                    label: 'Nama Lengkap',
-                    hint: 'Masukkan nama lengkap',
-                    controller: _nameController,
-                    prefixIcon: Icons.person_outline_rounded,
-                    validator: Validators.name,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingBase),
+                        // Name
+                        AppInput(
+                          label: 'Nama Lengkap',
+                          hint: 'Masukkan nama lengkap',
+                          controller: _nameController,
+                          prefixIcon: Icons.person_outline_rounded,
+                          validator: Validators.name,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingBase),
 
-                  // Email
-                  AppInput(
-                    label: 'Email',
-                    hint: 'Masukkan email kamu',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    prefixIcon: Icons.email_outlined,
-                    validator: Validators.email,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingBase),
+                        // Email
+                        AppInput(
+                          label: 'Email',
+                          hint: 'Masukkan email kamu',
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.email_outlined,
+                          validator: Validators.email,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingBase),
 
-                  // Password
-                  AppInput(
-                    label: 'Password',
-                    hint: 'Minimal 8 karakter',
-                    controller: _passwordController,
-                    obscureText: true,
-                    prefixIcon: Icons.lock_outline_rounded,
-                    validator: Validators.password,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingBase),
+                        AppInput(
+                          label: 'Nomor WhatsApp',
+                          hint: '081234567890',
+                          controller: _whatsAppController,
+                          keyboardType: TextInputType.phone,
+                          prefixIcon: Icons.phone_outlined,
+                          validator: Validators.whatsappNumber,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingBase),
 
-                  // Confirm Password
-                  AppInput(
-                    label: 'Konfirmasi Password',
-                    hint: 'Ulangi password',
-                    controller: _confirmPasswordController,
-                    obscureText: true,
-                    prefixIcon: Icons.lock_outline_rounded,
-                    validator: (value) => Validators.confirmPassword(
-                      value,
-                      _passwordController.text,
-                    ),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _onRegister(),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingXl),
+                        // Password
+                        AppInput(
+                          label: 'Password',
+                          hint: 'Minimal 8 karakter',
+                          controller: _passwordController,
+                          obscureText: true,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          validator: Validators.password,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingBase),
 
-                  // Register button
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      return AppButton.primary(
-                        label: 'Daftar',
-                        isLoading: state.isLoading,
-                        onPressed: _onRegister,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppDimensions.spacingXl),
+                        // Confirm Password
+                        AppInput(
+                          label: 'Konfirmasi Password',
+                          hint: 'Ulangi password',
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          validator: (value) => Validators.confirmPassword(
+                            value,
+                            _passwordController.text,
+                          ),
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _onRegister(),
+                        ),
+                        const SizedBox(height: AppDimensions.spacingXl),
 
-                  // Login link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Sudah punya akun? ',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.mutedForeground,
+                        // Register button
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            return AppButton.primary(
+                              label: 'Daftar',
+                              isLoading: state.isLoading,
+                              onPressed: _onRegister,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppDimensions.spacingXl),
+
+                        // Login link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Sudah punya akun? ',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.mutedForeground),
                             ),
-                      ),
-                      GestureDetector(
-                        onTap: () => context.go('/login'),
-                        child: Text(
-                          'Masuk',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                            GestureDetector(
+                              onTap: () => context.go('/login'),
+                              child: Text(
+                                'Masuk',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
-            ),
-            ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

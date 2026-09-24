@@ -138,6 +138,11 @@ class BillingTransaction extends Equatable {
   final String? snapUrl;
   final DateTime? paidAt;
   final DateTime createdAt;
+  final int refundedAmount;
+  final int refundRequestedAmount;
+  final int providerRefundAmountReported;
+  final String refundStatus;
+  final String refundReconciliationStatus;
 
   const BillingTransaction({
     required this.id,
@@ -152,11 +157,17 @@ class BillingTransaction extends Equatable {
     this.snapUrl,
     this.paidAt,
     required this.createdAt,
+    this.refundedAmount = 0,
+    this.refundRequestedAmount = 0,
+    this.providerRefundAmountReported = 0,
+    this.refundStatus = 'none',
+    this.refundReconciliationStatus = 'not_required',
   });
 
   @override
   List<Object?> get props =>
-      [id, orderId, itemType, itemName, amount, currency, status, paymentProvider, failureReason, snapUrl, paidAt, createdAt];
+      [id, orderId, itemType, itemName, amount, currency, status, paymentProvider, failureReason, snapUrl, paidAt, createdAt,
+        refundedAmount, refundRequestedAmount, providerRefundAmountReported, refundStatus, refundReconciliationStatus];
 }
 
 /// Hasil paginasi daftar transaksi.
