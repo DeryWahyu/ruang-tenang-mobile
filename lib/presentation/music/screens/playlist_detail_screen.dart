@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../common/widgets/app_alert_dialog.dart';
 import '../../common/widgets/app_network_image.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/music.dart';
@@ -83,7 +84,15 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
               );
             }
             if (state is PlaylistDetailLoaded) {
-              return _content(state.playlist);
+              return BlocBuilder<MusicBloc, MusicState>(
+                buildWhen: (previous, current) =>
+                    (previous.currentPlayingSong == null) !=
+                    (current.currentPlayingSong == null),
+                builder: (context, musicState) => _content(
+                  state.playlist,
+                  hasPlayer: musicState.currentPlayingSong != null,
+                ),
+              );
             }
             return const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
@@ -94,7 +103,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     );
   }
 
-  Widget _content(Playlist playlist) {
+  Widget _content(Playlist playlist, {required bool hasPlayer}) {
     final songs = playlist.items
         .where((i) => i.song != null)
         .map((i) => i.song!)
@@ -106,8 +115,11 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         playlist.userId == context.read<AuthBloc>().state.user?.id &&
         !playlist.isAdminPlaylist;
 
+    final bottomClearance =
+        MediaQuery.of(context).padding.bottom + (hasPlayer ? 112.0 : 28.0);
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomClearance),
       children: [
         Center(child: _cover(playlist.thumbnail)),
         const SizedBox(height: 20),
@@ -143,11 +155,13 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             children: [
               OutlinedButton.icon(
                 onPressed: () => _editPlaylist(playlist),
+                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
                 icon: const Icon(Icons.edit_outlined),
                 label: const Text('Edit'),
               ),
               OutlinedButton.icon(
                 onPressed: _addSong,
+                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
                 icon: const Icon(Icons.add),
                 label: const Text('Tambah lagu'),
               ),
@@ -161,23 +175,24 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         ],
         const SizedBox(height: 20),
         if (songs.isNotEmpty)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
             children: [
               _pillButton(
                 icon: Icons.play_arrow_rounded,
                 label: 'Putar Semua',
                 filled: true,
-                onTap: () => _music.add(MusicPlaySongRequested(songs.first)),
+                onTap: () => _music.add(MusicPlayQueueRequested(songs)),
               ),
-              const SizedBox(width: 12),
               _pillButton(
                 icon: Icons.shuffle_rounded,
                 label: 'Acak',
                 filled: false,
                 onTap: () {
                   final shuffled = List<Song>.from(songs)..shuffle();
-                  _music.add(MusicPlaySongRequested(shuffled.first));
+                  _music.add(MusicPlayQueueRequested(shuffled));
                 },
               ),
             ],
@@ -197,7 +212,8 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           BlocBuilder<MusicBloc, MusicState>(
             buildWhen: (p, c) =>
                 p.currentPlayingSong?.id != c.currentPlayingSong?.id ||
-                p.isPlaying != c.isPlaying,
+                p.isPlaying != c.isPlaying ||
+                p.isBuffering != c.isBuffering,
             builder: (context, ms) {
               return Column(
                 children: songs.map((song) {
@@ -207,78 +223,93 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
               );
             },
           ),
-        const SizedBox(height: 80),
       ],
     );
   }
 
   Widget _songTile(Song song, bool isCurrent, bool isPlaying, bool own) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (isCurrent) {
-          _music.add(
-            isPlaying
-                ? const MusicPauseSongRequested()
-                : const MusicResumeSongRequested(),
-          );
-        } else {
-          _music.add(MusicPlaySongRequested(song));
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isCurrent
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
           color: isCurrent
-              ? AppColors.primary.withValues(alpha: 0.08)
-              : AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isCurrent
-                ? AppColors.primary.withValues(alpha: 0.5)
-                : AppColors.border,
-          ),
+              ? AppColors.primary.withValues(alpha: 0.5)
+              : AppColors.border,
         ),
-        child: Row(
-          children: [
-            _thumb(song.thumbnail, 48),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: isCurrent
-                          ? AppColors.primary
-                          : AppColors.foreground,
-                    ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (isCurrent) {
+              _music.add(
+                isPlaying || _music.state.isBuffering
+                    ? const MusicPauseSongRequested()
+                    : const MusicResumeSongRequested(),
+              );
+            } else {
+              _music.add(MusicPlaySongRequested(song));
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _thumb(song.thumbnail, 48),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: isCurrent
+                              ? AppColors.primary
+                              : AppColors.foreground,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      TrackAttribution(song: song),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  TrackAttribution(song: song),
-                ],
-              ),
+                ),
+                if (isCurrent && _music.state.isBuffering)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                else
+                  Icon(
+                    isCurrent && isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_fill,
+                    color: AppColors.primary,
+                    size: 30,
+                  ),
+                if (own)
+                  IconButton(
+                    tooltip: 'Hapus dari playlist',
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _removeSong(song),
+                  ),
+              ],
             ),
-            Icon(
-              isCurrent && isPlaying
-                  ? Icons.pause_circle_filled
-                  : Icons.play_circle_fill,
-              color: AppColors.primary,
-              size: 30,
-            ),
-            if (own)
-              IconButton(
-                tooltip: 'Hapus dari playlist',
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: () => _removeSong(song),
-              ),
-          ],
+          ),
         ),
       ),
     );
@@ -291,7 +322,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     final save = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, update) => AlertDialog(
+        builder: (dialogContext, update) => AppAlertDialog(
           title: const Text('Edit playlist'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -345,7 +376,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   Future<void> _deletePlaylist(Playlist playlist) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         title: const Text('Hapus playlist?'),
         content: Text(playlist.name),
         actions: [

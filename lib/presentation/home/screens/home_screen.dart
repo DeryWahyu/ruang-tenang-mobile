@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/gamification.dart';
@@ -10,9 +9,7 @@ import '../../common/widgets/app_bottom_sheet.dart';
 import '../../common/widgets/level_badge.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../../core/constants/app_features.dart';
-import '../../common/widgets/mascot_hero.dart';
 import '../widgets/home_overview_section.dart';
-import '../widgets/member_feature_tour.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -64,7 +61,6 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const MemberFeatureTour(),
                   _circleIconButton(
                     Icons.search_rounded,
                     () => context.push('/search'),
@@ -83,49 +79,11 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 8),
 
-                  MascotHero(
-                    title: 'Selamat datang, $userName',
-                    description:
-                        'Kenali perasaanmu dan lanjutkan satu langkah kecil hari ini.',
-                    pose: 'student-welcome',
-                    eyebrow: 'Ruang untukmu',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSupportBanner(context),
+                  _buildWelcomeHero(userName),
                   const SizedBox(height: 12),
 
                   // Gamification / XP Progress Mini
                   const _HomeXpCard(),
-                  const SizedBox(height: 12),
-
-                  // Quick Actions Grid (Mood & Journal)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDashboardCard(
-                          context,
-                          title: 'Catat Mood',
-                          subtitle: 'Bagaimana perasaanmu?',
-                          icon: Icons.emoji_emotions_rounded,
-                          color: Colors.orange,
-                          onTap: () => context.push(
-                            '/mood/stats',
-                          ), // Or push to quick mood modal
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDashboardCard(
-                          context,
-                          title: 'Jurnal Cepat',
-                          subtitle: 'Tulis ceritamu',
-                          icon: Icons.edit_document,
-                          color: AppColors.primary,
-                          onTap: () => context.push('/journal/create'),
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 12),
 
                   const HomeOverviewSection(),
@@ -145,28 +103,81 @@ class HomeScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () => _showAllFeatures(context),
-                        child: const Text(
-                          'Lihat Semua',
-                          style: TextStyle(color: AppColors.primary),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Lihat Semua',
+                              style: TextStyle(color: AppColors.primary),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 2),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.swipe_rounded,
+                          size: 16,
+                          color: AppColors.gray500,
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            'Geser ke samping untuk melihat fitur lainnya',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: AppColors.gray500,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 17,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                  ),
 
                   // Horizontal scroll for features
                   SizedBox(
-                    height: 136,
+                    height: 170,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       clipBehavior: Clip.none,
                       children: [
                         _buildFeatureCard(
                           context,
+                          title: 'Statistik Mood',
+                          subtitle: 'Lihat pola perasaanmu',
+                          icon: Icons.mood_rounded,
+                          color: const Color(0xFFE89A3C),
+                          mascotPath: 'assets/images/mascot/tour-mood.webp',
+                          route: '/mood/stats',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildFeatureCard(
+                          context,
                           title: 'Artikel',
                           subtitle: 'Bacaan untuk sehat mental',
                           icon: Icons.article_rounded,
                           color: Colors.teal,
+                          mascotPath: 'assets/images/mascot/home-artikel.webp',
                           route: '/articles',
                         ),
                         const SizedBox(width: 16),
@@ -176,6 +187,7 @@ class HomeScreen extends StatelessWidget {
                           subtitle: 'Kisah inspiratif pengguna',
                           icon: Icons.auto_stories_rounded,
                           color: Colors.indigo,
+                          mascotPath: 'assets/images/mascot/home-cerita.webp',
                           route: '/community?tab=stories',
                         ),
                         const SizedBox(width: 16),
@@ -185,7 +197,28 @@ class HomeScreen extends StatelessWidget {
                           subtitle: 'Diskusi komunitas',
                           icon: Icons.forum_rounded,
                           color: Colors.purple,
+                          mascotPath: 'assets/images/mascot/home-forum.webp',
                           route: '/community',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Perjalanan',
+                          subtitle: 'Level, EXP, dan hadiahmu',
+                          icon: Icons.map_rounded,
+                          color: const Color(0xFFD97706),
+                          mascotPath: 'assets/images/mascot/tour-journey.webp',
+                          route: '/journey',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Koleksi Badge',
+                          subtitle: 'Rayakan pencapaian kecilmu',
+                          icon: Icons.emoji_events_rounded,
+                          color: const Color(0xFFB45309),
+                          mascotPath: 'assets/images/mascot/trophy.webp',
+                          route: '/gamification/badges',
                         ),
                       ],
                     ),
@@ -219,6 +252,110 @@ class HomeScreen extends StatelessWidget {
         icon: Icon(icon, color: AppColors.foreground),
         onPressed: onTap,
       ),
+    );
+  }
+
+  Widget _buildWelcomeHero(String userName) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final imageWidth = constraints.maxWidth < 330 ? 126.0 : 146.0;
+
+        return Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 166),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFF7F4), Colors.white],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.red700.withValues(alpha: 0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                right: 12,
+                bottom: 4,
+                child: Container(
+                  width: 124,
+                  height: 124,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.red100.withValues(alpha: 0.72),
+                        AppColors.red100.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(18, 18, imageWidth * 0.7 + 16, 18),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ruang untukmu',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      'Selamat datang, $userName',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.foreground,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      'Kenali perasaanmu dan lanjutkan satu langkah kecil hari ini.',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.gray600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: -8,
+                bottom: -12,
+                width: imageWidth,
+                height: 178,
+                child: IgnorePointer(
+                  child: Image.asset(
+                    'assets/images/mascot/student-welcome.webp',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.bottomCenter,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -308,262 +445,136 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSupportBanner(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showSafeSupport(context),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'SAFE SUPPORT',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Bantuan selalu dekat',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 21,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Jika situasi terasa tidak aman, cari dukungan cepat di sini.',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.favorite_outline_rounded,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSafeSupport(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const MascotHero(
-                title: 'Anda Tidak Sendirian',
-                description:
-                    'Jika merasa dalam bahaya atau ingin menyakiti diri, segera cari bantuan dari orang terdekat atau layanan darurat.',
-                pose: 'heart',
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Layanan darurat Indonesia: 119 ext 8',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => launchUrl(Uri.parse('tel:119')),
-                  icon: const Icon(Icons.phone),
-                  label: const Text('Hubungi 119'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDashboardCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppColors.mutedForeground,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildFeatureCard(
     BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
     required Color color,
+    required String mascotPath,
     required String route,
   }) {
-    return Container(
-      width: 160,
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push(route),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: color, size: 24),
+    return SizedBox(
+      width: 236,
+      height: 170,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.card,
+                    Color.lerp(AppColors.card, color, 0.055)!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: color.withValues(alpha: 0.16)),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.push(route),
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 104, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, color: color, size: 20),
+                        ),
+                        const Spacer(),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.mutedForeground,
+                                  fontSize: 11,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 14,
+                              color: color.withValues(alpha: 0.82),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppColors.mutedForeground,
-                    fontSize: 11,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            right: 5,
+            bottom: 14,
+            width: 74,
+            height: 74,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      color.withValues(alpha: 0.16),
+                      color.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -8,
+            bottom: -8,
+            width: 116,
+            height: 154,
+            child: IgnorePointer(
+              child: Image.asset(
+                mascotPath,
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomCenter,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

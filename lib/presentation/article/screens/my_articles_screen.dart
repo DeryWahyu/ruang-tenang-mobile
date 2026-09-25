@@ -8,6 +8,8 @@ import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/article.dart';
 import '../../../domain/repositories/article_repository.dart';
 import '../../../domain/repositories/upload_repository.dart';
+import '../../common/widgets/app_alert_dialog.dart';
+import '../../common/widgets/app_search_bar.dart';
 import '../../common/widgets/mascot_hero.dart';
 
 class MyArticlesState {
@@ -221,13 +223,11 @@ class _MyArticlesScreenState extends State<MyArticlesScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppSearchBar(
               controller: _search,
+              hint: 'Cari artikel saya',
               onSubmitted: (value) => _cubit.load(search: value),
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                labelText: 'Cari artikel saya',
-              ),
+              onClear: () => _cubit.load(),
             ),
             if (state.loading && state.items.isEmpty)
               const Center(child: CircularProgressIndicator()),
@@ -270,7 +270,7 @@ class _MyArticlesScreenState extends State<MyArticlesScreen> {
                             }
                             final confirmed = await showDialog<bool>(
                               context: context,
-                              builder: (dialogContext) => AlertDialog(
+                              builder: (dialogContext) => AppAlertDialog(
                                 title: const Text('Hapus artikel?'),
                                 content: Text(article.title),
                                 actions: [

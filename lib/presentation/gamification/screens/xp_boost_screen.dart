@@ -27,7 +27,7 @@ class _XpBoostView extends StatelessWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('XP Boost & Combo', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,

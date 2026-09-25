@@ -37,7 +37,7 @@ class _ArticleDetailView extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: Text(article?.title ?? 'Artikel', maxLines: 1, overflow: TextOverflow.ellipsis),
-            centerTitle: true,
+            centerTitle: false,
           ),
           body: state.status == ArticleStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())

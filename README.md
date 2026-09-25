@@ -36,7 +36,7 @@ flutter test
 flutter build apk --release
 ```
 
-Perubahan UI, routing, datasource, atau config minimal harus melewati analyze dan test. Build APK diperlukan untuk perubahan platform, asset, release, atau CI.
+Perubahan UI, routing, datasource, atau config minimal harus melewati analyze dan test. Agent hanya menjalankan build lokal bila pengguna memintanya secara eksplisit. Build tetap menjadi bagian dari proses CI dan release yang diminta.
 
 ## Arsitektur
 

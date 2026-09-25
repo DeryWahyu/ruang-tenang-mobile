@@ -65,6 +65,7 @@ class _MusicHomeViewState extends State<_MusicHomeView>
         surfaceTintColor: Colors.transparent,
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: false,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.mutedForeground,
           indicatorColor: AppColors.primary,
@@ -127,6 +128,7 @@ class _MusicHomeViewState extends State<_MusicHomeView>
           title: 'Musik yang menemani',
           description: 'Pilih irama untuk fokus, bernapas, atau beristirahat.',
           pose: 'music-headphones',
+          overflowMascot: true,
         ),
         const SizedBox(height: 16),
         const Text(
@@ -159,7 +161,14 @@ class _MusicHomeViewState extends State<_MusicHomeView>
   ) {
     final slug = category.slug ?? '';
     final isExpanded = _expandedSlug == slug && slug.isNotEmpty;
-    final songs = isExpanded ? state.currentCategorySongs : const <Song>[];
+    final categoryIsSelected = state.selectedCategorySlug == slug;
+    final songs = categoryIsSelected
+        ? state.currentCategorySongs
+        : const <Song>[];
+    final isLoadingSongs = categoryIsSelected && state.isLoadingCategorySongs;
+    final categoryError = categoryIsSelected
+        ? state.categoryErrorMessage
+        : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -222,7 +231,7 @@ class _MusicHomeViewState extends State<_MusicHomeView>
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: songs.isEmpty
+              child: isLoadingSongs
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       child: Center(
@@ -234,6 +243,43 @@ class _MusicHomeViewState extends State<_MusicHomeView>
                             color: AppColors.primary,
                           ),
                         ),
+                      ),
+                    )
+                  : categoryError != null
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.wifi_off_rounded,
+                            color: AppColors.mutedForeground,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              categoryError,
+                              style: const TextStyle(
+                                color: AppColors.mutedForeground,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.read<MusicBloc>().add(
+                              MusicCategorySelected(slug),
+                            ),
+                            child: const Text('Coba lagi'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : songs.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Text(
+                        'Belum ada lagu di kategori ini.',
+                        style: TextStyle(color: AppColors.mutedForeground),
                       ),
                     )
                   : Column(
@@ -248,13 +294,24 @@ class _MusicHomeViewState extends State<_MusicHomeView>
   }
 
   Widget _songRow(BuildContext context, Song song, MusicState state) {
-    final isPlaying = state.currentPlayingSong?.id == song.id;
+    final isCurrent = state.currentPlayingSong?.id == song.id;
+    final isPlaying = isCurrent && state.isPlaying;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () =>
-            context.read<MusicBloc>().add(MusicPlaySongRequested(song)),
+        onTap: () {
+          final bloc = context.read<MusicBloc>();
+          if (isCurrent) {
+            bloc.add(
+              isPlaying || state.isBuffering
+                  ? const MusicPauseSongRequested()
+                  : const MusicResumeSongRequested(),
+            );
+          } else {
+            bloc.add(MusicPlaySongRequested(song));
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: Row(
@@ -271,7 +328,7 @@ class _MusicHomeViewState extends State<_MusicHomeView>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: isPlaying
+                        color: isCurrent
                             ? AppColors.primary
                             : AppColors.foreground,
                       ),
@@ -280,12 +337,22 @@ class _MusicHomeViewState extends State<_MusicHomeView>
                   ],
                 ),
               ),
-              Icon(
-                isPlaying && state.isPlaying
-                    ? Icons.pause_circle_filled
-                    : Icons.play_arrow_rounded,
-                color: AppColors.primary,
-              ),
+              if (isCurrent && state.isBuffering)
+                const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                )
+              else
+                Icon(
+                  isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_arrow_rounded,
+                  color: AppColors.primary,
+                ),
             ],
           ),
         ),
@@ -307,6 +374,13 @@ class _MusicHomeViewState extends State<_MusicHomeView>
         bottomPad,
       ),
       children: [
+        const MascotHero(
+          title: 'Temukan irama jedamu',
+          description: 'Jelajahi playlist pilihan untuk menemani waktu tenang.',
+          pose: 'tour-music',
+          overflowMascot: true,
+        ),
+        const SizedBox(height: 16),
         const Text(
           'Playlist Publik',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -342,6 +416,13 @@ class _MusicHomeViewState extends State<_MusicHomeView>
         bottomPad,
       ),
       children: [
+        const MascotHero(
+          title: 'Simpan musik favorit',
+          description: 'Buat playlist pribadi untuk menemani rutinitasmu.',
+          pose: 'music-headphones',
+          overflowMascot: true,
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
             const Expanded(
@@ -516,60 +597,357 @@ class _MusicHomeViewState extends State<_MusicHomeView>
     });
   }
 
-  void _showCreatePlaylistDialog(BuildContext context) {
+  Future<void> _showCreatePlaylistDialog(BuildContext context) async {
     final nameController = TextEditingController();
     final descController = TextEditingController();
     final bloc = context.read<MusicBloc>();
 
-    showDialog(
+    await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Buat Playlist Baru'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Playlist',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Deskripsi',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Batal'),
+        var nameError = false;
+        return StatefulBuilder(
+          builder: (dialogContext, update) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.trim().isNotEmpty) {
-                  bloc.add(
-                    MusicCreatePlaylistRequested(
-                      name: nameController.text.trim(),
-                      description: descController.text.trim(),
-                      isPublic: false,
+            child: SingleChildScrollView(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Material(
+                    color: Colors.white,
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      side: const BorderSide(color: Colors.white, width: 1),
                     ),
-                  );
-                  Navigator.pop(dialogContext);
-                }
-              },
-              child: const Text('Buat'),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _playlistDialogHeader(),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'NAMA PLAYLIST',
+                                  style: TextStyle(
+                                    color: AppColors.gray700,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: 7),
+                                TextField(
+                                  controller: nameController,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  textInputAction: TextInputAction.next,
+                                  onChanged: (_) {
+                                    if (nameError) {
+                                      update(() => nameError = false);
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Contoh: Waktu istirahat',
+                                    prefixIcon: const Icon(
+                                      Icons.music_note_rounded,
+                                      color: AppColors.primary,
+                                      size: 20,
+                                    ),
+                                    errorText: nameError
+                                        ? 'Nama playlist wajib diisi'
+                                        : null,
+                                    filled: true,
+                                    fillColor: const Color(0xFFFFFAFA),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 15,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFE8E8ED),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.primary,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.destructive,
+                                      ),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.destructive,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 17),
+                                const Text(
+                                  'DESKRIPSI',
+                                  style: TextStyle(
+                                    color: AppColors.gray700,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: 7),
+                                TextField(
+                                  controller: descController,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  minLines: 3,
+                                  maxLines: 4,
+                                  textInputAction: TextInputAction.newline,
+                                  decoration: InputDecoration(
+                                    hintText: 'Ceritakan suasana playlist ini…',
+                                    alignLabelWithHint: true,
+                                    filled: true,
+                                    fillColor: const Color(0xFFFFFAFA),
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                      15,
+                                      14,
+                                      15,
+                                      14,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFE8E8ED),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.primary,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 13),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF6F5),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: const Color(0xFFFBE1DF),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.lock_rounded,
+                                        color: AppColors.primary,
+                                        size: 17,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Playlist ini bersifat pribadi dan hanya terlihat olehmu.',
+                                          style: TextStyle(
+                                            color: AppColors.gray700,
+                                            fontSize: 10,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 19),
+                                Row(
+                                  children: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppColors.gray600,
+                                        minimumSize: const Size(72, 48),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text('Batal'),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: FilledButton.icon(
+                                        onPressed: () {
+                                          final name = nameController.text
+                                              .trim();
+                                          if (name.isEmpty) {
+                                            update(() => nameError = true);
+                                            return;
+                                          }
+                                          bloc.add(
+                                            MusicCreatePlaylistRequested(
+                                              name: name,
+                                              description: descController.text
+                                                  .trim(),
+                                              isPublic: false,
+                                            ),
+                                          );
+                                          Navigator.pop(dialogContext);
+                                        },
+                                        style: FilledButton.styleFrom(
+                                          minimumSize: const Size(0, 48),
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.white,
+                                          elevation: 2,
+                                          shadowColor: AppColors.primary
+                                              .withValues(alpha: 0.25),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              15,
+                                            ),
+                                          ),
+                                          textStyle: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.add_rounded,
+                                          size: 19,
+                                        ),
+                                        label: const Text('Buat playlist'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 10,
+                    top: -18,
+                    width: 118,
+                    height: 158,
+                    child: IgnorePointer(
+                      child: Image.asset(
+                        'assets/images/mascot/music-headphones.webp',
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomCenter,
+                        excludeFromSemantics: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         );
       },
     );
+    nameController.dispose();
+    descController.dispose();
   }
+
+  Widget _playlistDialogHeader() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(22, 22, 116, 22),
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFF65A5D), Color(0xFFE94249)],
+      ),
+    ),
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          right: -90,
+          top: -77,
+          child: Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+            ),
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.graphic_eq_rounded, size: 13, color: Colors.white),
+                  SizedBox(width: 5),
+                  Text(
+                    'MUSIK UNTUKMU',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 13),
+            const Text(
+              'Buat playlist baru',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                height: 1.1,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Simpan lagu yang ingin kamu dengarkan lagi.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 11,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }

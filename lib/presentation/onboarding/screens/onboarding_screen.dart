@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/constants/storage_keys.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../common/widgets/app_button.dart';
-import '../../common/widgets/gradient_background.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -24,40 +21,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _slides = [
     _OnboardingSlide(
-      lottiePath: 'assets/lottie/chat.json',
-      icon: Icons.favorite_rounded,
-      gradient: [Color(0xFFFB7185), Color(0xFFEF4444)],
-      title: 'Ruang Aman untuk Bercerita',
+      backgroundPath: 'assets/images/mascot/onboarding-listen-bg.webp',
+      title: 'Ada ruang untuk bercerita',
       description:
-          'AI pendengar setia kami siap memahami keluh kesahmu 24/7. '
-          'Privasi sepenuhnya terjaga, tanpa ada penghakiman.',
+          'Mulai percakapan dengan AI pendamping yang mendengarkan tanpa '
+          'menghakimi.',
     ),
     _OnboardingSlide(
-      lottiePath: 'assets/lottie/journal.json',
-      icon: Icons.menu_book_rounded,
-      gradient: [Color(0xFFFB923C), Color(0xFFF59E0B)],
-      title: 'Kenali Dirimu Lebih Baik',
+      backgroundPath: 'assets/images/mascot/onboarding-journal-bg.webp',
+      title: 'Kenali dirimu perlahan',
       description:
-          'Catat perjalanan emosimu lewat jurnal harian. Pahami pola pikiranmu '
-          'dan lihat bagaimana kamu bertumbuh setiap harinya.',
+          'Catat perasaanmu dan lihat perubahan kecil dari hari ke hari.',
     ),
     _OnboardingSlide(
-      lottiePath: 'assets/lottie/relax.json',
-      icon: Icons.self_improvement_rounded,
-      gradient: [Color(0xFF38BDF8), Color(0xFF0284C7)],
-      title: 'Tenangkan Pikiranmu',
+      backgroundPath: 'assets/images/mascot/onboarding-breathe-bg.webp',
+      title: 'Temukan jeda yang menenangkan',
       description:
-          'Redakan stres dengan refleksi singkat, bacaan bermakna, dan '
-          'alunan musik relaksasi yang menenangkan jiwa.',
+          'Pilih bacaan, refleksi, atau musik saat kamu butuh ruang untuk '
+          'bernapas.',
     ),
     _OnboardingSlide(
-      lottiePath: 'assets/lottie/community.json',
-      icon: Icons.groups_rounded,
-      gradient: [Color(0xFFF87171), Color(0xFFDC2626)],
-      title: 'Dukungan Sepenuh Hati',
+      backgroundPath: 'assets/images/mascot/onboarding-community-bg.webp',
+      title: 'Tumbuh bersama',
       description:
-          'Kamu tidak sendirian. Bergabunglah dengan komunitas yang positif '
-          'untuk saling menguatkan dan berbagi cerita.',
+          'Berbagi cerita dan dukungan dalam komunitas yang saling '
+          'menguatkan.',
     ),
   ];
 
@@ -76,200 +64,208 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (!_isLastPage) {
+    if (_isLastPage) {
+      _completeOnboarding();
+      return;
+    }
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pageController.jumpToPage(_currentPage + 1);
+    } else {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
-    } else {
-      _completeOnboarding();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GradientBackground(
-      intensity: 2.5,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Tombol "Lewati" — disembunyikan di slide terakhir.
-            Align(
-              alignment: Alignment.centerRight,
-              child: AnimatedOpacity(
-                opacity: _isLastPage ? 0 : 1,
-                duration: const Duration(milliseconds: 250),
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: AppDimensions.spacingBase,
-                    right: AppDimensions.spacingSm,
-                  ),
-                  child: TextButton(
-                    onPressed: _isLastPage ? null : _completeOnboarding,
-                    child: Text(
-                      'Lewati',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.mutedForeground,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _slides.length,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemBuilder: (context, index) => _OnboardingSlideView(
-                  slide: _slides[index],
-                  isActive: index == _currentPage,
-                ),
-              ),
-            ),
-
-            // Indikator titik dengan animasi lebar.
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.spacingXl),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_slides.length, _buildDot),
-              ),
-            ),
-
-            // Tombol aksi utama (scale-on-press dari AppButton).
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.spacingXl,
-                0,
-                AppDimensions.spacingXl,
-                AppDimensions.spacing2xl,
-              ),
-              child: AppButton.primary(
-                label: _isLastPage ? 'Mulai Sekarang' : 'Selanjutnya',
-                suffixIcon: Icons.arrow_forward_rounded,
-                onPressed: _nextPage,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ));
-  }
-
-  Widget _buildDot(int index) {
-    final isActive = index == _currentPage;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 26 : 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : AppColors.gray300,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-      ),
-    );
-  }
-}
-
-/// Satu halaman onboarding, dengan animasi masuk halus (fade + slide-up)
-/// saat menjadi halaman aktif.
-class _OnboardingSlideView extends StatelessWidget {
-  final _OnboardingSlide slide;
-  final bool isActive;
-
-  const _OnboardingSlideView({required this.slide, required this.isActive});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing2xl, vertical: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Scaffold(
+      backgroundColor: AppColors.red50,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Ilustrasi: lingkaran gradient bertema merah + glow lembut.
-          AnimatedScale(
-            scale: isActive ? 1 : 0.4,
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.elasticOut,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: slide.gradient,
-                ),
-                boxShadow: AppShadows.lg,
-              ),
-              child: Lottie.asset(
-                slide.lottiePath,
-                width: 100,
-                height: 100,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stack) => Icon(slide.icon, size: 68, color: Colors.white),
+          PageView.builder(
+            controller: _pageController,
+            itemCount: _slides.length,
+            onPageChanged: (index) => setState(() => _currentPage = index),
+            itemBuilder: (context, index) => ExcludeSemantics(
+              child: Image.asset(
+                _slides[index].backgroundPath,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) =>
+                    const ColoredBox(color: AppColors.red50),
               ),
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing2xl),
-
-          AnimatedOpacity(
-            opacity: isActive ? 1 : 0,
-            duration: const Duration(milliseconds: 600),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeOutCubic,
-              transform: Matrix4.translationValues(0, isActive ? 0 : 80, 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                child: Column(
-                  children: [
-                    Text(
-                      slide.title,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.foreground,
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingMd),
-                    Text(
-                      slide.description,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.mutedForeground,
-                            height: 1.6,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: MediaQuery.sizeOf(context).height * 0.4,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      const Color(0xFFFFF9F6).withValues(alpha: 0.58),
+                      const Color(0xFFFFF9F6).withValues(alpha: 0.9),
+                    ],
+                    stops: const [0, 0.55, 1],
+                  ),
                 ),
               ),
+            ),
+          ),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight.isFinite
+                          ? constraints.maxHeight
+                          : 0,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: AppDimensions.appBarHeight,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: AnimatedOpacity(
+                                  opacity: _isLastPage ? 0 : 1,
+                                  duration: disableAnimations
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 250),
+                                  child: TextButton(
+                                    onPressed: _isLastPage
+                                        ? null
+                                        : _completeOnboarding,
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.gray700,
+                                      backgroundColor: Colors.white.withValues(
+                                        alpha: 0.86,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      shape: const StadiumBorder(),
+                                    ),
+                                    child: Text(
+                                      'Lewati',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(child: SizedBox.shrink()),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(30, 8, 30, 22),
+                            child: _buildPageControls(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildPageControls(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          _slides[_currentPage].title,
+          textAlign: TextAlign.left,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppColors.foreground,
+            fontSize: 23,
+            height: 1.15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _slides[_currentPage].description,
+          textAlign: TextAlign.left,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.gray600,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_slides.length, _buildDot),
+        ),
+        const SizedBox(height: 14),
+        AppButton.primary(
+          label: _isLastPage ? 'Mulai Sekarang' : 'Selanjutnya',
+          size: AppButtonSize.md,
+          suffixIcon: Icons.arrow_forward_rounded,
+          onPressed: _nextPage,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDot(int index) {
+    final isActive = index == _currentPage;
+    return Semantics(
+      label: 'Langkah ${index + 1} dari ${_slides.length}',
+      selected: isActive,
+      child: AnimatedContainer(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: isActive ? 26 : 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.gray300,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+        ),
+      ),
+    );
+  }
 }
 
 class _OnboardingSlide {
-  final String lottiePath;
-  final IconData icon;
-  final List<Color> gradient;
+  final String backgroundPath;
   final String title;
   final String description;
 
   const _OnboardingSlide({
-    required this.lottiePath,
-    required this.icon,
-    required this.gradient,
+    required this.backgroundPath,
     required this.title,
     required this.description,
   });

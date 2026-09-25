@@ -5,7 +5,8 @@ import '../datasources/remote/billing_remote_datasource.dart';
 class BillingRepositoryImpl implements BillingRepository {
   final BillingRemoteDataSource _remote;
 
-  BillingRepositoryImpl({required BillingRemoteDataSource remote}) : _remote = remote;
+  BillingRepositoryImpl({required BillingRemoteDataSource remote})
+    : _remote = remote;
 
   @override
   Future<BillingCatalog> getCatalog() async {
@@ -14,7 +15,10 @@ class BillingRepositoryImpl implements BillingRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> createCheckout(String itemType, int itemId) async {
+  Future<Map<String, dynamic>> createCheckout(
+    String itemType,
+    int itemId,
+  ) async {
     return _remote.createCheckout(itemType, itemId);
   }
 
@@ -27,10 +31,18 @@ class BillingRepositoryImpl implements BillingRepository {
     int limit = 20,
     String? status,
     String? itemType,
-  }) =>
-      _remote.getTransactions(page: page, limit: limit, status: status, itemType: itemType);
+  }) => _remote.getTransactions(
+    page: page,
+    limit: limit,
+    status: status,
+    itemType: itemType,
+  );
 
   @override
   Future<String> exportTransactionsCsv({String? status, String? itemType}) =>
       _remote.exportTransactionsCsv(status: status, itemType: itemType);
+
+  @override
+  Future<String> downloadInvoiceCsv(String orderId) =>
+      _remote.downloadInvoiceCsv(orderId);
 }

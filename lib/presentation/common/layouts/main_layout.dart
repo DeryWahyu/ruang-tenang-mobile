@@ -11,20 +11,51 @@ import '../../../core/di/injection_container.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
+  final String? routeLocation;
+  final GoRouter? router;
 
-  const MainLayout({super.key, required this.child});
+  const MainLayout({
+    super.key,
+    required this.child,
+    this.routeLocation,
+    this.router,
+  });
 
-  static int _calculateSelectedIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
+  int _calculateSelectedIndex(BuildContext context) {
+    final location = routeLocation ?? GoRouterState.of(context).uri.path;
     if (location.startsWith('/home')) return 0;
+    if (location == '/mood/stats') return 0;
+    if (location.startsWith('/journey') ||
+        location.startsWith('/gamification') ||
+        location.startsWith('/community') ||
+        location.startsWith('/forum') ||
+        location.startsWith('/stories') ||
+        location.startsWith('/articles') ||
+        location.startsWith('/search')) {
+      return 0;
+    }
     if (location.startsWith('/journal')) return 1;
     if (location.startsWith('/chat')) return 2;
     if (location.startsWith('/music')) return 3;
-    if (location.startsWith('/profile')) return 4;
+    if (location.startsWith('/profile') || location.startsWith('/billing')) {
+      return 4;
+    }
     return 0;
   }
 
   void _onItemTapped(BuildContext context, int index) {
+    final destination = switch (index) {
+      0 => '/home',
+      1 => '/journal',
+      2 => '/chat',
+      3 => '/music',
+      4 => '/profile',
+      _ => '/home',
+    };
+    if (router != null) {
+      router!.go(destination);
+      return;
+    }
     switch (index) {
       case 0:
         context.go('/home');
@@ -44,64 +75,78 @@ class MainLayout extends StatelessWidget {
     }
   }
 
-  /// Tab yang memiliki FAB sendiri (Jurnal list & Chat list).
-  /// Pada layar tersebut, FAB daily-task dinaikkan agar tidak bertumpuk.
-  static bool _hasOwnFab(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    return location == '/journal' || location == '/chat';
-  }
-
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _calculateSelectedIndex(context);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SizedBox.expand(
-        child: Stack(
-          children: [
-            Positioned.fill(child: child),
-            // One-per-day mood check-in popup (renders nothing until needed).
-            const MoodCheckinGate(),
-            // Daily-task FAB persisten di seluruh tab. Offset dinaikkan pada
-            // tab yang punya FAB sendiri (Jurnal/Chat) agar tidak bertumpuk.
-            Positioned.fill(
-              child: DailyTaskFab(
-                bottomOffset: _hasOwnFab(context) ? 76 : 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-      extendBody: false, // Prevents nested FABs and lists from overlapping with the navbar
-      // Slot bawah berisi mini-player musik global (bila ada lagu) di atas
-      // bottom-nav mengambang. Keduanya disusun dalam Column agar tidak
-      // saling menutup.
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BlocProvider.value(
-            value: sl<MusicBloc>(),
-            child: BlocBuilder<MusicBloc, MusicState>(
-              buildWhen: (p, c) => (p.currentPlayingSong != null) != (c.currentPlayingSong != null),
-              builder: (context, state) {
-                if (state.currentPlayingSong == null) return const SizedBox.shrink();
-                return const SafeArea(
-                  top: false,
-                  bottom: false,
-                  child: GlobalMiniPlayer(bottomOffset: 8),
-                );
-              },
+    return BlocProvider.value(
+      value: sl<MusicBloc>(),
+      child: BlocListener<MusicBloc, MusicState>(
+        listenWhen: (previous, current) =>
+            previous.playbackErrorMessage != current.playbackErrorMessage ||
+            (previous.errorMessage != current.errorMessage &&
+                current.status != MusicStatus.failure),
+        listener: (context, state) {
+          final message = state.playbackErrorMessage ?? state.errorMessage;
+          if (message == null || message.isEmpty) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(message)));
+        },
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SizedBox.expand(
+            child: Stack(
+              children: [
+                Positioned.fill(child: child),
+                // One-per-day mood check-in popup (renders nothing until needed).
+                const MoodCheckinGate(),
+                // FAB misi harian tetap tersedia di area member selain obrolan,
+                // agar tidak menutupi prompt awal dan kontrol pesan.
+                if (selectedIndex != 2)
+                  Positioned.fill(
+                    child: DailyTaskFab(bottomOffset: 16, router: router),
+                  ),
+              ],
             ),
           ),
-          _buildBottomNav(context, selectedIndex, bottomPadding),
-        ],
+          extendBody:
+              false, // Prevents nested FABs and lists from overlapping with the navbar
+          // Slot bawah berisi mini-player musik global (bila ada lagu) di atas
+          // bottom-nav mengambang. Keduanya disusun dalam Column agar tidak
+          // saling menutup.
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BlocBuilder<MusicBloc, MusicState>(
+                buildWhen: (p, c) =>
+                    (p.currentPlayingSong != null) !=
+                    (c.currentPlayingSong != null),
+                builder: (context, state) {
+                  if (state.currentPlayingSong == null) {
+                    return const SizedBox.shrink();
+                  }
+                  return SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: GlobalMiniPlayer(bottomOffset: 8, router: router),
+                  );
+                },
+              ),
+              _buildBottomNav(context, selectedIndex, bottomPadding),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildBottomNav(BuildContext context, int selectedIndex, double bottomPadding) {
+  Widget _buildBottomNav(
+    BuildContext context,
+    int selectedIndex,
+    double bottomPadding,
+  ) {
     return Container(
       margin: EdgeInsets.only(
         left: 16,
@@ -111,7 +156,10 @@ class MainLayout extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6), width: 1),
+        border: Border.all(
+          color: AppColors.border.withValues(alpha: 0.6),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -129,7 +177,7 @@ class MainLayout extends StatelessWidget {
             _NavBarItem(
               iconOutline: Icons.home_outlined,
               iconFilled: Icons.home_rounded,
-              label: 'Home',
+              label: 'Beranda',
               isSelected: selectedIndex == 0,
               onTap: () => _onItemTapped(context, 0),
             ),
@@ -194,7 +242,9 @@ class _NavBarItem extends StatelessWidget {
             curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary.withValues(alpha: 0.10) : Colors.transparent,
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.10)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
@@ -250,7 +300,9 @@ class _ChatNavButton extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: isSelected ? 0.50 : 0.35),
+                color: AppColors.primary.withValues(
+                  alpha: isSelected ? 0.50 : 0.35,
+                ),
                 blurRadius: 16,
                 spreadRadius: 1,
                 offset: const Offset(0, 6),
@@ -263,7 +315,11 @@ class _ChatNavButton extends StatelessWidget {
               shape: BoxShape.circle,
               color: AppColors.card,
             ),
-            child: const Icon(Icons.chat_bubble_rounded, color: Color(0xFFEF4444), size: 24),
+            child: const Icon(
+              Icons.chat_bubble_rounded,
+              color: Color(0xFFEF4444),
+              size: 24,
+            ),
           ),
         ),
       ),

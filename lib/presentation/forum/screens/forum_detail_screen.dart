@@ -65,7 +65,7 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            centerTitle: true,
+            centerTitle: false,
             actions: [
               PopupMenuButton<String>(
                 onSelected: (value) {

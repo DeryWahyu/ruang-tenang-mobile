@@ -35,8 +35,8 @@ const kAllAppFeatures = <AppFeature>[
     '/journal',
   ),
   AppFeature(
-    'Mood Tracker',
-    'Pantau suasana hati',
+    'Statistik Mood',
+    'Lihat pola perasaanmu',
     Icons.mood_rounded,
     Color(0xFFF59E0B),
     '/mood/stats',
@@ -64,9 +64,9 @@ const kAllAppFeatures = <AppFeature>[
   ),
   AppFeature(
     'Perjalanan',
-    'Ringkasan, peta, dan hadiah',
-    Icons.map_outlined,
-    Color(0xFFF59E0B),
+    'Level, EXP, dan hadiahmu',
+    Icons.map_rounded,
+    Color(0xFFD97706),
     '/journey',
   ),
   AppFeature(
@@ -75,6 +75,13 @@ const kAllAppFeatures = <AppFeature>[
     Icons.videogame_asset_rounded,
     Color(0xFF7C3AED),
     '/game',
+  ),
+  AppFeature(
+    'Koleksi Badge',
+    'Rayakan pencapaian kecilmu',
+    Icons.emoji_events_rounded,
+    Color(0xFFB45309),
+    '/gamification/badges',
   ),
   AppFeature(
     'Paket & Koin',

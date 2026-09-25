@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/public_journal.dart';
 import '../../../domain/repositories/journal_repository.dart';
+import '../../common/widgets/app_search_bar.dart';
 import '../../common/widgets/mascot_hero.dart';
 
 class PublicJournalState {
@@ -103,20 +104,11 @@ class _PublicJournalsScreenState extends State<PublicJournalsScreen> {
                 pose: 'journal',
               ),
               const SizedBox(height: 16),
-              TextField(
+              AppSearchBar(
                 controller: _search,
+                hint: 'Cari jurnal publik',
                 onSubmitted: (value) => _cubit.load(search: value),
-                decoration: InputDecoration(
-                  labelText: 'Cari jurnal publik',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      _search.clear();
-                      _cubit.load();
-                    },
-                    icon: const Icon(Icons.clear),
-                  ),
-                ),
+                onClear: () => _cubit.load(),
               ),
               const SizedBox(height: 16),
               if (state.loading && state.items.isEmpty)

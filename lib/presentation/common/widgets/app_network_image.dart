@@ -42,37 +42,77 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolved = resolveMediaUrl(url, cacheBuster: cacheBuster);
-    final media = MediaQuery.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final resolved = resolveMediaUrl(url, cacheBuster: cacheBuster);
+        final media = MediaQuery.of(context);
+        final displayWidth = _boundedDimension(
+          width,
+          constraints.maxWidth,
+          media.size.width,
+        );
+        final displayHeight = _boundedDimension(
+          height,
+          constraints.maxHeight,
+          null,
+        );
+        final cacheWidth = _cacheDimension(
+          displayWidth,
+          media.devicePixelRatio,
+        );
+        final cacheHeight = _cacheDimension(
+          displayHeight,
+          media.devicePixelRatio,
+        );
 
-    Widget content;
-    if (resolved == null) {
-      content = _fallback();
-    } else {
-      // Target lebar dekode = lebar tampil × devicePixelRatio (dibatasi agar
-      // tidak menahan resolusi lebih besar dari yang dibutuhkan layar).
-      int? cacheWidth;
-      if (width != null && width!.isFinite) {
-        cacheWidth = (width! * media.devicePixelRatio).round();
+        Widget content;
+        if (resolved == null) {
+          content = _fallback();
+        } else {
+          content = CachedNetworkImage(
+            imageUrl: resolved,
+            width: width,
+            height: height,
+            fit: fit,
+            memCacheWidth: cacheWidth,
+            memCacheHeight: cacheHeight,
+            maxWidthDiskCache: cacheWidth,
+            maxHeightDiskCache: cacheHeight,
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
+            placeholder: (_, _) => _placeholder(),
+            errorWidget: (_, _, _) => _fallback(),
+          );
+        }
+
+        if (borderRadius != null) {
+          content = ClipRRect(borderRadius: borderRadius!, child: content);
+        }
+        return content;
+      },
+    );
+  }
+
+  double? _boundedDimension(
+    double? requested,
+    double constraint,
+    double? fallback,
+  ) {
+    if (requested != null && requested.isFinite && requested > 0) {
+      if (constraint.isFinite && constraint > 0 && constraint < requested) {
+        return constraint;
       }
-
-      content = CachedNetworkImage(
-        imageUrl: resolved,
-        width: width,
-        height: height,
-        fit: fit,
-        memCacheWidth: cacheWidth,
-        maxWidthDiskCache: cacheWidth,
-        fadeInDuration: const Duration(milliseconds: 200),
-        placeholder: (_, _) => _placeholder(),
-        errorWidget: (_, _, _) => _fallback(),
-      );
+      return requested;
     }
+    if (constraint.isFinite && constraint > 0) return constraint;
+    return fallback;
+  }
 
-    if (borderRadius != null) {
-      content = ClipRRect(borderRadius: borderRadius!, child: content);
+  int? _cacheDimension(double? logicalSize, double devicePixelRatio) {
+    if (logicalSize == null || !logicalSize.isFinite || logicalSize <= 0) {
+      return null;
     }
-    return content;
+    return (logicalSize * devicePixelRatio).round().clamp(1, 2048).toInt();
   }
 
   Widget _placeholder() {
@@ -84,13 +124,19 @@ class AppNetworkImage extends StatelessWidget {
   }
 
   Widget _fallback() {
-    final iconSize = (width != null && width!.isFinite) ? (width! * 0.4).clamp(16.0, 48.0) : 24.0;
+    final iconSize = (width != null && width!.isFinite)
+        ? (width! * 0.4).clamp(16.0, 48.0)
+        : 24.0;
     return Container(
       width: width,
       height: height,
       color: backgroundColor ?? AppColors.muted,
       alignment: Alignment.center,
-      child: Icon(fallbackIcon, color: fallbackColor ?? AppColors.mutedForeground, size: iconSize),
+      child: Icon(
+        fallbackIcon,
+        color: fallbackColor ?? AppColors.mutedForeground,
+        size: iconSize,
+      ),
     );
   }
 }

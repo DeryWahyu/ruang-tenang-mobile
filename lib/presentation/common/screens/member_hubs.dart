@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../article/screens/article_list_screen.dart';
 import '../../article/screens/my_articles_screen.dart';
 import '../../billing/screens/billing_transactions_screen.dart';
@@ -25,10 +26,10 @@ class CommunityHubScreen extends StatelessWidget {
     labels: const ['Forum', 'Kisah', 'Jurnal Publik', 'Statistik'],
     keys: const ['forum', 'stories', 'journals', 'stats'],
     children: const [
-      ForumListScreen(),
+      ForumListScreen(showAppBar: false),
       _StoriesPanel(),
       PublicJournalsScreen(),
-      CommunityStatsScreen(),
+      CommunityStatsScreen(showAppBar: false),
     ],
   );
 }
@@ -42,13 +43,16 @@ class _StoriesPanel extends StatelessWidget {
     child: Column(
       children: const [
         TabBar(
+          isScrollable: false,
           tabs: [
             Tab(text: 'Jelajahi kisah'),
             Tab(text: 'Kisah saya'),
           ],
         ),
         Expanded(
-          child: TabBarView(children: [StoryListScreen(), MyStoriesScreen()]),
+          child: TabBarView(
+            children: [StoryListScreen(showAppBar: false), MyStoriesScreen()],
+          ),
         ),
       ],
     ),
@@ -61,12 +65,12 @@ class ArticleHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MemberTabHub(
-    title: 'Artikel',
+    title: 'Artikel & Bacaan',
     route: '/articles',
     tab: tab,
     labels: const ['Jelajahi', 'Artikel Saya'],
     keys: const ['explore', 'mine'],
-    children: const [ArticleListScreen(), MyArticlesScreen()],
+    children: const [ArticleListScreen(showAppBar: false), MyArticlesScreen()],
   );
 }
 
@@ -82,9 +86,9 @@ class JourneyHubScreen extends StatelessWidget {
     labels: const ['Ringkasan', 'Peta', 'Hadiah'],
     keys: const ['summary', 'map', 'rewards'],
     children: const [
-      JourneySummaryScreen(),
-      ProgressMapScreen(),
-      RewardsScreen(),
+      JourneySummaryScreen(showAppBar: false),
+      ProgressMapScreen(showAppBar: false),
+      RewardsScreen(showAppBar: false),
     ],
   );
 }
@@ -101,9 +105,9 @@ class BillingHubScreen extends StatelessWidget {
     labels: const ['Paket', 'Koin', 'Transaksi'],
     keys: const ['packages', 'coins', 'transactions'],
     children: const [
-      PremiumPlansScreen(mode: BillingCatalogMode.packages),
-      PremiumPlansScreen(mode: BillingCatalogMode.coins),
-      BillingTransactionsScreen(),
+      PremiumPlansScreen(mode: BillingCatalogMode.packages, showAppBar: false),
+      PremiumPlansScreen(mode: BillingCatalogMode.coins, showAppBar: false),
+      BillingTransactionsScreen(showAppBar: false),
     ],
   );
 }
@@ -179,11 +183,29 @@ class _MemberTabHubState extends State<_MemberTabHub>
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      toolbarHeight: 0,
+      title: Text(
+        widget.title,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      centerTitle: false,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
       bottom: TabBar(
         controller: _tabs,
-        isScrollable: true,
-        tabs: widget.labels.map((label) => Tab(text: label)).toList(),
+        isScrollable: false,
+        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+        dividerColor: AppColors.border,
+        tabs: widget.labels
+            .map(
+              (label) => Tab(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(label, maxLines: 1),
+                ),
+              ),
+            )
+            .toList(),
       ),
     ),
     body: TabBarView(controller: _tabs, children: widget.children),

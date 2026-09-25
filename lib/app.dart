@@ -5,6 +5,7 @@ import 'core/di/injection_container.dart';
 import 'core/router/app_router.dart';
 import 'core/router/go_router_refresh_stream.dart';
 import 'core/theme/app_theme.dart';
+import 'presentation/common/layouts/main_layout.dart';
 import 'presentation/common/widgets/gradient_background.dart';
 import 'presentation/music/widgets/global_mini_player.dart';
 import 'presentation/gamification/widgets/daily_task_fab.dart';
@@ -153,6 +154,7 @@ class _GlobalOverlayState extends State<_GlobalOverlay> {
     }
 
     final inShell = AppRouter.isShellLocation(location);
+    final showBottomNavigation = AppRouter.showsBottomNavigation(location);
     final safeBottom = MediaQuery.of(context).padding.bottom;
 
     // Konten dasar: untuk rute shell, MainLayout sudah menangani
@@ -160,6 +162,12 @@ class _GlobalOverlayState extends State<_GlobalOverlay> {
     Widget content;
     if (inShell) {
       content = widget.child;
+    } else if (showBottomNavigation) {
+      content = MainLayout(
+        routeLocation: location,
+        router: widget.router,
+        child: widget.child,
+      );
     } else {
       final fabBottom =
           safeBottom + (AppRouter.hasOwnFab(location) ? 76.0 : 16.0);
@@ -170,9 +178,11 @@ class _GlobalOverlayState extends State<_GlobalOverlay> {
             left: 0,
             right: 0,
             bottom: safeBottom + 8,
-            child: const GlobalMiniPlayer(),
+            child: GlobalMiniPlayer(router: widget.router),
           ),
-          Positioned.fill(child: DailyTaskFab(bottomOffset: fabBottom)),
+          Positioned.fill(
+            child: DailyTaskFab(bottomOffset: fabBottom, router: widget.router),
+          ),
         ],
       );
     }

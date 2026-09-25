@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -17,6 +19,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
   final CreatePlaylistUseCase _createPlaylist;
   final UploadRepository _uploadRepository;
   final AudioPlayer _audioPlayer;
+  bool _handledCompletionForCurrentTrack = false;
 
   MusicBloc({
     required GetSongCategoriesUseCase getCategories,
@@ -36,11 +39,14 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     on<MusicFetchInitialDataRequested>(_onFetchInitialData);
     on<MusicCategorySelected>(_onCategorySelected);
     on<MusicPlaySongRequested>(_onPlaySongRequested);
+    on<MusicPlayQueueRequested>(_onPlayQueueRequested);
+    on<MusicQueueAdvanceRequested>(_onQueueAdvanceRequested);
     on<MusicCreatePlaylistRequested>(_onCreatePlaylistRequested);
     on<MusicPauseSongRequested>(_onPauseSongRequested);
     on<MusicResumeSongRequested>(_onResumeSongRequested);
     on<MusicStopSongRequested>(_onStopSongRequested);
     on<MusicPlaybackStateChanged>(_onPlaybackStateChanged);
+    on<MusicPlaybackFailed>(_onPlaybackFailed);
 
     // Listen to audio player state
     _audioPlayer.positionStream.listen((pos) {
@@ -48,6 +54,9 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
         add(
           MusicPlaybackStateChanged(
             isPlaying: _audioPlayer.playing,
+            isBuffering:
+                _audioPlayer.processingState == ProcessingState.loading ||
+                _audioPlayer.processingState == ProcessingState.buffering,
             position: pos,
             duration: _audioPlayer.duration ?? Duration.zero,
           ),
@@ -60,15 +69,35 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
         add(
           MusicPlaybackStateChanged(
             isPlaying: state.playing,
+            isBuffering:
+                state.processingState == ProcessingState.loading ||
+                state.processingState == ProcessingState.buffering,
             position: _audioPlayer.position,
             duration: _audioPlayer.duration ?? Duration.zero,
           ),
         );
 
-        // Auto-stop when completed
-        if (state.processingState == ProcessingState.completed) {
-          add(const MusicStopSongRequested());
+        // Move to the next queued track, or clear the player at queue end.
+        if (state.processingState == ProcessingState.completed &&
+            !_handledCompletionForCurrentTrack) {
+          _handledCompletionForCurrentTrack = true;
+          if (this.state.queueIndex + 1 < this.state.playbackQueue.length) {
+            add(const MusicQueueAdvanceRequested());
+          } else {
+            add(const MusicStopSongRequested());
+          }
         }
+      }
+    });
+
+    _audioPlayer.errorStream.listen((error) {
+      if (kDebugMode) debugPrint('Music: error stream audio: $error');
+      if (!isClosed && state.currentPlayingSong != null) {
+        add(
+          const MusicPlaybackFailed(
+            'Lagu belum dapat diputar. Periksa koneksi, lalu coba lagi.',
+          ),
+        );
       }
     });
   }
@@ -83,7 +112,13 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     MusicFetchInitialDataRequested event,
     Emitter<MusicState> emit,
   ) async {
-    emit(state.copyWith(status: MusicStatus.loading));
+    emit(
+      state.copyWith(
+        status: MusicStatus.loading,
+        clearErrorMessage: true,
+        clearPlaybackError: true,
+      ),
+    );
 
     List<SongCategory> categories = [];
     List<PlaylistListItem> publicPlaylists = [];
@@ -123,6 +158,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
         categories: categories,
         publicPlaylists: publicPlaylists,
         myPlaylists: myPlaylists,
+        clearErrorMessage: true,
       ),
     );
 
@@ -136,11 +172,34 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     Emitter<MusicState> emit,
   ) async {
     try {
+      emit(
+        state.copyWith(
+          selectedCategorySlug: event.slug,
+          currentCategorySongs: const [],
+          isLoadingCategorySongs: true,
+          clearCategoryError: true,
+        ),
+      );
       final songs = await _getSongsByCategory(event.slug);
-      emit(state.copyWith(currentCategorySongs: songs));
+      if (state.selectedCategorySlug != event.slug) return;
+      emit(
+        state.copyWith(
+          currentCategorySongs: songs,
+          isLoadingCategorySongs: false,
+        ),
+      );
     } catch (e) {
-      // Non-fatal: keep previously loaded songs; just log in debug.
       if (kDebugMode) debugPrint('Music: gagal memuat lagu kategori: $e');
+      if (state.selectedCategorySlug != event.slug) return;
+      emit(
+        state.copyWith(
+          isLoadingCategorySongs: false,
+          categoryErrorMessage: ErrorMessage.from(
+            e,
+            'Lagu dalam kategori ini belum berhasil dimuat.',
+          ),
+        ),
+      );
     }
   }
 
@@ -148,36 +207,118 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     MusicPlaySongRequested event,
     Emitter<MusicState> emit,
   ) async {
-    final song = event.song;
-
-    // Resolve a playable absolute URL from the (possibly relative) file path.
-    // Use updatedAt as a cache buster so that if the song data is updated, 
-    // it will invalidate the cached audio file and download the new one.
-    final url = resolveMediaUrl(
-      song.filePath, 
-      cacheBuster: song.updatedAt?.millisecondsSinceEpoch.toString(),
+    await _startSong(
+      event.song,
+      queue: [event.song],
+      queueIndex: 0,
+      emit: emit,
     );
-    
+  }
+
+  Future<void> _onPlayQueueRequested(
+    MusicPlayQueueRequested event,
+    Emitter<MusicState> emit,
+  ) async {
+    if (event.songs.isEmpty) return;
+    final startIndex = event.startIndex
+        .clamp(0, event.songs.length - 1)
+        .toInt();
+    await _startSong(
+      event.songs[startIndex],
+      queue: List<Song>.unmodifiable(event.songs),
+      queueIndex: startIndex,
+      emit: emit,
+    );
+  }
+
+  Future<void> _onQueueAdvanceRequested(
+    MusicQueueAdvanceRequested event,
+    Emitter<MusicState> emit,
+  ) async {
+    final nextIndex = state.queueIndex + 1;
+    if (nextIndex >= state.playbackQueue.length) {
+      add(const MusicStopSongRequested());
+      return;
+    }
+    await _startSong(
+      state.playbackQueue[nextIndex],
+      queue: state.playbackQueue,
+      queueIndex: nextIndex,
+      emit: emit,
+    );
+  }
+
+  Future<void> _startSong(
+    Song song, {
+    required List<Song> queue,
+    required int queueIndex,
+    required Emitter<MusicState> emit,
+  }) async {
+    emit(state.copyWith(clearPlaybackError: true));
+    // Audio may use a signed URL, so do not append an image cache-buster.
+    final url = resolveMediaUrl(song.filePath);
     if (url == null) {
-      emit(state.copyWith(errorMessage: 'Lagu tidak memiliki sumber audio yang valid'));
+      await _audioPlayer.stop();
+      emit(
+        state.copyWith(
+          clearPlayingSong: true,
+          playbackQueue: const [],
+          queueIndex: 0,
+          isPlaying: false,
+          isBuffering: false,
+          position: Duration.zero,
+          duration: Duration.zero,
+          playbackErrorMessage: 'Audio lagu ini belum tersedia.',
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(currentPlayingSong: song));
+    // Ignore a stale completion from the previous source while setUrl changes
+    // the player's item; re-arm this once the new source is ready.
+    _handledCompletionForCurrentTrack = true;
+    emit(
+      state.copyWith(
+        currentPlayingSong: song,
+        playbackQueue: queue,
+        queueIndex: queueIndex,
+        isPlaying: false,
+        isBuffering: true,
+        position: Duration.zero,
+        duration: Duration.zero,
+        clearPlaybackError: true,
+      ),
+    );
 
     try {
-      // Use LockCachingAudioSource to cache the downloaded audio locally
-      // ignore: experimental_member_use
-      await _audioPlayer.setAudioSource(LockCachingAudioSource(Uri.parse(url)));
-      await _audioPlayer.play();
+      await _audioPlayer.setUrl(url);
+      _handledCompletionForCurrentTrack = false;
+      unawaited(
+        _audioPlayer.play().catchError((Object error) {
+          if (kDebugMode) debugPrint('Music: gagal memulai audio: $error');
+          if (!isClosed) {
+            add(
+              const MusicPlaybackFailed(
+                'Lagu belum dapat diputar. Periksa koneksi, lalu coba lagi.',
+              ),
+            );
+          }
+        }),
+      );
     } catch (e) {
-      if (kDebugMode) debugPrint('Music: gagal memutar audio: $e');
-      // Surface the failure and clear the now-unplayable "current song".
-      emit(state.copyWith(
-        clearPlayingSong: true,
-        isPlaying: false,
-        errorMessage: ErrorMessage.from(e, 'Gagal memutar lagu'),
-      ));
+      if (kDebugMode) debugPrint('Music: gagal menyiapkan audio: $e');
+      await _audioPlayer.stop();
+      emit(
+        state.copyWith(
+          clearPlayingSong: true,
+          playbackQueue: const [],
+          queueIndex: 0,
+          isPlaying: false,
+          isBuffering: false,
+          playbackErrorMessage:
+              'Lagu belum dapat diputar. Periksa koneksi, lalu coba lagi.',
+        ),
+      );
     }
   }
 
@@ -199,6 +340,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     MusicCreatePlaylistRequested event,
     Emitter<MusicState> emit,
   ) async {
+    emit(state.copyWith(clearErrorMessage: true, clearPlaybackError: true));
     try {
       String thumbnailUrl = '';
       if (event.thumbnailFile != null) {
@@ -216,12 +358,14 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
 
       // Refresh my playlists
       final myPlaylists = await _getMyPlaylists();
-      emit(state.copyWith(myPlaylists: myPlaylists));
+      emit(state.copyWith(myPlaylists: myPlaylists, clearErrorMessage: true));
     } catch (e) {
       if (kDebugMode) debugPrint('Music: gagal membuat playlist: $e');
-      emit(state.copyWith(
-        errorMessage: ErrorMessage.from(e, 'Gagal membuat playlist'),
-      ));
+      emit(
+        state.copyWith(
+          errorMessage: ErrorMessage.from(e, 'Gagal membuat playlist'),
+        ),
+      );
     }
   }
 
@@ -229,12 +373,17 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     MusicStopSongRequested event,
     Emitter<MusicState> emit,
   ) async {
+    _handledCompletionForCurrentTrack = true;
     await _audioPlayer.stop();
     emit(
       state.copyWith(
         clearPlayingSong: true,
+        playbackQueue: const [],
+        queueIndex: 0,
         isPlaying: false,
+        isBuffering: false,
         position: Duration.zero,
+        duration: Duration.zero,
       ),
     );
   }
@@ -246,8 +395,23 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
     emit(
       state.copyWith(
         isPlaying: event.isPlaying,
+        isBuffering: event.isBuffering,
         position: event.position,
         duration: event.duration,
+      ),
+    );
+  }
+
+  void _onPlaybackFailed(MusicPlaybackFailed event, Emitter<MusicState> emit) {
+    if (state.currentPlayingSong == null) return;
+    emit(
+      state.copyWith(
+        clearPlayingSong: true,
+        playbackQueue: const [],
+        queueIndex: 0,
+        isPlaying: false,
+        isBuffering: false,
+        playbackErrorMessage: event.message,
       ),
     );
   }

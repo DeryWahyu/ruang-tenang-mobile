@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
+import '../../common/widgets/app_alert_dialog.dart';
 import '../bloc/journal_bloc.dart';
 import '../bloc/journal_event.dart';
 import '../bloc/journal_state.dart';
@@ -30,7 +31,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
   void _onDelete() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => AppAlertDialog(
         title: const Text('Hapus Jurnal?'),
         content: const Text('Tindakan ini tidak dapat dibatalkan.'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

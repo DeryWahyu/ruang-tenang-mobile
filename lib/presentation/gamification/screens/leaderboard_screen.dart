@@ -31,7 +31,7 @@ class _LeaderboardView extends StatelessWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Papan Peringkat', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,

@@ -18,7 +18,6 @@ import '../../presentation/journal/screens/journal_list_screen.dart';
 import '../../presentation/journal/screens/journal_create_screen.dart';
 import '../../presentation/journal/screens/journal_detail_screen.dart';
 import '../../presentation/journal/screens/journal_insights_screen.dart';
-import '../../presentation/mood/screens/mood_tracker_screen.dart';
 import '../../presentation/mood/screens/mood_stats_screen.dart';
 import '../../presentation/chat/screens/chat_list_screen.dart';
 import '../../presentation/chat/screens/chat_detail_screen.dart';
@@ -28,7 +27,6 @@ import '../../presentation/music/screens/playlist_detail_screen.dart';
 import '../../presentation/profile/screens/profile_screen.dart';
 import '../../presentation/profile/screens/edit_profile_screen.dart';
 import '../../presentation/profile/screens/change_password_screen.dart';
-import '../../presentation/profile/screens/settings_screen.dart';
 import '../../presentation/splash_screen.dart';
 
 import '../../presentation/forum/screens/forum_list_screen.dart';
@@ -88,18 +86,28 @@ class AppRouter {
   /// menentukan di mana mini-player musik global dipasang agar tidak dobel:
   /// MainLayout menampilkannya untuk rute shell, `app.dart` untuk rute lain.
   ///
-  /// Catatan: hanya `/journal/*` dan `/chat/*` yang punya anak di dalam shell.
-  /// `/music/playlist/...` dan `/profile/...` adalah rute yang di-`push` di
-  /// atas shell sehingga TIDAK memakai MainLayout — diperlakukan non-shell.
+  /// Detail playlist memakai anak dari rute Musik sehingga tetap berada di
+  /// dalam MainLayout bersama bottom navigation dan global mini-player.
   static bool isShellLocation(String location) {
-    if (location == '/home' || location == '/music' || location == '/profile') {
+    if (location == '/home' ||
+        location == '/mood/stats' ||
+        location == '/journey' ||
+        location == '/music' ||
+        location.startsWith('/music/') ||
+        location == '/profile') {
       return true;
     }
-    return location == '/journal' ||
+    return location.startsWith('/journey/') ||
+        location == '/journal' ||
         location.startsWith('/journal/') ||
         location == '/chat' ||
         location.startsWith('/chat/');
   }
+
+  /// Semua layar privat memakai bottom nav, termasuk rute yang saat ini
+  /// dirender di luar ShellRoute utama.
+  static bool showsBottomNavigation(String location) =>
+      showsGlobalMiniPlayer(location);
 
   /// Apakah mini-player musik global boleh tampil di [location].
   /// Disembunyikan pada alur awal/auth (belum login).
@@ -193,15 +201,6 @@ class AppRouter {
           path: '/verify-phone',
           builder: (context, state) => const VerifyPhoneScreen(),
         ),
-        GoRoute(
-          path: '/mood',
-          builder: (context, state) => const MoodTrackerScreen(),
-        ),
-        GoRoute(
-          path: '/mood/stats',
-          builder: (context, state) => const MoodStatsScreen(),
-        ),
-
         // Forum
         GoRoute(
           path: '/forum',
@@ -302,11 +301,6 @@ class AppRouter {
           ],
         ),
         GoRoute(
-          path: '/music/playlist/:uuid',
-          builder: (context, state) =>
-              PlaylistDetailScreen(uuid: state.pathParameters['uuid']!),
-        ),
-        GoRoute(
           path: '/billing/premium',
           redirect: (context, state) => '/billing',
         ),
@@ -346,12 +340,6 @@ class AppRouter {
           ],
         ),
         GoRoute(
-          path: '/journey',
-          builder: (context, state) => JourneyHubScreen(
-            tab: state.uri.queryParameters['tab'] ?? 'summary',
-          ),
-        ),
-        GoRoute(
           path: '/game',
           builder: (context, state) => const MindfulRunnerScreen(),
         ),
@@ -362,10 +350,6 @@ class AppRouter {
         GoRoute(
           path: '/profile/password',
           builder: (context, state) => const ChangePasswordScreen(),
-        ),
-        GoRoute(
-          path: '/profile/settings',
-          builder: (context, state) => const SettingsScreen(),
         ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,
@@ -383,14 +367,24 @@ class AppRouter {
               ],
             ),
             GoRoute(
+              path: '/mood/stats',
+              builder: (context, state) => const MoodStatsScreen(),
+            ),
+            GoRoute(
+              path: '/journey',
+              builder: (context, state) => JourneyHubScreen(
+                tab: state.uri.queryParameters['tab'] ?? 'summary',
+              ),
+            ),
+            GoRoute(
+              path: '/journal/insights',
+              builder: (context, state) => const JournalInsightsScreen(),
+            ),
+            GoRoute(
               path: '/journal',
               pageBuilder: (context, state) =>
                   const NoTransitionPage(child: JournalListScreen()),
               routes: [
-                GoRoute(
-                  path: 'insights',
-                  builder: (context, state) => const JournalInsightsScreen(),
-                ),
                 GoRoute(
                   path: 'create',
                   builder: (context, state) {
@@ -410,9 +404,8 @@ class AppRouter {
             ),
             GoRoute(
               path: '/chat',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: ChatConsentGate(child: ChatListScreen()),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: ChatListScreen()),
               routes: [
                 GoRoute(
                   path: 'new',
@@ -436,6 +429,13 @@ class AppRouter {
               path: '/music',
               pageBuilder: (context, state) =>
                   const NoTransitionPage(child: MusicHomeScreen()),
+              routes: [
+                GoRoute(
+                  path: 'playlist/:uuid',
+                  builder: (context, state) =>
+                      PlaylistDetailScreen(uuid: state.pathParameters['uuid']!),
+                ),
+              ],
             ),
             GoRoute(
               path: '/profile',

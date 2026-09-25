@@ -70,6 +70,12 @@ class AppAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pixelSize = (size * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(1, 1024)
+        .toInt();
+    final fullImageUrl = _fullImageUrl;
+
     Widget avatar = Container(
       width: size,
       height: size,
@@ -77,17 +83,22 @@ class AppAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: backgroundColor ?? AppColors.red100,
-        border: showBorder
-            ? Border.all(color: AppColors.card, width: 2)
-            : null,
+        border: showBorder ? Border.all(color: AppColors.card, width: 2) : null,
       ),
-      child: _fullImageUrl != null && _fullImageUrl!.isNotEmpty
+      child: fullImageUrl != null && fullImageUrl.isNotEmpty
           ? ClipOval(
               child: CachedNetworkImage(
-                imageUrl: _fullImageUrl!,
+                imageUrl: fullImageUrl,
                 width: size,
                 height: size,
                 fit: BoxFit.cover,
+                memCacheWidth: pixelSize,
+                memCacheHeight: pixelSize,
+                maxWidthDiskCache: pixelSize,
+                maxHeightDiskCache: pixelSize,
+                fadeInDuration: Duration.zero,
+                fadeOutDuration: Duration.zero,
+                useOldImageOnUrlChange: true,
                 placeholder: (context, url) => _buildInitials(),
                 errorWidget: (context, url, error) => _buildInitials(),
               ),
@@ -100,11 +111,7 @@ class AppAvatar extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           avatar,
-          Positioned(
-            right: -2,
-            bottom: -2,
-            child: badge!,
-          ),
+          Positioned(right: -2, bottom: -2, child: badge!),
         ],
       );
     }
@@ -117,16 +124,39 @@ class AppAvatar extends StatelessWidget {
   }
 
   Widget _buildInitials() {
+    final parts = (name ?? '')
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    final initials = parts.isEmpty
+        ? ''
+        : parts.length == 1
+        ? parts.first.characters.first.toUpperCase()
+        : '${parts.first.characters.first}${parts.last.characters.first}'
+              .toUpperCase();
+
     return Container(
       width: size,
       height: size,
-      color: backgroundColor ?? AppColors.card,
-      child: Image.asset(
-        'assets/images/dummy-profile.png',
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-      ),
+      alignment: Alignment.center,
+      color: backgroundColor ?? AppColors.red50,
+      child: initials.isEmpty
+          ? Icon(
+              Icons.person_rounded,
+              color: AppColors.primary,
+              size: size * 0.56,
+            )
+          : Text(
+              initials,
+              maxLines: 1,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: size * (initials.length == 1 ? 0.42 : 0.32),
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
     );
   }
 }

@@ -22,8 +22,9 @@ import 'track_attribution.dart';
 /// player di atas bottom-nav/safe-area agar tidak tertutup.
 class GlobalMiniPlayer extends StatelessWidget {
   final double bottomOffset;
+  final GoRouter? router;
 
-  const GlobalMiniPlayer({super.key, this.bottomOffset = 0});
+  const GlobalMiniPlayer({super.key, this.bottomOffset = 0, this.router});
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +35,7 @@ class GlobalMiniPlayer extends StatelessWidget {
         buildWhen: (p, c) =>
             p.currentPlayingSong != c.currentPlayingSong ||
             p.isPlaying != c.isPlaying ||
+            p.isBuffering != c.isBuffering ||
             p.position != c.position ||
             p.duration != c.duration,
         builder: (context, state) {
@@ -50,19 +52,29 @@ class GlobalMiniPlayer extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
-                onTap: () => context.push('/music'),
+                onTap: () {
+                  if (router != null) {
+                    router!.push('/music');
+                  } else {
+                    context.push('/music');
+                  }
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                    border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.6),
+                    ),
                     boxShadow: AppShadows.lg,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                         child: LinearProgressIndicator(
                           value: progress.clamp(0.0, 1.0),
                           backgroundColor: AppColors.secondary,
@@ -71,7 +83,10 @@ class GlobalMiniPlayer extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         child: Row(
                           children: [
                             _thumb(song, 40),
@@ -81,31 +96,53 @@ class GlobalMiniPlayer extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(song.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                  Text(
+                                    song.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                   TrackAttribution(song: song),
                                 ],
                               ),
                             ),
                             IconButton(
                               visualDensity: VisualDensity.compact,
-                              icon: Icon(
-                                state.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                                color: AppColors.primary,
-                                size: 34,
-                              ),
+                              icon: state.isBuffering
+                                  ? const SizedBox(
+                                      width: 23,
+                                      height: 23,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    )
+                                  : Icon(
+                                      state.isPlaying
+                                          ? Icons.pause_circle_filled
+                                          : Icons.play_circle_fill,
+                                      color: AppColors.primary,
+                                      size: 34,
+                                    ),
                               onPressed: () => context.read<MusicBloc>().add(
-                                    state.isPlaying
-                                        ? const MusicPauseSongRequested()
-                                        : const MusicResumeSongRequested(),
-                                  ),
+                                state.isPlaying || state.isBuffering
+                                    ? const MusicPauseSongRequested()
+                                    : const MusicResumeSongRequested(),
+                              ),
                             ),
                             IconButton(
                               visualDensity: VisualDensity.compact,
-                              icon: const Icon(Icons.close_rounded, color: AppColors.mutedForeground, size: 22),
-                              onPressed: () => context.read<MusicBloc>().add(const MusicStopSongRequested()),
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: AppColors.mutedForeground,
+                                size: 22,
+                              ),
+                              onPressed: () => context.read<MusicBloc>().add(
+                                const MusicStopSongRequested(),
+                              ),
                             ),
                           ],
                         ),

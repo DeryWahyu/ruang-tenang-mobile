@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -15,6 +15,7 @@ import '../bloc/chat_event.dart';
 import '../bloc/chat_state.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input.dart';
+import '../../common/widgets/app_alert_dialog.dart';
 
 /// Quick-start prompts shown on a fresh conversation.
 const List<String> kChatSuggestions = [
@@ -205,7 +206,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => StatefulBuilder(
-          builder: (dialogContext, update) => AlertDialog(
+          builder: (dialogContext, update) => AppAlertDialog(
             title: const Text('Ringkasan obrolan'),
             content: SingleChildScrollView(
               child: Text(
@@ -378,7 +379,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           ),
                           const SizedBox(width: 5),
                           const Text(
-                            'Ruang Tenang AI • Online',
+                            'Teman Cerita AI',
                             style: TextStyle(
                               fontSize: 11,
                               color: AppColors.mutedForeground,
@@ -437,17 +438,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
+        color: const Color(0xFFFFECEE),
+        border: Border.all(color: AppColors.red100),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: AppColors.primary.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: ClipOval(
-        child: Image.asset('assets/images/logo.webp', fit: BoxFit.cover),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Image.asset(
+          'assets/images/mascot/chat-listen.webp',
+          fit: BoxFit.contain,
+          excludeFromSemantics: true,
+        ),
       ),
     );
   }
@@ -501,70 +508,112 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   Widget _welcomeState() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
       child: Column(
         children: [
-          const SizedBox(height: 8),
           Container(
-            width: 88,
-            height: 88,
+            width: 172,
+            height: 172,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFFB7185),
-                  Color(0xFFEF4444),
-                  Color(0xFFDC2626),
-                ],
+                colors: [Color(0xFFFFE8E9), Color(0xFFFFF7EB)],
               ),
+              border: Border.all(color: AppColors.red100),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.35),
+                  color: AppColors.primary.withValues(alpha: 0.10),
                   blurRadius: 24,
-                  offset: const Offset(0, 10),
+                  offset: const Offset(0, 9),
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.psychology_alt_rounded,
-              color: Colors.white,
-              size: 40,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Image.asset(
+                'assets/images/mascot/chat-welcome.webp',
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+              ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 17),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.red100),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: AppColors.primary,
+                  size: 14,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'RuNa siap mendengarkan',
+                  style: TextStyle(
+                    color: AppColors.red700,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           const Text(
-            'Halo! Saya AI Ruang Tenang',
+            'Cerita saja, mulai dari mana pun.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 21,
+              height: 1.13,
+              fontWeight: FontWeight.w900,
               color: AppColors.foreground,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
-            'Ruang aman untuk bercerita, tanpa menghakimi. Apa yang ingin kamu bicarakan hari ini?',
+            'Tak perlu merangkai kata yang sempurna. Apa yang terasa dekat di pikiranmu hari ini?',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.mutedForeground, height: 1.5),
+            style: TextStyle(
+              color: AppColors.mutedForeground,
+              height: 1.5,
+              fontSize: 13,
+            ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 25),
           Align(
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                Icon(
-                  Icons.bolt_rounded,
+                const Icon(
+                  Icons.chat_bubble_outline_rounded,
                   size: 16,
-                  color: AppColors.accentOrange,
+                  color: AppColors.primary,
                 ),
                 const SizedBox(width: 6),
+                const Expanded(
+                  child: Text(
+                    'Pilih titik awal',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
                 Text(
-                  'Mulai cepat',
+                  'atau tulis sendiri',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                     color: AppColors.mutedForeground,
                   ),
                 ),
@@ -580,29 +629,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   Widget _suggestionTile(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 9),
       child: Material(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           onTap: () => _sendMessage(text),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.6),
+                color: AppColors.border.withValues(alpha: 0.75),
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
+                    color: AppColors.red50,
+                    borderRadius: BorderRadius.circular(13),
                   ),
                   child: const Icon(
                     Icons.chat_bubble_outline_rounded,
@@ -615,13 +665,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   child: Text(
                     text,
                     style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
                 const Icon(
-                  Icons.arrow_outward_rounded,
+                  Icons.arrow_forward_rounded,
                   size: 16,
                   color: AppColors.mutedForeground,
                 ),

@@ -30,6 +30,20 @@ class MusicPlaySongRequested extends MusicEvent {
   List<Object?> get props => [song];
 }
 
+class MusicPlayQueueRequested extends MusicEvent {
+  final List<Song> songs;
+  final int startIndex;
+
+  const MusicPlayQueueRequested(this.songs, {this.startIndex = 0});
+
+  @override
+  List<Object?> get props => [songs, startIndex];
+}
+
+class MusicQueueAdvanceRequested extends MusicEvent {
+  const MusicQueueAdvanceRequested();
+}
+
 class MusicPauseSongRequested extends MusicEvent {
   const MusicPauseSongRequested();
 }
@@ -61,15 +75,26 @@ class MusicCreatePlaylistRequested extends MusicEvent {
 
 class MusicPlaybackStateChanged extends MusicEvent {
   final bool isPlaying;
+  final bool isBuffering;
   final Duration position;
   final Duration duration;
 
   const MusicPlaybackStateChanged({
     required this.isPlaying,
+    required this.isBuffering,
     required this.position,
     required this.duration,
   });
 
   @override
-  List<Object?> get props => [isPlaying, position, duration];
+  List<Object?> get props => [isPlaying, isBuffering, position, duration];
+}
+
+class MusicPlaybackFailed extends MusicEvent {
+  final String message;
+
+  const MusicPlaybackFailed(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

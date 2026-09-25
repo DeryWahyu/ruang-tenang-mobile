@@ -63,7 +63,7 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            centerTitle: true,
+            centerTitle: false,
           ),
           body: state.status == StoryStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())

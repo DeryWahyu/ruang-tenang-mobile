@@ -16,7 +16,8 @@ import '../bloc/forum_state.dart';
 import '../../auth/bloc/auth_bloc.dart';
 
 class ForumListScreen extends StatelessWidget {
-  const ForumListScreen({super.key});
+  final bool showAppBar;
+  const ForumListScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +25,14 @@ class ForumListScreen extends StatelessWidget {
       create: (_) => sl<ForumBloc>()
         ..add(const ForumListRequested())
         ..add(const ForumCategoriesRequested()),
-      child: const _ForumListView(),
+      child: _ForumListView(showAppBar: showAppBar),
     );
   }
 }
 
 class _ForumListView extends StatefulWidget {
-  const _ForumListView();
+  final bool showAppBar;
+  const _ForumListView({required this.showAppBar});
 
   @override
   State<_ForumListView> createState() => _ForumListViewState();
@@ -107,7 +109,9 @@ class _ForumListViewState extends State<_ForumListView> {
     final blocked =
         context.watch<AuthBloc>().state.user?.isForumBlocked == true;
     return Scaffold(
-      appBar: AppBar(title: const Text('Forum Komunitas'), centerTitle: true),
+      appBar: widget.showAppBar
+          ? AppBar(title: const Text('Forum Komunitas'), centerTitle: false)
+          : null,
       body: Column(
         children: [
           if (blocked)
@@ -235,7 +239,9 @@ class _ForumListViewState extends State<_ForumListView> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           Container(
-                            height: constraints.maxHeight > 0
+                            height:
+                                constraints.maxHeight.isFinite &&
+                                    constraints.maxHeight > 0
                                 ? constraints.maxHeight
                                 : 400,
                             alignment: Alignment.center,

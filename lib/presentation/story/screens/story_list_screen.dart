@@ -8,6 +8,7 @@ import '../../common/widgets/app_avatar.dart';
 import '../../common/widgets/app_skeleton.dart';
 import '../../common/widgets/app_empty_state.dart';
 import '../../common/widgets/app_error_widget.dart';
+import '../../common/widgets/app_search_bar.dart';
 import '../../../domain/entities/story.dart';
 import '../../../domain/repositories/story_repository.dart';
 import '../bloc/story_bloc.dart';
@@ -15,19 +16,21 @@ import '../bloc/story_event.dart';
 import '../bloc/story_state.dart';
 
 class StoryListScreen extends StatelessWidget {
-  const StoryListScreen({super.key});
+  final bool showAppBar;
+  const StoryListScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<StoryBloc>()..add(const StoryListRequested()),
-      child: const _StoryListView(),
+      child: _StoryListView(showAppBar: showAppBar),
     );
   }
 }
 
 class _StoryListView extends StatefulWidget {
-  const _StoryListView();
+  final bool showAppBar;
+  const _StoryListView({required this.showAppBar});
 
   @override
   State<_StoryListView> createState() => _StoryListViewState();
@@ -73,28 +76,22 @@ class _StoryListViewState extends State<_StoryListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cerita Inspiratif'),
-        centerTitle: true,
+        primary: widget.showAppBar,
+        toolbarHeight: widget.showAppBar ? null : 0,
+        automaticallyImplyLeading: widget.showAppBar,
+        title: widget.showAppBar ? const Text('Cerita Inspiratif') : null,
+        centerTitle: false,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(126),
+          preferredSize: const Size.fromHeight(118),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: Column(
               children: [
-                TextField(
+                AppSearchBar(
                   controller: _search,
+                  hint: 'Cari kisah',
                   onSubmitted: (_) => _load(),
-                  decoration: InputDecoration(
-                    hintText: 'Cari kisah',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        _search.clear();
-                        _load();
-                      },
-                      icon: const Icon(Icons.clear),
-                    ),
-                  ),
+                  onClear: _load,
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -187,7 +184,9 @@ class _StoryListViewState extends State<_StoryListView> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     Container(
-                      height: constraints.maxHeight > 0
+                      height:
+                          constraints.maxHeight.isFinite &&
+                              constraints.maxHeight > 0
                           ? constraints.maxHeight
                           : 400,
                       alignment: Alignment.center,

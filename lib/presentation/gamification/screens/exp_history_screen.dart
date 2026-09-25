@@ -54,7 +54,7 @@ class _ExpHistoryViewState extends State<_ExpHistoryView> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Riwayat EXP', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,

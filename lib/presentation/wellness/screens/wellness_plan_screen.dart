@@ -27,7 +27,7 @@ class _WellnessPlanView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rencana Wellness'),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: BlocBuilder<WellnessBloc, WellnessState>(
         builder: (context, state) {
@@ -166,7 +166,7 @@ class _WellnessPlanView extends StatelessWidget {
       String mobileRoute = route;
       // Map web backend routes to mobile routes
       if (route.startsWith('/dashboard/mood-tracker')) {
-        mobileRoute = '/mood';
+        mobileRoute = '/mood/stats';
       } else if (route.startsWith('/dashboard/journal/create')) {
         mobileRoute = '/journal/create';
       } else if (route.startsWith('/dashboard/chat')) {

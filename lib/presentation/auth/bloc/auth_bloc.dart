@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_exceptions.dart';
+import '../../../core/utils/image_cache_service.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../domain/usecases/auth/auth_usecases.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
@@ -27,10 +31,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _useCases.checkAuthStatus();
       if (user != null) {
+        unawaited(ImageCacheService.prefetch(user.avatar));
         emit(AuthState.authenticated(user));
         // Refresh profile in background.
         try {
           final freshUser = await _useCases.getProfile();
+          if (resolveMediaUrl(freshUser.avatar) !=
+              resolveMediaUrl(user.avatar)) {
+            await ImageCacheService.prefetch(
+              freshUser.avatar,
+              timeout: const Duration(milliseconds: 500),
+            );
+          }
           emit(AuthState.authenticated(freshUser));
         } on UnauthorizedException {
           await _useCases.logout();
@@ -59,6 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+      unawaited(ImageCacheService.prefetch(user.avatar));
       emit(AuthState.authenticated(user));
     } on PhoneVerificationRequired catch (e) {
       emit(AuthState.verificationRequired(e.challenge, e.phoneRequired));
@@ -152,6 +165,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       final user = await _useCases.getProfile();
+      if (resolveMediaUrl(user.avatar) != resolveMediaUrl(state.user?.avatar)) {
+        await ImageCacheService.prefetch(
+          user.avatar,
+          timeout: const Duration(milliseconds: 500),
+        );
+      }
       emit(AuthState.authenticated(user));
     } on ForbiddenException {
       await _useCases.logout();

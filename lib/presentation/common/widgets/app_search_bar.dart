@@ -60,8 +60,16 @@ class _AppSearchBarState extends State<AppSearchBar> {
     return Container(
       height: AppDimensions.inputHeight,
       decoration: BoxDecoration(
-        color: AppColors.muted,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.foreground.withValues(alpha: 0.035),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -85,11 +93,12 @@ class _AppSearchBarState extends State<AppSearchBar> {
               decoration: InputDecoration(
                 hintText: widget.hint,
                 hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.mutedForeground,
-                    ),
+                  color: AppColors.mutedForeground,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
+                isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 12,
@@ -111,17 +120,10 @@ class _AppSearchBarState extends State<AppSearchBar> {
                 widget.onClear?.call();
               },
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 36,
-                minHeight: 36,
-              ),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             ),
           if (widget.trailing != null) ...[
-            Container(
-              width: 1,
-              height: 24,
-              color: AppColors.border,
-            ),
+            Container(width: 1, height: 24, color: AppColors.border),
             widget.trailing!,
           ],
         ],

@@ -14,7 +14,8 @@ import '../bloc/chat_bloc.dart';
 import '../bloc/chat_event.dart';
 import '../bloc/chat_state.dart';
 import 'chat_detail_screen.dart' show kChatSuggestions;
-import '../../common/widgets/mascot_hero.dart';
+import '../../common/widgets/app_alert_dialog.dart';
+import '../../common/widgets/app_search_bar.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -96,11 +97,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Konseling AI',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              'Teman Cerita',
+              style: TextStyle(fontWeight: FontWeight.w800),
             ),
             Text(
-              'Teman cerita virtual Anda',
+              'Ruang aman untuk bercerita',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.mutedForeground,
@@ -111,27 +112,22 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            tooltip: 'Kelola folder',
-            onPressed: _manageFolders,
-            icon: const Icon(Icons.folder_outlined),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton.filledTonal(
+              tooltip: 'Kelola folder',
+              onPressed: _manageFolders,
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.foreground,
+              ),
+              icon: const Icon(Icons.folder_open_rounded),
+            ),
           ),
         ],
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openNewChat(),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: const Icon(Icons.maps_ugc_rounded),
-        label: const Text(
-          'Obrolan Baru',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
       ),
       body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
@@ -157,20 +153,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                    child: TextField(
+                    child: AppSearchBar(
                       controller: _search,
+                      hint: 'Cari obrolan lama',
                       onSubmitted: (_) => _refresh(),
-                      decoration: InputDecoration(
-                        hintText: 'Cari obrolan',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            _search.clear();
-                            _refresh();
-                          },
-                          icon: const Icon(Icons.clear),
-                        ),
-                      ),
+                      onClear: _refresh,
                     ),
                   ),
                 ),
@@ -208,7 +195,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(child: _sectionHeader()),
+                SliverToBoxAdapter(
+                  child: _sectionHeader(state.sessions.length),
+                ),
                 if (loadingInitial)
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -229,7 +218,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   SliverToBoxAdapter(child: _emptyHint())
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 36),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
@@ -258,11 +247,117 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Widget _hero() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: const MascotHero(
-        title: 'Teman Cerita AI',
-        description: 'RuNa siap menemanimu bercerita, tanpa menghakimi.',
-        pose: 'chat-listen',
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
+      child: Container(
+        height: 210,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFECEE), Color(0xFFFFF8F2)],
+          ),
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.07),
+              blurRadius: 18,
+              offset: const Offset(0, 7),
+            ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 17, 132, 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: const Text(
+                      'RUANG CERITA PRIBADI',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.45,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Cerita saja, mulai dari mana pun.',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.foreground,
+                      fontSize: 18,
+                      height: 1.12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'RuNa siap mendengarkan, tanpa menghakimi.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.mutedForeground,
+                      fontSize: 11,
+                      height: 1.35,
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    height: 36,
+                    child: FilledButton.icon(
+                      onPressed: () => _openNewChat(),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                      label: const Text('Mulai bercerita'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              right: -6,
+              bottom: -10,
+              width: 150,
+              height: 204,
+              child: Image.asset(
+                'assets/images/mascot/chat-welcome.webp',
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomCenter,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -272,31 +367,47 @@ class _ChatListScreenState extends State<ChatListScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
           child: Row(
             children: [
               const Icon(
-                Icons.bolt_rounded,
+                Icons.chat_bubble_outline_rounded,
                 size: 16,
-                color: AppColors.accentOrange,
+                color: AppColors.primary,
               ),
               const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  'Pilih topik pembuka',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
               Text(
-                'Mulai cepat',
+                'Geser untuk melihat',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.mutedForeground,
                 ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 14,
+                color: AppColors.mutedForeground,
               ),
             ],
           ),
         ),
         SizedBox(
-          height: 42,
+          height: 82,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
             itemCount: kChatSuggestions.length,
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, i) {
@@ -305,87 +416,160 @@ class _ChatListScreenState extends State<ChatListScreen> {
             },
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
       ],
     );
   }
 
   Widget _chip(String text) {
-    return Material(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => _openNewChat(prompt: text),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.add_rounded, size: 15, color: AppColors.primary),
-              const SizedBox(width: 6),
-              Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.foreground,
-                ),
+    return SizedBox(
+      width: 248,
+      child: Material(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(19),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(19),
+          onTap: () => _openNewChat(prompt: text),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.75),
               ),
-            ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.red50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.forum_outlined,
+                    size: 17,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    text,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 16,
+                  color: AppColors.mutedForeground,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _sectionHeader() {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Text(
-        'Riwayat Obrolan',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: AppColors.foreground,
-        ),
+  Widget _sectionHeader(int count) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text(
+              'Riwayat obrolan',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.foreground,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.red50,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              '$count',
+              style: const TextStyle(
+                color: AppColors.red700,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _emptyHint() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(22, 19, 22, 22),
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFF6F4), Colors.white],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.forum_outlined,
-              size: 44,
-              color: AppColors.mutedForeground.withValues(alpha: 0.7),
+            SizedBox(
+              width: 108,
+              height: 108,
+              child: Image.asset(
+                'assets/images/mascot/chat-welcome.webp',
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 7),
             const Text(
               'Belum ada obrolan',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
             ),
             const SizedBox(height: 6),
             const Text(
-              'Mulai percakapan pertamamu lewat tombol di atas atau pilih topik cepat.',
+              'Mulai dari hal yang paling ingin kamu ceritakan hari ini.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.mutedForeground, fontSize: 13),
+              style: TextStyle(
+                color: AppColors.mutedForeground,
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 13),
+            OutlinedButton.icon(
+              onPressed: () => _openNewChat(),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 17),
+              label: const Text('Mulai obrolan'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.24),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
             ),
           ],
         ),
@@ -396,7 +580,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget _sessionCard(ChatSessionListItem session) {
     final dateStr = DateFormat('dd MMM yyyy').format(session.createdAt);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
@@ -410,28 +594,20 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 color: AppColors.border.withValues(alpha: 0.5),
               ),
             ),
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.fromLTRB(14, 13, 8, 13),
             child: Row(
               children: [
                 Container(
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFFFB7185),
-                        Color(0xFFEF4444),
-                        Color(0xFFDC2626),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(15),
+                    color: AppColors.red50,
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
-                    Icons.psychology_alt_rounded,
-                    color: Colors.white,
-                    size: 22,
+                    Icons.forum_rounded,
+                    color: AppColors.primary,
+                    size: 21,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -442,7 +618,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       Text(
                         session.title,
                         style: const TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w800,
                           fontSize: 15,
                         ),
                         maxLines: 1,
@@ -470,6 +646,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                 ),
                 PopupMenuButton<String>(
+                  tooltip: 'Opsi obrolan',
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: AppColors.mutedForeground,
+                  ),
                   onSelected: (action) => _sessionAction(session, action),
                   itemBuilder: (_) => [
                     PopupMenuItem(
@@ -555,7 +736,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       } else if (action == 'delete') {
         final confirmed = await showDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
+          builder: (dialogContext) => AppAlertDialog(
             title: const Text('Hapus obrolan permanen?'),
             actions: [
               TextButton(
@@ -651,7 +832,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     if (delete) {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => AppAlertDialog(
           title: const Text('Hapus folder?'),
           content: const Text('Obrolan di dalamnya tetap tersimpan.'),
           actions: [
@@ -682,7 +863,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final name = TextEditingController(text: folder?['name']?.toString() ?? '');
     final save = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         title: Text(folder == null ? 'Buat folder' : 'Ubah nama folder'),
         content: TextField(
           controller: name,

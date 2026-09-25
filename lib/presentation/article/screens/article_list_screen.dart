@@ -7,13 +7,15 @@ import '../../common/widgets/app_network_image.dart';
 import '../../common/widgets/app_skeleton.dart';
 import '../../common/widgets/app_empty_state.dart';
 import '../../common/widgets/app_error_widget.dart';
+import '../../common/widgets/app_search_bar.dart';
 import '../../../domain/entities/article.dart';
 import '../bloc/article_bloc.dart';
 import '../bloc/article_event.dart';
 import '../bloc/article_state.dart';
 
 class ArticleListScreen extends StatelessWidget {
-  const ArticleListScreen({super.key});
+  final bool showAppBar;
+  const ArticleListScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +23,14 @@ class ArticleListScreen extends StatelessWidget {
       create: (_) => sl<ArticleBloc>()
         ..add(const ArticleListRequested())
         ..add(const ArticleCategoriesRequested()),
-      child: const _ArticleListView(),
+      child: _ArticleListView(showAppBar: showAppBar),
     );
   }
 }
 
 class _ArticleListView extends StatefulWidget {
-  const _ArticleListView();
+  final bool showAppBar;
+  const _ArticleListView({required this.showAppBar});
 
   @override
   State<_ArticleListView> createState() => _ArticleListViewState();
@@ -55,31 +58,26 @@ class _ArticleListViewState extends State<_ArticleListView> {
 
   @override
   Widget build(BuildContext context) {
+    final searchBar = PreferredSize(
+      preferredSize: const Size.fromHeight(52),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: AppSearchBar(
+          controller: _search,
+          hint: 'Cari artikel',
+          onSubmitted: (_) => _searchArticles(),
+          onClear: _searchArticles,
+        ),
+      ),
+    );
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Artikel & Bacaan'),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: TextField(
-              controller: _search,
-              onSubmitted: (_) => _searchArticles(),
-              decoration: InputDecoration(
-                hintText: 'Cari artikel',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    _search.clear();
-                    _searchArticles();
-                  },
-                  icon: const Icon(Icons.clear),
-                ),
-              ),
-            ),
-          ),
-        ),
+        primary: widget.showAppBar,
+        toolbarHeight: widget.showAppBar ? null : 0,
+        automaticallyImplyLeading: widget.showAppBar,
+        title: widget.showAppBar ? const Text('Artikel & Bacaan') : null,
+        centerTitle: false,
+        bottom: searchBar,
       ),
       body: BlocBuilder<ArticleBloc, ArticleState>(
         builder: (context, state) {
@@ -110,7 +108,9 @@ class _ArticleListViewState extends State<_ArticleListView> {
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               Container(
-                                height: constraints.maxHeight > 0
+                                height:
+                                    constraints.maxHeight.isFinite &&
+                                        constraints.maxHeight > 0
                                     ? constraints.maxHeight
                                     : 400,
                                 alignment: Alignment.center,

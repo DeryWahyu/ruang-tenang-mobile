@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../bloc/gamification_bloc.dart';
 import '../bloc/gamification_event.dart';
 import '../bloc/gamification_state.dart';
+import '../widgets/gamification_badge_icon.dart';
 
 class BadgeScreen extends StatelessWidget {
   const BadgeScreen({super.key});
@@ -12,7 +13,8 @@ class BadgeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<GamificationBloc>()..add(const GamificationBadgesRequested()),
+      create: (_) =>
+          sl<GamificationBloc>()..add(const GamificationBadgesRequested()),
       child: const _BadgeView(),
     );
   }
@@ -26,8 +28,11 @@ class _BadgeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Koleksi Badge', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: const Text(
+          'Koleksi Badge',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: false,
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
@@ -36,16 +41,25 @@ class _BadgeView extends StatelessWidget {
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
           if (state.status == GamificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
           if (state.status == GamificationStatus.failure) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.mutedForeground),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 48,
+                    color: AppColors.mutedForeground,
+                  ),
                   const SizedBox(height: 16),
-                  Text(state.errorMessage, style: const TextStyle(color: AppColors.mutedForeground)),
+                  Text(
+                    state.errorMessage,
+                    style: const TextStyle(color: AppColors.mutedForeground),
+                  ),
                 ],
               ),
             );
@@ -58,13 +72,26 @@ class _BadgeView extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                    child: const Icon(Icons.workspace_premium_rounded, size: 64, color: AppColors.primary),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.workspace_premium_rounded,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  const Text('Belum Ada Badge', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Belum Ada Badge',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
-                  const Text('Selesaikan misi untuk mendapatkan badge pertamamu!', style: TextStyle(color: AppColors.mutedForeground)),
+                  const Text(
+                    'Selesaikan misi untuk mendapatkan badge pertamamu!',
+                    style: TextStyle(color: AppColors.mutedForeground),
+                  ),
                 ],
               ),
             );
@@ -89,74 +116,104 @@ class _BadgeView extends StatelessWidget {
                     children: [
                       const Text(
                         'Pencapaianmu',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.foreground,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Kumpulkan lencana dengan menyelesaikan berbagai aktivitas kesehatan mental.',
-                        style: TextStyle(fontSize: 14, color: AppColors.mutedForeground.withValues(alpha: 0.8)),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.mutedForeground.withValues(
+                            alpha: 0.8,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final category = grouped.keys.elementAt(index);
-                      final badges = grouped[category]!;
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 24),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppColors.card,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                          ],
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final category = grouped.keys.elementAt(index);
+                    final badges = grouped[category]!;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.5),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                                  child: const Icon(Icons.category_rounded, size: 16, color: AppColors.primary),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  category.toUpperCase(),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.foreground, letterSpacing: 1.2),
+                                child: const Icon(
+                                  Icons.category_rounded,
+                                  size: 16,
+                                  color: AppColors.primary,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 130,
-                                childAspectRatio: 0.75,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
                               ),
-                              itemCount: badges.length,
-                              itemBuilder: (context, i) {
-                                final badge = badges[i];
-                                return _buildBadgeItem(context, badge);
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    childCount: grouped.length,
-                  ),
+                              const SizedBox(width: 12),
+                              Text(
+                                category.toUpperCase(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: AppColors.foreground,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 130,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                ),
+                            itemCount: badges.length,
+                            itemBuilder: (context, i) {
+                              final badge = badges[i];
+                              return _buildBadgeItem(context, badge);
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }, childCount: grouped.length),
                 ),
               ),
             ],
@@ -174,27 +231,29 @@ class _BadgeView extends StatelessWidget {
           height: 72,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: badge.earned ? Colors.amber.shade100 : AppColors.muted.withValues(alpha: 0.5),
+            color: badge.earned
+                ? Colors.amber.shade100
+                : AppColors.muted.withValues(alpha: 0.5),
             border: Border.all(
               color: badge.earned ? Colors.amber.shade400 : AppColors.border,
               width: badge.earned ? 3 : 1,
             ),
-            boxShadow: badge.earned ? [
-              BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4)),
-            ] : null,
+            boxShadow: badge.earned
+                ? [
+                    BoxShadow(
+                      color: Colors.amber.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
           child: Center(
-            child: Text(
-              badge.icon.isNotEmpty ? badge.icon : '🏅',
-              style: TextStyle(
-                fontSize: 32,
-                foreground: Paint()..colorFilter = badge.earned ? null : const ColorFilter.matrix([
-                  0.2126, 0.7152, 0.0722, 0, 0,
-                  0.2126, 0.7152, 0.0722, 0, 0,
-                  0.2126, 0.7152, 0.0722, 0, 0,
-                  0,      0,      0,      0.3, 0, // Lower opacity for unearned
-                ]),
-              ),
+            child: GamificationBadgeIcon(
+              badgeKey: badge.badgeKey,
+              category: badge.category,
+              earned: badge.earned,
+              size: 56,
             ),
           ),
         ),
@@ -208,7 +267,9 @@ class _BadgeView extends StatelessWidget {
             fontSize: 12,
             height: 1.2,
             fontWeight: badge.earned ? FontWeight.bold : FontWeight.w500,
-            color: badge.earned ? AppColors.foreground : AppColors.mutedForeground,
+            color: badge.earned
+                ? AppColors.foreground
+                : AppColors.mutedForeground,
           ),
         ),
         if (!badge.earned && badge.progressPercent != null) ...[

@@ -59,7 +59,7 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         // Transparan agar GradientBackground global terlihat menembus —
         // konsisten dengan tampilan web yang berlatar lembut.
         backgroundColor: Colors.transparent,
@@ -223,6 +223,7 @@ class AppTheme {
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.mutedForeground,
         indicatorColor: AppColors.primary,
+        dividerColor: AppColors.border,
         labelStyle: textTheme.labelLarge,
         unselectedLabelStyle: textTheme.labelLarge,
       ),

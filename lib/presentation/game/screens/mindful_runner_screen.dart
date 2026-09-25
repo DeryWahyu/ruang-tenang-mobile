@@ -115,7 +115,7 @@ class _MindfulRunnerScreenState extends State<MindfulRunnerScreen>
           'Mindful Runner',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 0,

@@ -247,12 +247,7 @@ Future<void> initDependencies() async {
     () => PublicJournalCubit(sl<JournalRepository>()),
   );
   sl.registerFactory<HomeOverviewCubit>(
-    () => HomeOverviewCubit(
-      sl<MoodRepository>(),
-      sl<JournalRepository>(),
-      sl<ArticleRepository>(),
-      sl<MusicRepository>(),
-    ),
+    () => HomeOverviewCubit(sl<MoodRepository>()),
   );
   sl.registerFactory<MoodBloc>(
     () => MoodBloc(moodUseCases: sl<MoodUseCases>()),

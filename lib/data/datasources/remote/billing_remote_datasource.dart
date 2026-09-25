@@ -19,13 +19,13 @@ class BillingRemoteDataSource {
     return BillingCatalogModel.fromJson(response.data!);
   }
 
-  Future<Map<String, dynamic>> createCheckout(String itemType, int itemId) async {
+  Future<Map<String, dynamic>> createCheckout(
+    String itemType,
+    int itemId,
+  ) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       '${ApiConstants.billing}/checkout',
-      data: {
-        'item_type': itemType,
-        'item_id': itemId,
-      },
+      data: {'item_type': itemType, 'item_id': itemId},
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success || response.data == null) {
@@ -80,4 +80,14 @@ class BillingRemoteDataSource {
     );
   }
 
+  /// Unduh invoice CSV untuk transaksi milik pengguna yang sedang login.
+  Future<String> downloadInvoiceCsv(String orderId) {
+    final normalizedOrderId = orderId.trim();
+    if (normalizedOrderId.isEmpty) {
+      throw ArgumentError.value(orderId, 'orderId', 'Tidak boleh kosong');
+    }
+    return _apiClient.fetchRaw(
+      '${ApiConstants.billing}/transactions/${Uri.encodeComponent(normalizedOrderId)}/invoice',
+    );
+  }
 }

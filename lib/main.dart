@@ -11,15 +11,6 @@ void main() async {
   // Load centralized configuration (.env) before anything reads it.
   await AppConfig.init();
 
-  // Set preferred orientations — dukung potret & lanskap agar nyaman di
-  // tablet dan saat perangkat diputar.
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
-
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -29,11 +20,17 @@ void main() async {
     ),
   );
 
-  // Initialize dependencies
-  await initDependencies();
-
-  // Initialize date formatting for Indonesian locale
-  await AppDateUtils.init();
+  // These initializations are independent once centralized config is ready.
+  await Future.wait<void>([
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]),
+    initDependencies(),
+    AppDateUtils.init(),
+  ]);
 
   runApp(const RuangTenangApp());
 }

@@ -311,10 +311,8 @@ class AppButton extends StatelessWidget {
 
     final textWidget = Text(
       label ?? '',
-      style: TextStyle(
-        fontSize: _fontSize,
-        fontWeight: FontWeight.w600,
-      ),
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.w600),
     );
 
     if (prefixIcon == null && suffixIcon == null) return textWidget;
@@ -327,7 +325,7 @@ class AppButton extends StatelessWidget {
           Icon(prefixIcon, size: _iconSize),
           const SizedBox(width: 8),
         ],
-        textWidget,
+        Flexible(child: textWidget),
         if (suffixIcon != null) ...[
           const SizedBox(width: 8),
           Icon(suffixIcon, size: _iconSize),

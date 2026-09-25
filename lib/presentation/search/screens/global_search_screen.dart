@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_features.dart';
+import '../../common/widgets/app_search_bar.dart';
 import '../../common/widgets/app_network_image.dart';
 import '../../../domain/entities/music.dart';
 import '../../music/bloc/music_bloc.dart';
@@ -58,28 +59,21 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: TextField(
+        title: AppSearchBar(
           controller: _searchController,
+          hint: 'Cari artikel, lagu...',
           autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Cari artikel, lagu...',
-            border: InputBorder.none,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                context.read<SearchBloc>().add(const SearchCleared());
-              },
-            ),
-          ),
           onChanged: (value) {
-            if (_debounce?.isActive ?? false) _debounce!.cancel();
+            _debounce?.cancel();
+            if (value.isEmpty) {
+              context.read<SearchBloc>().add(const SearchCleared());
+              return;
+            }
             _debounce = Timer(const Duration(milliseconds: 500), () {
               if (mounted) _onSearch(context);
             });
           },
           onSubmitted: (_) => _onSearch(context),
-          textInputAction: TextInputAction.search,
         ),
       ),
       body: BlocBuilder<SearchBloc, SearchState>(
@@ -94,7 +88,9 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
             return _buildEmptyState(state.errorMessage, isError: true);
           }
           if (state.result == null || state.result!.total == 0) {
-            return _buildEmptyState('Tidak ada hasil ditemukan untuk "${state.query}"');
+            return _buildEmptyState(
+              'Tidak ada hasil ditemukan untuk "${state.query}"',
+            );
           }
 
           final result = state.result!;
@@ -109,20 +105,41 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    if ((_currentTab == 'Semua' || _currentTab == 'Artikel') && articles.isNotEmpty) ...[
-                      const Text('Artikel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    if ((_currentTab == 'Semua' || _currentTab == 'Artikel') &&
+                        articles.isNotEmpty) ...[
+                      const Text(
+                        'Artikel',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ...articles.map((a) => _buildArticleItem(context, a)),
                       const SizedBox(height: 24),
                     ],
-                    if ((_currentTab == 'Semua' || _currentTab == 'Lagu') && songs.isNotEmpty) ...[
-                      const Text('Lagu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    if ((_currentTab == 'Semua' || _currentTab == 'Lagu') &&
+                        songs.isNotEmpty) ...[
+                      const Text(
+                        'Lagu',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ...songs.map((s) => _buildSongItem(context, s)),
                       const SizedBox(height: 24),
                     ],
-                    if ((_currentTab == 'Semua' || _currentTab == 'Fitur') && features.isNotEmpty) ...[
-                      const Text('Fitur Aplikasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    if ((_currentTab == 'Semua' || _currentTab == 'Fitur') &&
+                        features.isNotEmpty) ...[
+                      const Text(
+                        'Fitur Aplikasi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ...features.map((f) => _buildFeatureItem(context, f)),
                     ],
@@ -141,9 +158,16 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(isError ? Icons.error_outline : Icons.search, size: 64, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
+          Icon(
+            isError ? Icons.error_outline : Icons.search,
+            size: 64,
+            color: AppColors.mutedForeground.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          Text(message, style: const TextStyle(color: AppColors.mutedForeground)),
+          Text(
+            message,
+            style: const TextStyle(color: AppColors.mutedForeground),
+          ),
         ],
       ),
     );
@@ -171,9 +195,20 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: isSelected ? AppColors.primary : Colors.transparent, width: 2)),
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
         ),
-        child: Text('$title ($count)', style: TextStyle(color: isSelected ? AppColors.primary : AppColors.mutedForeground, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+        child: Text(
+          '$title ($count)',
+          style: TextStyle(
+            color: isSelected ? AppColors.primary : AppColors.mutedForeground,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
@@ -189,8 +224,16 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
         borderRadius: BorderRadius.circular(8),
         fallbackIcon: Icons.article,
       ),
-      title: Text(article.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text('Artikel', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+      title: Text(
+        article.title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      subtitle: Text(
+        'Artikel',
+        style: TextStyle(color: AppColors.primary, fontSize: 12),
+      ),
     );
   }
 
@@ -210,8 +253,16 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
         borderRadius: BorderRadius.circular(8),
         fallbackIcon: Icons.music_note,
       ),
-      title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text('Lagu', style: TextStyle(color: Colors.blue, fontSize: 12)),
+      title: Text(
+        song.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      subtitle: Text(
+        'Lagu',
+        style: TextStyle(color: Colors.blue, fontSize: 12),
+      ),
       trailing: const Icon(Icons.play_circle_filled, color: AppColors.primary),
     );
   }
@@ -232,9 +283,20 @@ class _GlobalSearchViewState extends State<_GlobalSearchView> {
         ),
         child: Icon(feature.icon, color: feature.color),
       ),
-      title: Text(feature.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text('Fitur', style: TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
+      title: Text(
+        feature.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      subtitle: Text(
+        'Fitur',
+        style: TextStyle(color: AppColors.mutedForeground, fontSize: 12),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.mutedForeground,
+      ),
     );
   }
 }

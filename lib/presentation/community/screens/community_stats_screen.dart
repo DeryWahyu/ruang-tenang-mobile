@@ -12,38 +12,50 @@ import '../../gamification/cubit/view_state.dart';
 /// Menampilkan pencapaian agregat komunitas pada periode berjalan
 /// (total XP, anggota aktif, anggota baru, pencapaian, kisah & artikel).
 class CommunityStatsScreen extends StatelessWidget {
-  const CommunityStatsScreen({super.key});
+  final bool showAppBar;
+  const CommunityStatsScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<CommunityCubit>()..load(),
-      child: const _CommunityStatsView(),
+      child: _CommunityStatsView(showAppBar: showAppBar),
     );
   }
 }
 
 class _CommunityStatsView extends StatelessWidget {
-  const _CommunityStatsView();
+  final bool showAppBar;
+  const _CommunityStatsView({required this.showAppBar});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Statistik Komunitas', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 1,
-      ),
+      appBar: showAppBar
+          ? AppBar(
+              title: const Text(
+                'Statistik Komunitas',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: false,
+              backgroundColor: AppColors.card,
+              surfaceTintColor: Colors.transparent,
+              elevation: 1,
+            )
+          : null,
       body: BlocBuilder<CommunityCubit, ViewState<CommunityStats>>(
         builder: (context, state) {
           if (state.data == null && state.status == ViewStatus.loading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
           if (state.data == null) {
-            return _Retry(message: state.error, onRetry: () => context.read<CommunityCubit>().load());
+            return _Retry(
+              message: state.error,
+              onRetry: () => context.read<CommunityCubit>().load(),
+            );
           }
 
           final stats = state.data!;
@@ -98,13 +110,21 @@ class _PeriodHeader extends StatelessWidget {
             children: [
               Icon(Icons.groups_rounded, color: Colors.white, size: 22),
               SizedBox(width: 8),
-              Text('Pencapaian Komunitas',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                'Pencapaian Komunitas',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(periodLabel,
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(
+            periodLabel,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -201,11 +221,21 @@ class _StatCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(data.value,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(
+                data.value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(data.label,
-                  style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
+              Text(
+                data.label,
+                style: const TextStyle(
+                  color: AppColors.mutedForeground,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
@@ -234,17 +264,26 @@ class _ImpactSection extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.local_fire_department_rounded, color: AppColors.primary, size: 20),
+              Icon(
+                Icons.local_fire_department_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
-              Text('Dampak Komunitas',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                'Dampak Komunitas',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           _ImpactRow(
             label: 'Pertumbuhan komunitas',
-            value: '${stats.growthPercentage >= 0 ? '+' : ''}${stats.growthPercentage.toStringAsFixed(1)}%',
-            valueColor: stats.growthPercentage >= 0 ? AppColors.success : AppColors.destructive,
+            value:
+                '${stats.growthPercentage >= 0 ? '+' : ''}${stats.growthPercentage.toStringAsFixed(1)}%',
+            valueColor: stats.growthPercentage >= 0
+                ? AppColors.success
+                : AppColors.destructive,
           ),
           const Divider(height: 24),
           _ImpactRow(
@@ -274,11 +313,13 @@ class _ImpactRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(color: AppColors.mutedForeground)),
-        Text(value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: valueColor ?? AppColors.foreground,
-            )),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: valueColor ?? AppColors.foreground,
+          ),
+        ),
       ],
     );
   }
@@ -298,7 +339,11 @@ class _Retry extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.mutedForeground),
+            const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppColors.mutedForeground,
+            ),
             const SizedBox(height: 16),
             Text(
               message.isNotEmpty ? message : 'Gagal memuat statistik komunitas',

@@ -10,22 +10,25 @@ import '../bloc/gamification_event.dart';
 import '../bloc/gamification_state.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_event.dart';
+import '../../common/widgets/app_alert_dialog.dart';
 
 class RewardsScreen extends StatelessWidget {
-  const RewardsScreen({super.key});
+  final bool showAppBar;
+  const RewardsScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
           sl<GamificationBloc>()..add(const GamificationRewardsRequested()),
-      child: const _RewardsView(),
+      child: _RewardsView(showAppBar: showAppBar),
     );
   }
 }
 
 class _RewardsView extends StatefulWidget {
-  const _RewardsView();
+  final bool showAppBar;
+  const _RewardsView({required this.showAppBar});
 
   @override
   State<_RewardsView> createState() => _RewardsViewState();
@@ -39,17 +42,19 @@ class _RewardsViewState extends State<_RewardsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text(
-          'Toko Hadiah',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 1,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text(
+                'Toko Hadiah',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: false,
+              backgroundColor: AppColors.card,
+              surfaceTintColor: Colors.transparent,
+              elevation: 1,
+              shadowColor: Colors.black.withValues(alpha: 0.05),
+            )
+          : null,
       body: BlocConsumer<GamificationBloc, GamificationState>(
         listenWhen: (p, c) =>
             p.successMessage != c.successMessage ||
@@ -91,7 +96,10 @@ class _RewardsViewState extends State<_RewardsView> {
               children: List.generate(
                 4,
                 (_) => const AppSkeleton(
-                  height: double.infinity,
+                  // Grid tiles already receive a tight height from their
+                  // delegate. Keep the skeleton's own constraint finite so
+                  // it can expand to the tile without requesting infinity.
+                  height: 220,
                   borderRadius: 16,
                 ),
               ),
@@ -144,8 +152,9 @@ class _RewardsViewState extends State<_RewardsView> {
                             maxCrossAxisExtent: 220,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
-                            mainAxisExtent:
-                                270, // Fixed height to prevent overflow
+                            // Leave enough room for the description and action
+                            // button, including at the maximum tile width.
+                            mainAxisExtent: 284,
                           ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _rewardCard(
@@ -381,7 +390,7 @@ class _RewardsViewState extends State<_RewardsView> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: AspectRatio(
-              aspectRatio: 16 / 10,
+              aspectRatio: 16 / 9,
               child: reward.image.isNotEmpty
                   ? AppNetworkImage(
                       url: reward.image,
@@ -485,7 +494,7 @@ class _RewardsViewState extends State<_RewardsView> {
     final bloc = context.read<GamificationBloc>();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => AppAlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Tukar Hadiah'),
         content: Text(

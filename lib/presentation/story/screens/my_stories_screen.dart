@@ -6,6 +6,7 @@ import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/story.dart';
 import '../../../domain/repositories/story_repository.dart';
 import '../../../domain/repositories/upload_repository.dart';
+import '../../common/widgets/app_alert_dialog.dart';
 import '../../common/widgets/mascot_hero.dart';
 
 class MyStoriesScreen extends StatefulWidget {
@@ -58,7 +59,7 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
   Future<void> _delete(StoryCard story) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         title: const Text('Hapus kisah?'),
         content: Text(story.title),
         actions: [

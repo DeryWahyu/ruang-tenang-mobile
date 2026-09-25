@@ -30,7 +30,7 @@ class AppDimensions {
   static const double buttonHeightLg = 44.0;
   static const double buttonIconSize = 40.0;
 
-  static const double inputHeight = 48.0;
+  static const double inputHeight = 44.0;
 
   static const double bottomNavHeight = 64.0;
   static const double appBarHeight = 56.0;

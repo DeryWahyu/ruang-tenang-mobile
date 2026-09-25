@@ -5,6 +5,8 @@ Jalankan flutter pub get, flutter analyze --no-fatal-infos --no-fatal-warnings, 
 
 ## Build
 
+Agent tidak menjalankan build lokal otomatis setelah perubahan kode, aset, config, atau platform. Tunggu permintaan build eksplisit dari pengguna. Perintah berikut dipakai saat pengguna meminta build atau saat menyiapkan release yang memang diminta.
+
 Untuk Android gunakan flutter build apk --release. CI membangun dua artifact:
 - ruang-tenang-development.apk dengan ENVIRONMENT=development dan BASE_URL_DEVELOPMENT;
 - ruang-tenang-production.apk dengan ENVIRONMENT=production dan BASE_URL_PRODUCTION.

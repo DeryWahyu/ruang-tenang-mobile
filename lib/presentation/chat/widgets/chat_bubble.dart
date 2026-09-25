@@ -42,27 +42,23 @@ class ChatBubble extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFFB7185),
-                    Color(0xFFEF4444),
-                    Color(0xFFDC2626),
-                  ],
-                ),
+                color: const Color(0xFFFFECEE),
+                border: Border.all(color: AppColors.red100),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.35),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.psychology_alt_rounded,
-                color: Colors.white,
-                size: 16,
+              child: Padding(
+                padding: const EdgeInsets.all(1),
+                child: Image.asset(
+                  'assets/images/mascot/chat-listen.webp',
+                  fit: BoxFit.contain,
+                  excludeFromSemantics: true,
+                ),
               ),
             )
           else

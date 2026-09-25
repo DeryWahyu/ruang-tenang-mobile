@@ -8,6 +8,7 @@ class MascotHero extends StatelessWidget {
   final String pose;
   final String? eyebrow;
   final Widget? action;
+  final bool overflowMascot;
 
   const MascotHero({
     super.key,
@@ -16,6 +17,7 @@ class MascotHero extends StatelessWidget {
     required this.pose,
     this.eyebrow,
     this.action,
+    this.overflowMascot = false,
   });
 
   @override
@@ -23,7 +25,7 @@ class MascotHero extends StatelessWidget {
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 152),
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: overflowMascot ? Clip.none : Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFFF1F2), Colors.white],
@@ -34,13 +36,15 @@ class MascotHero extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final imageWidth = constraints.maxWidth < 330 ? 100.0 : 132.0;
+          final renderedImageWidth = imageWidth + (overflowMascot ? 12 : 0);
           return Stack(
+            clipBehavior: overflowMascot ? Clip.none : Clip.hardEdge,
             children: [
               Positioned(
-                right: -8,
-                bottom: -4,
-                width: imageWidth,
-                height: 150,
+                right: overflowMascot ? -18 : -8,
+                bottom: overflowMascot ? -12 : -4,
+                width: renderedImageWidth,
+                height: overflowMascot ? 166 : 150,
                 child: Image.asset(
                   'assets/images/mascot/$pose.webp',
                   fit: BoxFit.contain,
@@ -49,7 +53,12 @@ class MascotHero extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(20, 20, imageWidth - 4, 20),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  20,
+                  renderedImageWidth - 4,
+                  20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
