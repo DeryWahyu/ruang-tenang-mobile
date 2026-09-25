@@ -12,4 +12,14 @@ abstract class MusicRepository {
     required String thumbnail,
     required bool isPublic,
   });
+  Future<Playlist> updatePlaylist(
+    String uuid, {
+    required String name,
+    required String description,
+    required String thumbnail,
+    required bool isPublic,
+  });
+  Future<void> deletePlaylist(String uuid);
+  Future<void> addSong(String uuid, int songId);
+  Future<void> removeSong(String uuid, int songId);
 }

@@ -26,8 +26,32 @@ class ArticleListScreen extends StatelessWidget {
   }
 }
 
-class _ArticleListView extends StatelessWidget {
+class _ArticleListView extends StatefulWidget {
   const _ArticleListView();
+
+  @override
+  State<_ArticleListView> createState() => _ArticleListViewState();
+}
+
+class _ArticleListViewState extends State<_ArticleListView> {
+  final _search = TextEditingController();
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _searchArticles() {
+    if (_search.text.trim().isEmpty) {
+      context.read<ArticleBloc>().add(
+        const ArticleListRequested(refresh: true),
+      );
+    } else {
+      context.read<ArticleBloc>().add(
+        ArticleSearchRequested(_search.text.trim()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,51 +59,85 @@ class _ArticleListView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Artikel & Bacaan'),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(64),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: TextField(
+              controller: _search,
+              onSubmitted: (_) => _searchArticles(),
+              decoration: InputDecoration(
+                hintText: 'Cari artikel',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    _search.clear();
+                    _searchArticles();
+                  },
+                  icon: const Icon(Icons.clear),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: BlocBuilder<ArticleBloc, ArticleState>(
         builder: (context, state) {
           return Column(
             children: [
-              if (state.categories.isNotEmpty) _buildCategoryChips(context, state),
+              if (state.categories.isNotEmpty)
+                _buildCategoryChips(context, state),
               Expanded(
                 child: state.status == ArticleStatus.loading
                     ? const _ArticleSkeletonList()
                     : state.status == ArticleStatus.failure
-                        ? AppErrorWidget(
-                            message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat artikel',
-                            onRetry: () => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
-                          )
-                        : state.items.isEmpty
-                            ? RefreshIndicator(
-                                color: AppColors.primary,
-                                onRefresh: () async => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) => ListView(
-                                    physics: const AlwaysScrollableScrollPhysics(),
-                                    children: [
-                                      Container(
-                                        height: constraints.maxHeight > 0 ? constraints.maxHeight : 400,
-                                        alignment: Alignment.center,
-                                        child: const AppEmptyState(
-                                          icon: Icons.article_outlined,
-                                          title: 'Belum Ada Artikel',
-                                          subtitle: 'Artikel kesehatan mental akan muncul di sini.',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : RefreshIndicator(
-                                onRefresh: () async => context.read<ArticleBloc>().add(const ArticleListRequested(refresh: true)),
-                                child: ListView.builder(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  cacheExtent: 600,
-                                  padding: const EdgeInsets.all(16),
-                                  itemCount: state.items.length,
-                                  itemBuilder: (context, index) => _buildArticleCard(context, state.items[index]),
+                    ? AppErrorWidget(
+                        message: state.errorMessage.isNotEmpty
+                            ? state.errorMessage
+                            : 'Gagal memuat artikel',
+                        onRetry: () => context.read<ArticleBloc>().add(
+                          const ArticleListRequested(refresh: true),
+                        ),
+                      )
+                    : state.items.isEmpty
+                    ? RefreshIndicator(
+                        color: AppColors.primary,
+                        onRefresh: () async => context.read<ArticleBloc>().add(
+                          const ArticleListRequested(refresh: true),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) => ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              Container(
+                                height: constraints.maxHeight > 0
+                                    ? constraints.maxHeight
+                                    : 400,
+                                alignment: Alignment.center,
+                                child: const AppEmptyState(
+                                  icon: Icons.article_outlined,
+                                  title: 'Belum Ada Artikel',
+                                  subtitle:
+                                      'Artikel kesehatan mental akan muncul di sini.',
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async => context.read<ArticleBloc>().add(
+                          const ArticleListRequested(refresh: true),
+                        ),
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          cacheExtent: 600,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: state.items.length,
+                          itemBuilder: (context, index) =>
+                              _buildArticleCard(context, state.items[index]),
+                        ),
+                      ),
               ),
             ],
           );
@@ -98,29 +156,43 @@ class _ArticleListView extends StatelessWidget {
           FilterChip(
             label: const Text('Semua'),
             selected: state.selectedCategoryId == null,
-            onSelected: (_) => context.read<ArticleBloc>().add(const ArticleCategorySelected(null)),
+            onSelected: (_) => context.read<ArticleBloc>().add(
+              const ArticleCategorySelected(null),
+            ),
             selectedColor: AppColors.red100,
             checkmarkColor: AppColors.primary,
             labelStyle: TextStyle(
-              color: state.selectedCategoryId == null ? AppColors.primary : AppColors.foreground,
-              fontWeight: state.selectedCategoryId == null ? FontWeight.bold : FontWeight.normal,
+              color: state.selectedCategoryId == null
+                  ? AppColors.primary
+                  : AppColors.foreground,
+              fontWeight: state.selectedCategoryId == null
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
           const SizedBox(width: 8),
-          ...state.categories.map((cat) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(cat.name),
-                  selected: state.selectedCategoryId == cat.id,
-                  onSelected: (_) => context.read<ArticleBloc>().add(ArticleCategorySelected(cat.id)),
-                  selectedColor: AppColors.red100,
-                  checkmarkColor: AppColors.primary,
-                  labelStyle: TextStyle(
-                    color: state.selectedCategoryId == cat.id ? AppColors.primary : AppColors.foreground,
-                    fontWeight: state.selectedCategoryId == cat.id ? FontWeight.bold : FontWeight.normal,
-                  ),
+          ...state.categories.map(
+            (cat) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(cat.name),
+                selected: state.selectedCategoryId == cat.id,
+                onSelected: (_) => context.read<ArticleBloc>().add(
+                  ArticleCategorySelected(cat.id),
                 ),
-              )),
+                selectedColor: AppColors.red100,
+                checkmarkColor: AppColors.primary,
+                labelStyle: TextStyle(
+                  color: state.selectedCategoryId == cat.id
+                      ? AppColors.primary
+                      : AppColors.foreground,
+                  fontWeight: state.selectedCategoryId == cat.id
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -141,7 +213,10 @@ class _ArticleListView extends StatelessWidget {
               SizedBox(
                 width: 110,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
                   child: article.thumbnail.isNotEmpty
                       ? AppNetworkImage(
                           url: article.thumbnail,
@@ -151,42 +226,86 @@ class _ArticleListView extends StatelessWidget {
                       : Container(
                           width: 110,
                           color: AppColors.muted,
-                          child: const Icon(Icons.article, color: AppColors.mutedForeground),
+                          child: const Icon(
+                            Icons.article,
+                            color: AppColors.mutedForeground,
+                          ),
                         ),
                 ),
               ),
               Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (article.category != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(article.category!.name, style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (article.category != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            article.category!.name,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      Text(
+                        article.title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    Text(article.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 6),
-                    Text(article.excerpt.replaceAll(RegExp(r'<[^>]*>'), ''), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground, height: 1.3)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        if (article.author != null) ...[
-                          Text(article.author!.name, style: const TextStyle(fontSize: 11, color: AppColors.mutedForeground, fontWeight: FontWeight.w500)),
-                          const SizedBox(width: 6),
-                          const Text('•', style: TextStyle(color: AppColors.mutedForeground)),
-                          const SizedBox(width: 6),
+                      const SizedBox(height: 6),
+                      Text(
+                        article.excerpt.replaceAll(RegExp(r'<[^>]*>'), ''),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          if (article.author != null) ...[
+                            Text(
+                              article.author!.name,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.mutedForeground,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              '•',
+                              style: TextStyle(
+                                color: AppColors.mutedForeground,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            _formatDate(article.createdAt),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
                         ],
-                        Text(_formatDate(article.createdAt), style: const TextStyle(fontSize: 11, color: AppColors.mutedForeground)),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );
@@ -199,7 +318,6 @@ class _ArticleListView extends StatelessWidget {
     return '${date.day}/${date.month}/${date.year}';
   }
 }
-
 
 /// Skeleton shimmer untuk daftar artikel saat memuat.
 class _ArticleSkeletonList extends StatelessWidget {

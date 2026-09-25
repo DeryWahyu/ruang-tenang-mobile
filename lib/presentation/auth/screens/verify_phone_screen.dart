@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/di/injection_container.dart';
+import '../../../core/network/api_exceptions.dart';
 import '../../../core/utils/validators.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../bloc/auth_bloc.dart';
@@ -75,6 +76,8 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
         code: _code.text.trim(),
       );
       if (mounted) context.read<AuthBloc>().add(const AuthCheckRequested());
+    } on ForbiddenException catch (e) {
+      if (mounted) setState(() => _error = e.message);
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'Kode OTP tidak valid atau kedaluwarsa');

@@ -19,7 +19,10 @@ class MusicRemoteDataSource {
     }
 
     return response.data!
-        .map((e) => SongCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) =>
+              SongCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -51,12 +54,19 @@ class MusicRemoteDataSource {
     }
 
     return response.data!
-        .map((e) => PlaylistListItemModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => PlaylistListItemModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
         .toList();
   }
 
   /// GET /playlists/public (paginated response: {data:[...], pagination:{}})
-  Future<List<PlaylistListItemModel>> getPublicPlaylists({int page = 1, int limit = 20}) async {
+  Future<List<PlaylistListItemModel>> getPublicPlaylists({
+    int page = 1,
+    int limit = 20,
+  }) async {
     final body = await _apiClient.fetchBody(
       'GET',
       '${ApiConstants.playlists}/public',
@@ -65,7 +75,11 @@ class MusicRemoteDataSource {
 
     final list = (body['data'] as List<dynamic>?) ?? [];
     return list
-        .map((e) => PlaylistListItemModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => PlaylistListItemModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
         .toList();
   }
 
@@ -108,4 +122,54 @@ class MusicRemoteDataSource {
     return PlaylistModel.fromJson(response.data!);
   }
 
+  Future<PlaylistModel> updatePlaylist(
+    String uuid, {
+    required String name,
+    required String description,
+    required String thumbnail,
+    required bool isPublic,
+  }) async {
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '${ApiConstants.playlists}/$uuid',
+      data: {
+        'name': name,
+        'description': description,
+        'thumbnail': thumbnail,
+        'is_public': isPublic,
+      },
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Playlist belum berhasil diubah');
+    }
+    return PlaylistModel.fromJson(response.data!);
+  }
+
+  Future<void> deletePlaylist(String uuid) async {
+    final response = await _apiClient.delete<dynamic>(
+      '${ApiConstants.playlists}/$uuid',
+    );
+    if (!response.success) {
+      throw Exception(response.error ?? 'Playlist belum berhasil dihapus');
+    }
+  }
+
+  Future<void> addSong(String uuid, int songId) async {
+    final response = await _apiClient.post<dynamic>(
+      '${ApiConstants.playlists}/$uuid/songs',
+      data: {'song_id': songId},
+    );
+    if (!response.success) {
+      throw Exception(response.error ?? 'Lagu belum berhasil ditambahkan');
+    }
+  }
+
+  Future<void> removeSong(String uuid, int songId) async {
+    final response = await _apiClient.delete<dynamic>(
+      '${ApiConstants.playlists}/$uuid/songs/$songId',
+    );
+    if (!response.success) {
+      throw Exception(response.error ?? 'Lagu belum berhasil dihapus');
+    }
+  }
 }

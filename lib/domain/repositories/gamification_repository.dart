@@ -20,11 +20,18 @@ abstract class GamificationRepository {
   Future<Map<String, dynamic>> claimLandmark(String landmarkId);
 
   // Hall of Fame / Leaderboard
-  Future<List<HallOfFameEntry>> getMonthlyHallOfFame({required int month, required int year, String? category});
+  Future<List<HallOfFameEntry>> getMonthlyHallOfFame({
+    required int month,
+    required int year,
+    String? category,
+  });
   Future<List<HallOfFameEntry>> getLevelHallOfFame(int level, {int limit = 10});
 
   // Rewards Shop
   Future<List<Reward>> getRewards();
   Future<int> getCoinBalance();
   Future<Map<String, dynamic>> claimReward(int rewardId);
+  Future<Map<String, dynamic>> getRewardClaims({int page = 1});
+  Future<Map<String, dynamic>> getOwnedThemes();
+  Future<void> activateTheme(String theme);
 }

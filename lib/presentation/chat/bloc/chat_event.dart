@@ -9,14 +9,25 @@ abstract class ChatEvent extends Equatable {
 
 class ChatSessionsRequested extends ChatEvent {
   final bool refresh;
-  const ChatSessionsRequested({this.refresh = false});
+  final String filter;
+  final String? search;
+  const ChatSessionsRequested({
+    this.refresh = false,
+    this.filter = 'all',
+    this.search,
+  });
 
   @override
-  List<Object?> get props => [refresh];
+  List<Object?> get props => [refresh, filter, search];
 }
 
 class ChatSessionsLoadMoreRequested extends ChatEvent {
-  const ChatSessionsLoadMoreRequested();
+  final String filter;
+  final String? search;
+  const ChatSessionsLoadMoreRequested({this.filter = 'all', this.search});
+
+  @override
+  List<Object?> get props => [filter, search];
 }
 
 class ChatSessionDetailRequested extends ChatEvent {
@@ -48,11 +59,16 @@ class ChatSessionDeleteRequested extends ChatEvent {
 class ChatMessageSendRequested extends ChatEvent {
   final String uuid;
   final String content;
+  final String type;
 
-  const ChatMessageSendRequested({required this.uuid, required this.content});
+  const ChatMessageSendRequested({
+    required this.uuid,
+    required this.content,
+    this.type = 'text',
+  });
 
   @override
-  List<Object?> get props => [uuid, content];
+  List<Object?> get props => [uuid, content, type];
 }
 
 /// Dikirim saat pengguna mengirim pesan pertama pada obrolan baru (belum ada
@@ -61,12 +77,17 @@ class ChatMessageSendRequested extends ChatEvent {
 /// (mirip GPT/Gemini/Claude).
 class ChatFirstMessageSent extends ChatEvent {
   final String content;
+  final String type;
   final int? folderId;
 
-  const ChatFirstMessageSent({required this.content, this.folderId});
+  const ChatFirstMessageSent({
+    required this.content,
+    this.folderId,
+    this.type = 'text',
+  });
 
   @override
-  List<Object?> get props => [content, folderId];
+  List<Object?> get props => [content, folderId, type];
 }
 
 class ChatMessageLikeToggled extends ChatEvent {

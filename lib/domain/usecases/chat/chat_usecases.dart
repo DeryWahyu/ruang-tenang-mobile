@@ -5,8 +5,17 @@ class GetChatSessionsUseCase {
   final ChatRepository _repository;
   GetChatSessionsUseCase(this._repository);
 
-  Future<ChatSessionListResult> call({int page = 1, int limit = 20}) =>
-      _repository.getSessions(page: page, limit: limit);
+  Future<ChatSessionListResult> call({
+    int page = 1,
+    int limit = 20,
+    String? filter,
+    String? search,
+  }) => _repository.getSessions(
+    page: page,
+    limit: limit,
+    filter: filter,
+    search: search,
+  );
 }
 
 class GetChatSessionUseCase {
@@ -36,8 +45,10 @@ class SendChatMessageUseCase {
   SendChatMessageUseCase(this._repository);
 
   Future<({ChatMessage userMessage, ChatMessage aiMessage})> call(
-          String uuid, String content) =>
-      _repository.sendMessage(uuid, content);
+    String uuid,
+    String content, {
+    String type = 'text',
+  }) => _repository.sendMessage(uuid, content, type: type);
 }
 
 class ToggleLikeMessageUseCase {
@@ -51,7 +62,8 @@ class ToggleDislikeMessageUseCase {
   final ChatRepository _repository;
   ToggleDislikeMessageUseCase(this._repository);
 
-  Future<void> call(int messageId) => _repository.toggleDislikeMessage(messageId);
+  Future<void> call(int messageId) =>
+      _repository.toggleDislikeMessage(messageId);
 }
 
 class ChatUseCases {

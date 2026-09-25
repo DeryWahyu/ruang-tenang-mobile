@@ -9,9 +9,16 @@ import '../../common/widgets/app_error_widget.dart';
 import '../bloc/billing_bloc.dart';
 import '../bloc/billing_event.dart';
 import '../bloc/billing_state.dart';
+import '../../common/widgets/mascot_hero.dart';
+
+enum BillingCatalogMode { packages, coins }
 
 class PremiumPlansScreen extends StatelessWidget {
-  const PremiumPlansScreen({super.key});
+  final BillingCatalogMode mode;
+  const PremiumPlansScreen({
+    super.key,
+    this.mode = BillingCatalogMode.packages,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,38 +26,48 @@ class PremiumPlansScreen extends StatelessWidget {
       create: (_) => sl<BillingBloc>()
         ..add(const BillingCatalogRequested())
         ..add(const BillingStatusRequested()),
-      child: const _PremiumPlansView(),
+      child: _PremiumPlansView(mode: mode),
     );
   }
 }
 
 class _PremiumPlansView extends StatelessWidget {
-  const _PremiumPlansView();
+  final BillingCatalogMode mode;
+  const _PremiumPlansView({required this.mode});
 
   /// Membuka halaman pembayaran (Midtrans) dari hasil checkout.
   ///
   /// Backend mengembalikan `redirect_url`; kita buka di browser/aplikasi
   /// eksternal agar pengguna menyelesaikan pembayaran. Tanpa ini, alur
   /// pembayaran menjadi buntu (dead-end).
-  Future<void> _openPaymentPage(BuildContext context, Map<String, dynamic> checkoutResult) async {
+  Future<void> _openPaymentPage(
+    BuildContext context,
+    Map<String, dynamic> checkoutResult,
+  ) async {
     // Backend mengembalikan snap_url untuk Midtrans
-    final redirectUrl = checkoutResult['snap_url'] as String? ?? checkoutResult['redirect_url'] as String?;
+    final redirectUrl =
+        checkoutResult['snap_url'] as String? ??
+        checkoutResult['redirect_url'] as String?;
     final messenger = ScaffoldMessenger.of(context);
 
     if (redirectUrl == null || redirectUrl.isEmpty) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Tautan pembayaran tidak tersedia. Coba lagi.')),
+        const SnackBar(
+          content: Text('Tautan pembayaran tidak tersedia. Coba lagi.'),
+        ),
       );
       return;
     }
 
     final uri = Uri.tryParse(redirectUrl);
-    final launched = uri != null &&
-        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+    final launched =
+        uri != null && await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
 
     if (!launched) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka halaman pembayaran.')),
+        const SnackBar(
+          content: Text('Tidak dapat membuka halaman pembayaran.'),
+        ),
       );
     }
   }
@@ -71,9 +88,11 @@ class _PremiumPlansView extends StatelessWidget {
       ),
       body: BlocConsumer<BillingBloc, BillingState>(
         listener: (context, state) {
-          if (state.status == BillingStatusEnum.checkoutSuccess && state.checkoutResult != null) {
+          if (state.status == BillingStatusEnum.checkoutSuccess &&
+              state.checkoutResult != null) {
             _openPaymentPage(context, state.checkoutResult!);
-          } else if (state.status == BillingStatusEnum.failure && state.errorMessage.isNotEmpty) {
+          } else if (state.status == BillingStatusEnum.failure &&
+              state.errorMessage.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.errorMessage),
@@ -88,8 +107,12 @@ class _PremiumPlansView extends StatelessWidget {
           }
           if (state.status == BillingStatusEnum.failure) {
             return AppErrorWidget(
-              message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat katalog',
-              onRetry: () => context.read<BillingBloc>().add(const BillingCatalogRequested()),
+              message: state.errorMessage.isNotEmpty
+                  ? state.errorMessage
+                  : 'Gagal memuat katalog',
+              onRetry: () => context.read<BillingBloc>().add(
+                const BillingCatalogRequested(),
+              ),
             );
           }
           if (state.catalog == null) {
@@ -106,29 +129,51 @@ class _PremiumPlansView extends StatelessWidget {
             },
             child: ListView(
               padding: const EdgeInsets.all(16),
-            children: [
-              if (state.billingStatus != null) ...[
-                _buildStatusCard(context, state.billingStatus!),
-                const SizedBox(height: 24),
+              children: [
+                MascotHero(
+                  title: mode == BillingCatalogMode.packages
+                      ? 'Paket yang menemani'
+                      : 'Koin untuk langkah kecil',
+                  description: mode == BillingCatalogMode.packages
+                      ? 'Pilih akses yang sesuai dengan kebutuhanmu.'
+                      : 'Isi saldo koin untuk merayakan kemajuanmu.',
+                  pose: mode == BillingCatalogMode.packages
+                      ? 'secure'
+                      : 'daily-missions',
+                ),
+                const SizedBox(height: 16),
+                if (state.billingStatus != null) ...[
+                  _buildStatusCard(context, state.billingStatus!),
+                  const SizedBox(height: 24),
+                ],
+                if (mode == BillingCatalogMode.packages) ...[
+                  const Text(
+                    'Langganan Premium',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  ...state.catalog!.plans.map(
+                    (plan) => _buildPlanCard(context, plan),
+                  ),
+                ] else ...[
+                  const Text(
+                    'Top Up Koin',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  GridView.extent(
+                    maxCrossAxisExtent: 200,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.9,
+                    children: state.catalog!.topupPackages
+                        .map((pkg) => _buildCoinPackage(context, pkg))
+                        .toList(),
+                  ),
+                ],
               ],
-              const Text('Langganan Premium', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              ...state.catalog!.plans.map((plan) => _buildPlanCard(context, plan)),
-              
-              const SizedBox(height: 32),
-              
-              const Text('Top Up Koin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              GridView.extent(
-                maxCrossAxisExtent: 200,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.9,
-                children: state.catalog!.topupPackages.map((pkg) => _buildCoinPackage(context, pkg)).toList(),
-              ),
-            ],
             ),
           );
         },
@@ -161,21 +206,40 @@ class _PremiumPlansView extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(status.isPremium ? Icons.workspace_premium_rounded : Icons.person_rounded,
-                  color: Colors.white, size: 22),
+              Icon(
+                status.isPremium
+                    ? Icons.workspace_premium_rounded
+                    : Icons.person_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
               const SizedBox(width: 8),
-              Text(status.isPremium ? 'Akun Premium' : 'Akun Gratis',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                status.isPremium ? 'Akun Premium' : 'Akun Gratis',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
-                child: _statusMetric(Icons.monetization_on_rounded, 'Koin', '${status.goldCoins}'),
+                child: _statusMetric(
+                  Icons.monetization_on_rounded,
+                  'Koin',
+                  '${status.goldCoins}',
+                ),
               ),
               Expanded(
-                child: _statusMetric(Icons.chat_bubble_rounded, 'Kuota Chat', quotaLabel),
+                child: _statusMetric(
+                  Icons.chat_bubble_rounded,
+                  'Kuota Chat',
+                  quotaLabel,
+                ),
               ),
             ],
           ),
@@ -206,8 +270,18 @@ class _PremiumPlansView extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
+            ),
           ],
         ),
       ],
@@ -229,17 +303,38 @@ class _PremiumPlansView extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(plan.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                Text('Rp ${plan.price}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                Text(
+                  plan.name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Rp ${plan.price}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(plan.description, style: const TextStyle(color: AppColors.mutedForeground)),
+            Text(
+              plan.description,
+              style: const TextStyle(color: AppColors.mutedForeground),
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => context.read<BillingBloc>().add(BillingCheckoutRequested(itemType: 'subscription', itemId: plan.id)),
+                onPressed: () => context.read<BillingBloc>().add(
+                  BillingCheckoutRequested(
+                    itemType: 'subscription',
+                    itemId: plan.id,
+                  ),
+                ),
                 child: const Text('Pilih Paket'),
               ),
             ),
@@ -254,7 +349,9 @@ class _PremiumPlansView extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.read<BillingBloc>().add(BillingCheckoutRequested(itemType: 'topup', itemId: pkg.id)),
+        onTap: () => context.read<BillingBloc>().add(
+          BillingCheckoutRequested(itemType: 'topup', itemId: pkg.id),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -262,14 +359,39 @@ class _PremiumPlansView extends StatelessWidget {
             children: [
               const Icon(Icons.monetization_on, size: 48, color: Colors.amber),
               const SizedBox(height: 8),
-              Text('${pkg.totalCoins} Koin', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                '${pkg.totalCoins} Koin',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               if (pkg.bonusCoins > 0)
-                Text('+${pkg.bonusCoins} Bonus', style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.bold)),
+                Text(
+                  '+${pkg.bonusCoins} Bonus',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.red50, borderRadius: BorderRadius.circular(20)),
-                child: Text('Rp ${pkg.price}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.red50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Rp ${pkg.price}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),

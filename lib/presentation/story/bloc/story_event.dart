@@ -9,9 +9,29 @@ abstract class StoryEvent extends Equatable {
 class StoryListRequested extends StoryEvent {
   final bool refresh;
   final String sortBy;
-  const StoryListRequested({this.refresh = false, this.sortBy = 'recent'});
+  final String? categoryId;
+  final String? search;
+  const StoryListRequested({
+    this.refresh = false,
+    this.sortBy = 'recent',
+    this.categoryId,
+    this.search,
+  });
   @override
-  List<Object?> get props => [refresh, sortBy];
+  List<Object?> get props => [refresh, sortBy, categoryId, search];
+}
+
+class StoryLoadMoreRequested extends StoryEvent {
+  final String sortBy;
+  final String? categoryId;
+  final String? search;
+  const StoryLoadMoreRequested({
+    this.sortBy = 'recent',
+    this.categoryId,
+    this.search,
+  });
+  @override
+  List<Object?> get props => [sortBy, categoryId, search];
 }
 
 class StoryDetailRequested extends StoryEvent {
@@ -38,16 +58,20 @@ class StoryCommentsRequested extends StoryEvent {
 class StoryCommentCreateRequested extends StoryEvent {
   final String storyId;
   final String content;
-  const StoryCommentCreateRequested({required this.storyId, required this.content});
+  const StoryCommentCreateRequested({
+    required this.storyId,
+    required this.content,
+  });
   @override
   List<Object?> get props => [storyId, content];
 }
 
 class StoryCommentHeartToggled extends StoryEvent {
+  final String storyId;
   final String commentId;
-  const StoryCommentHeartToggled(this.commentId);
+  const StoryCommentHeartToggled(this.storyId, this.commentId);
   @override
-  List<Object?> get props => [commentId];
+  List<Object?> get props => [storyId, commentId];
 }
 
 class StorySearchRequested extends StoryEvent {

@@ -35,6 +35,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         } on UnauthorizedException {
           await _useCases.logout();
           emit(const AuthState.unauthenticated());
+        } on ForbiddenException {
+          await _useCases.logout();
+          emit(const AuthState.unauthenticated());
         } catch (_) {
           // Keep cached user if refresh fails.
         }
@@ -150,6 +153,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _useCases.getProfile();
       emit(AuthState.authenticated(user));
+    } on ForbiddenException {
+      await _useCases.logout();
+      emit(const AuthState.unauthenticated());
     } catch (_) {
       // Keep current state if refresh fails.
     }

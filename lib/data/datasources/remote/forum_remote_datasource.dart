@@ -13,14 +13,16 @@ class ForumRemoteDataSource {
     int limit = 10,
     String? search,
     int? categoryId,
+    String? circle,
   }) async {
     final response = await _apiClient.getPaginated<ForumThreadModel>(
       ApiConstants.forums,
       queryParameters: {
-        'page': page,
         'limit': limit,
+        'offset': (page - 1) * limit,
         if (search != null && search.isNotEmpty) 'search': search,
         'category_id': ?categoryId,
+        if (circle != null && circle.isNotEmpty) 'circle': circle,
       },
       fromJson: (json) => ForumThreadModel.fromJson(json),
     );
@@ -55,11 +57,7 @@ class ForumRemoteDataSource {
   }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       ApiConstants.forums,
-      data: {
-        'title': title,
-        'content': content,
-        'category_id': ?categoryId,
-      },
+      data: {'title': title, 'content': content, 'category_id': ?categoryId},
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -93,7 +91,10 @@ class ForumRemoteDataSource {
     }
 
     return response.data!
-        .map((e) => ForumCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) =>
+              ForumCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -107,8 +108,8 @@ class ForumRemoteDataSource {
     final response = await _apiClient.getPaginated<ForumPostModel>(
       '${ApiConstants.forums}/$slug/posts',
       queryParameters: {
-        'page': page,
         'limit': limit,
+        'offset': (page - 1) * limit,
         'sort_by': sortBy,
       },
       fromJson: (json) => ForumPostModel.fromJson(json),

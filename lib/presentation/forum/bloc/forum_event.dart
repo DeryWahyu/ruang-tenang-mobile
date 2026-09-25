@@ -8,9 +8,29 @@ abstract class ForumEvent extends Equatable {
 
 class ForumListRequested extends ForumEvent {
   final bool refresh;
-  const ForumListRequested({this.refresh = false});
+  final String? search;
+  final int? categoryId;
+  final String? circle;
+  final bool updateFilters;
+  const ForumListRequested({
+    this.refresh = false,
+    this.search,
+    this.categoryId,
+    this.circle,
+    this.updateFilters = false,
+  });
   @override
-  List<Object?> get props => [refresh];
+  List<Object?> get props => [
+    refresh,
+    search,
+    categoryId,
+    circle,
+    updateFilters,
+  ];
+}
+
+class ForumLoadMoreRequested extends ForumEvent {
+  const ForumLoadMoreRequested();
 }
 
 class ForumCategoriesRequested extends ForumEvent {
@@ -32,11 +52,22 @@ class ForumPostsRequested extends ForumEvent {
   List<Object?> get props => [slug, sortBy];
 }
 
+class ForumPostsLoadMoreRequested extends ForumEvent {
+  final String slug;
+  const ForumPostsLoadMoreRequested(this.slug);
+  @override
+  List<Object?> get props => [slug];
+}
+
 class ForumCreateRequested extends ForumEvent {
   final String title;
   final String content;
   final int? categoryId;
-  const ForumCreateRequested({required this.title, required this.content, this.categoryId});
+  const ForumCreateRequested({
+    required this.title,
+    required this.content,
+    this.categoryId,
+  });
   @override
   List<Object?> get props => [title, content, categoryId];
 }

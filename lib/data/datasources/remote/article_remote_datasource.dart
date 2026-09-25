@@ -7,6 +7,73 @@ class ArticleRemoteDataSource {
 
   ArticleRemoteDataSource(this._apiClient);
 
+  Future<List<ArticleListItemModel>> getMyArticles({
+    int page = 1,
+    String? search,
+  }) async {
+    final response = await _apiClient.getPaginated<ArticleListItemModel>(
+      '/my-articles',
+      queryParameters: {
+        'page': page,
+        'limit': 10,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      },
+      fromJson: ArticleListItemModel.fromJson,
+    );
+    return response.data;
+  }
+
+  Future<ArticleModel> getMyArticle(String id) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/my-articles/$id',
+      fromJson: (data) => Map<String, dynamic>.from(data as Map),
+    );
+    if (response.data == null) {
+      throw Exception(response.error ?? 'Gagal memuat artikel');
+    }
+    return ArticleModel.fromJson(response.data!);
+  }
+
+  Future<void> saveMyArticle({
+    String? id,
+    required String title,
+    required String content,
+    required int categoryId,
+    String? thumbnail,
+  }) async {
+    final payload = {
+      'title': title,
+      'content': content,
+      'category_id': categoryId,
+      if (thumbnail != null && thumbnail.isNotEmpty) 'thumbnail': thumbnail,
+    };
+    if (id != null) {
+      final response = await _apiClient.put<dynamic>(
+        '/my-articles/$id',
+        data: payload,
+      );
+      if (!response.success) {
+        throw Exception(response.error ?? 'Gagal memperbarui artikel');
+      }
+      return;
+    }
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      '/my-articles',
+      data: payload,
+      fromJson: (data) => Map<String, dynamic>.from(data as Map),
+    );
+    if (!response.success || response.data?['id'] == null) {
+      throw Exception(response.error ?? 'Gagal menyimpan artikel');
+    }
+  }
+
+  Future<void> deleteMyArticle(String id) async {
+    final response = await _apiClient.delete<dynamic>('/my-articles/$id');
+    if (!response.success) {
+      throw Exception(response.error ?? 'Gagal menghapus artikel');
+    }
+  }
+
   /// GET /articles
   Future<Map<String, dynamic>> getArticles({
     int page = 1,
@@ -59,7 +126,11 @@ class ArticleRemoteDataSource {
     }
 
     return response.data!
-        .map((e) => ArticleCategoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => ArticleCategoryModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
         .toList();
   }
 }

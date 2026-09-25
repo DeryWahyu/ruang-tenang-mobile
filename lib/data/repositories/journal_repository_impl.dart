@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/storage_keys.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../domain/entities/journal.dart';
+import '../../domain/entities/public_journal.dart';
 import '../../domain/repositories/journal_repository.dart';
 import '../datasources/remote/journal_remote_datasource.dart';
 import '../models/journal_model.dart';
@@ -17,8 +18,48 @@ class JournalRepositoryImpl implements JournalRepository {
   JournalRepositoryImpl({
     required JournalRemoteDataSource remote,
     required SharedPreferences prefs,
-  })  : _remote = remote,
-        _prefs = prefs;
+  }) : _remote = remote,
+       _prefs = prefs;
+
+  @override
+  Future<Map<String, dynamic>> getSettings() => _remote.getSettings();
+
+  @override
+  Future<Map<String, dynamic>> updateSettings(String key, dynamic value) =>
+      _remote.updateSettings(key, value);
+
+  @override
+  Future<Map<String, dynamic>> getAnalytics() => _remote.getAnalytics();
+
+  @override
+  Future<Map<String, dynamic>?> getWeeklySummary() =>
+      _remote.getWeeklySummary();
+
+  @override
+  Future<Map<String, dynamic>> getAiContext() => _remote.getAiContext();
+
+  @override
+  Future<List<dynamic>> getAiAccessLogs() => _remote.getAiAccessLogs();
+
+  @override
+  Future<Map<String, dynamic>> exportJournals(String format) =>
+      _remote.exportJournals(format);
+
+  @override
+  Future<Map<String, dynamic>> getWritingPrompt() => _remote.getWritingPrompt();
+
+  @override
+  Future<List<PublicJournal>> listPublic({
+    int page = 1,
+    String? search,
+  }) async => (await _remote.listPublic(
+    page: page,
+    search: search,
+  )).map((item) => item.value).toList();
+
+  @override
+  Future<PublicJournal> getPublic(String uuid) async =>
+      (await _remote.getPublic(uuid)).value;
 
   @override
   Future<JournalListResult> list({
@@ -157,12 +198,14 @@ class JournalRepositoryImpl implements JournalRepository {
     final raw = _prefs.getString(_detailKey(uuid));
     if (raw == null) return null;
     try {
-      return JournalModel.fromJson(jsonDecode(raw) as Map<String, dynamic>)
-          .toEntity();
+      return JournalModel.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      ).toEntity();
     } catch (_) {
       return null;
     }
   }
 
-  String _detailKey(String uuid) => '${StorageKeys.cachedJournals}_detail_$uuid';
+  String _detailKey(String uuid) =>
+      '${StorageKeys.cachedJournals}_detail_$uuid';
 }

@@ -32,7 +32,10 @@ class _GameHubView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Game Hub', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Ringkasan Perjalanan',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -45,7 +48,10 @@ class _GameHubView extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.leaderboard_rounded, color: AppColors.foreground),
+              icon: const Icon(
+                Icons.leaderboard_rounded,
+                color: AppColors.foreground,
+              ),
               onPressed: () => context.push('/gamification/leaderboard'),
               tooltip: 'Papan Peringkat',
             ),
@@ -54,24 +60,37 @@ class _GameHubView extends StatelessWidget {
       ),
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
-          if (state.levelInfo == null && state.status == GamificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+          if (state.levelInfo == null &&
+              state.status == GamificationStatus.loading) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
-          if (state.status == GamificationStatus.failure && state.levelInfo == null) {
+          if (state.status == GamificationStatus.failure &&
+              state.levelInfo == null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.destructive),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppColors.destructive,
+                  ),
                   const SizedBox(height: 16),
-                  Text(state.errorMessage, style: const TextStyle(color: AppColors.mutedForeground)),
+                  Text(
+                    state.errorMessage,
+                    style: const TextStyle(color: AppColors.mutedForeground),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<GamificationBloc>().add(const GamificationLevelRequested());
+                      context.read<GamificationBloc>().add(
+                        const GamificationLevelRequested(),
+                      );
                     },
                     child: const Text('Coba Lagi'),
-                  )
+                  ),
                 ],
               ),
             );
@@ -81,8 +100,12 @@ class _GameHubView extends StatelessWidget {
             color: AppColors.primary,
             backgroundColor: AppColors.card,
             onRefresh: () async {
-              context.read<GamificationBloc>().add(const GamificationLevelRequested());
-              context.read<GamificationBloc>().add(const GamificationExpHistoryRequested(refresh: true));
+              context.read<GamificationBloc>().add(
+                const GamificationLevelRequested(),
+              );
+              context.read<GamificationBloc>().add(
+                const GamificationExpHistoryRequested(refresh: true),
+              );
             },
             child: CustomScrollView(
               slivers: [
@@ -90,20 +113,29 @@ class _GameHubView extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      if (state.journey != null || state.levelInfo != null) _buildLevelCard(context, state),
+                      if (state.journey != null || state.levelInfo != null)
+                        _buildLevelCard(context, state),
                       const SizedBox(height: 32),
-                      
+
                       const Text(
                         'Aktivitas Harian',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.foreground,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildDailyActivitiesGrid(context),
-                      
+
                       const SizedBox(height: 32),
                       const Text(
                         'Eksplorasi Fitur',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.foreground,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildExplorationList(context),
@@ -111,7 +143,11 @@ class _GameHubView extends StatelessWidget {
                       const SizedBox(height: 32),
                       const Text(
                         'Komunitas & Kompetisi',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.foreground,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildSecondaryList(context),
@@ -123,12 +159,20 @@ class _GameHubView extends StatelessWidget {
                           children: [
                             const Text(
                               'Riwayat EXP',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.foreground,
+                              ),
                             ),
                             if (state.expHistory.length > 5)
                               TextButton(
-                                onPressed: () => context.push('/gamification/exp-history'),
-                                child: const Text('Lihat Semua', style: TextStyle(color: AppColors.primary)),
+                                onPressed: () =>
+                                    context.push('/gamification/exp-history'),
+                                child: const Text(
+                                  'Lihat Semua',
+                                  style: TextStyle(color: AppColors.primary),
+                                ),
                               ),
                           ],
                         ),
@@ -137,10 +181,15 @@ class _GameHubView extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.card,
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: AppColors.border.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Column(
-                            children: state.expHistory.take(5).map((history) => _buildExpTile(history)).toList(),
+                            children: state.expHistory
+                                .take(5)
+                                .map((history) => _buildExpTile(history))
+                                .toList(),
                           ),
                         ),
                       ],
@@ -176,18 +225,15 @@ class _GameHubView extends StatelessWidget {
         : 0.0;
     final String progressLabel = journey != null
         ? (journey.expToNextLevel > 0
-            ? '${journey.expToNextLevel} XP lagi ke Level ${level + 1}'
-            : 'Level maksimum tercapai')
+              ? '${journey.expToNextLevel} XP lagi ke Level ${level + 1}'
+              : 'Level maksimum tercapai')
         : '$currentExp XP';
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.amber.shade400,
-            Colors.orange.shade600,
-          ],
+          colors: [Colors.amber.shade400, Colors.orange.shade600],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -210,10 +256,17 @@ class _GameHubView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
                 ),
                 child: Center(
-                  child: LevelBadge(icon: badgeIcon, size: 46, fallbackColor: Colors.white),
+                  child: LevelBadge(
+                    icon: badgeIcon,
+                    size: 46,
+                    fallbackColor: Colors.white,
+                  ),
                 ),
               ),
               const SizedBox(width: 20),
@@ -232,14 +285,21 @@ class _GameHubView extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         badgeName,
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -251,13 +311,26 @@ class _GameHubView extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 18),
+                        const Icon(
+                          Icons.local_fire_department_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         const SizedBox(width: 4),
-                        Text('${journey.currentStreak}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(
+                          '${journey.currentStreak}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ],
                     ),
-                    const Text('streak', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                    const Text(
+                      'streak',
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                    ),
                   ],
                 ),
             ],
@@ -282,11 +355,19 @@ class _GameHubView extends StatelessWidget {
             children: [
               Text(
                 '$currentExp XP',
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 progressLabel,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -381,18 +462,32 @@ class _GameHubView extends StatelessWidget {
     );
   }
 
-  Widget _buildListCard(BuildContext context, {required String title, required String subtitle, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildListCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => WidgetsBinding.instance.addPostFrameCallback((_) => onTap()),
+          onTap: () =>
+              WidgetsBinding.instance.addPostFrameCallback((_) => onTap()),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -400,7 +495,10 @@ class _GameHubView extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Icon(icon, color: color, size: 28),
                 ),
                 const SizedBox(width: 16),
@@ -408,13 +506,28 @@ class _GameHubView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(subtitle, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13)),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: AppColors.mutedForeground,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground.withValues(alpha: 0.5)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
+                ),
               ],
             ),
           ),
@@ -432,8 +545,15 @@ class _GameHubView extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.accentOrange.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: Icon(_expIconFor(history.activityType), color: AppColors.accentOrange, size: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.accentOrange.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _expIconFor(history.activityType),
+                  color: AppColors.accentOrange,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -441,35 +561,52 @@ class _GameHubView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      history.activityType, 
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                      history.activityType,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      history.description, 
-                      maxLines: 1, 
+                      history.description,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.mutedForeground,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '+${history.points} XP', 
-                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                  '+${history.points} XP',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        Divider(height: 1, color: AppColors.border.withValues(alpha: 0.3), indent: 70),
+        Divider(
+          height: 1,
+          color: AppColors.border.withValues(alpha: 0.3),
+          indent: 70,
+        ),
       ],
     );
   }

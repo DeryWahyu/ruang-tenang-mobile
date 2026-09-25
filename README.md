@@ -51,7 +51,7 @@ Alur standar adalah screen → BLoC/Cubit → use case/repository → remote dat
 
 ## Fitur member
 
-Home, jurnal, mood tracker/check-in, chat AI, musik/playlist, artikel, stories, forum, wellness, global search, statistik komunitas, billing/premium, profil/settings, dan gamifikasi berupa daily tasks, badge, leaderboard, progress map, rewards, EXP history, XP boost, serta game offline Mindful Runner.
+Home dengan ringkasan aktivitas dan tur fitur, jurnal pribadi/publik, mood tracker, chat AI dengan persetujuan privasi dan input suara, musik/playlist, artikel publik dan artikel sendiri, kisah komunitas, forum, statistik komunitas, pencarian, paket/koin/transaksi, profil, serta Perjalanan (tugas harian, badge, leaderboard, peta, hadiah, tema, riwayat EXP, dan XP boost). Mindful Runner tetap tersedia secara offline.
 
 Admin dan mitra memakai web. Jangan menambahkan screen mobile yang memerlukan role tersebut tanpa keputusan produk baru.
 
@@ -74,7 +74,7 @@ Jangan commit .env, token, credential, atau data pengguna. AppConfig adalah sumb
 
 ## Navigasi
 
-Lima tab shell utama adalah Home, Journal, Chat, Music, dan Profile. Route fitur lain berada di luar shell dan diakses dari Home/Profile/Game Hub. AppRouter secure-by-default: hanya splash, onboarding, dan auth yang public; route lain membutuhkan sesi authenticated.
+Lima tab shell utama adalah Home, Journal, Chat, Music, dan Profile. Komunitas, Artikel, Perjalanan, dan Paket & Koin memakai halaman bertab dengan navigasi setara web khusus mahasiswa. AppRouter secure-by-default: hanya splash, onboarding, dan auth yang public; route lain membutuhkan sesi akun mahasiswa yang terautentikasi.
 
 ## CI dan release
 

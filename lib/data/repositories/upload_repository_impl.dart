@@ -29,4 +29,20 @@ class UploadRepositoryImpl implements UploadRepository {
     return response.data!['url'] as String;
   }
 
+  @override
+  Future<String> uploadAudio(File file) async {
+    final fileName = file.path.split('/').last;
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(file.path, filename: fileName),
+    });
+    final response = await _apiClient.uploadFile<Map<String, dynamic>>(
+      ApiConstants.uploadAudio,
+      formData: formData,
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Audio belum berhasil diunggah');
+    }
+    return response.data!['url'] as String;
+  }
 }

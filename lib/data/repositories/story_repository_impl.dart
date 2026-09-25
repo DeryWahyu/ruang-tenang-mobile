@@ -6,7 +6,28 @@ import '../models/story_model.dart';
 class StoryRepositoryImpl implements StoryRepository {
   final StoryRemoteDataSource _remote;
 
-  StoryRepositoryImpl({required StoryRemoteDataSource remote}) : _remote = remote;
+  StoryRepositoryImpl({required StoryRemoteDataSource remote})
+    : _remote = remote;
+
+  @override
+  Future<List<StoryCategory>> getCategories() async =>
+      (await _remote.getCategories()).map((item) => item.toEntity()).toList();
+
+  @override
+  Future<List<StoryCard>> getMyStories({int page = 1, String? status}) async =>
+      (await _remote.getMyStories(
+        page: page,
+        status: status,
+      )).map((item) => item.toEntity()).toList();
+
+  @override
+  Future<Story> saveStory({
+    String? id,
+    required Map<String, dynamic> data,
+  }) async => (await _remote.saveStory(id: id, data: data)).toEntity();
+
+  @override
+  Future<void> deleteStory(String id) => _remote.deleteStory(id);
 
   @override
   Future<List<StoryCard>> getStories({
@@ -56,7 +77,7 @@ class StoryRepositoryImpl implements StoryRepository {
   }
 
   @override
-  Future<void> toggleCommentHeart(String commentId) async {
-    await _remote.toggleCommentHeart(commentId);
+  Future<void> toggleCommentHeart(String storyId, String commentId) async {
+    await _remote.toggleCommentHeart(storyId, commentId);
   }
 }

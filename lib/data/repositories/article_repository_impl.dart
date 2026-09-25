@@ -6,7 +6,39 @@ import '../models/article_model.dart';
 class ArticleRepositoryImpl implements ArticleRepository {
   final ArticleRemoteDataSource _remote;
 
-  ArticleRepositoryImpl({required ArticleRemoteDataSource remote}) : _remote = remote;
+  ArticleRepositoryImpl({required ArticleRemoteDataSource remote})
+    : _remote = remote;
+
+  @override
+  Future<List<ArticleListItem>> getMyArticles({
+    int page = 1,
+    String? search,
+  }) async => (await _remote.getMyArticles(
+    page: page,
+    search: search,
+  )).map((item) => item.toEntity()).toList();
+
+  @override
+  Future<Article> getMyArticle(String id) async =>
+      (await _remote.getMyArticle(id)).toEntity();
+
+  @override
+  Future<void> saveMyArticle({
+    String? id,
+    required String title,
+    required String content,
+    required int categoryId,
+    String? thumbnail,
+  }) => _remote.saveMyArticle(
+    id: id,
+    title: title,
+    content: content,
+    categoryId: categoryId,
+    thumbnail: thumbnail,
+  );
+
+  @override
+  Future<void> deleteMyArticle(String id) => _remote.deleteMyArticle(id);
 
   @override
   Future<List<ArticleListItem>> getArticles({

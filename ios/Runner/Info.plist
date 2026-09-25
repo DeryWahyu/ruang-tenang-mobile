@@ -8,6 +8,10 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Ruang Tenang</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mikrofon digunakan saat kamu merekam pesan suara atau mendikte pesan untuk Teman Cerita AI.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Pengenalan suara mengubah ucapanmu menjadi teks untuk pesan Teman Cerita AI.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -6,7 +6,8 @@ import '../models/forum_model.dart';
 class ForumRepositoryImpl implements ForumRepository {
   final ForumRemoteDataSource _remote;
 
-  ForumRepositoryImpl({required ForumRemoteDataSource remote}) : _remote = remote;
+  ForumRepositoryImpl({required ForumRemoteDataSource remote})
+    : _remote = remote;
 
   @override
   Future<List<ForumThread>> getForums({
@@ -14,12 +15,14 @@ class ForumRepositoryImpl implements ForumRepository {
     int limit = 10,
     String? search,
     int? categoryId,
+    String? circle,
   }) async {
     final result = await _remote.getForums(
       page: page,
       limit: limit,
       search: search,
       categoryId: categoryId,
+      circle: circle,
     );
     final items = result['items'] as List<ForumThreadModel>;
     return items.map((e) => e.toEntity()).toList();
@@ -63,7 +66,12 @@ class ForumRepositoryImpl implements ForumRepository {
     int limit = 10,
     String sortBy = 'newest',
   }) async {
-    final result = await _remote.getPosts(slug, page: page, limit: limit, sortBy: sortBy);
+    final result = await _remote.getPosts(
+      slug,
+      page: page,
+      limit: limit,
+      sortBy: sortBy,
+    );
     final items = result['items'] as List<ForumPostModel>;
     return items.map((e) => e.toEntity()).toList();
   }

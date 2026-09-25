@@ -10,6 +10,7 @@ import 'presentation/music/widgets/global_mini_player.dart';
 import 'presentation/gamification/widgets/daily_task_fab.dart';
 import 'presentation/common/cubit/connectivity_cubit.dart';
 import 'presentation/auth/bloc/auth_bloc.dart';
+import 'presentation/auth/bloc/auth_state.dart';
 import 'presentation/journal/bloc/journal_bloc.dart';
 import 'presentation/mood/bloc/mood_bloc.dart';
 import 'presentation/chat/bloc/chat_bloc.dart';
@@ -44,45 +45,39 @@ class _RuangTenangAppState extends State<RuangTenangApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (_) => sl<AuthBloc>(),
-        ),
-        BlocProvider<JournalBloc>(
-          create: (_) => sl<JournalBloc>(),
-        ),
-        BlocProvider<MoodBloc>(
-          create: (_) => sl<MoodBloc>(),
-        ),
-        BlocProvider<ChatBloc>(
-          create: (_) => sl<ChatBloc>(),
-        ),
-        BlocProvider<ConnectivityCubit>(
-          create: (_) => ConnectivityCubit(),
-        ),
+        BlocProvider<AuthBloc>(create: (_) => sl<AuthBloc>()),
+        BlocProvider<JournalBloc>(create: (_) => sl<JournalBloc>()),
+        BlocProvider<MoodBloc>(create: (_) => sl<MoodBloc>()),
+        BlocProvider<ChatBloc>(create: (_) => sl<ChatBloc>()),
+        BlocProvider<ConnectivityCubit>(create: (_) => ConnectivityCubit()),
       ],
-      child: MaterialApp.router(
-        title: 'Ruang Tenang',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        routerConfig: _router,
-        builder: (context, child) {
-          // Batasi skala teks sistem (0.85–1.3) agar pengaturan font ekstrem
-          // pada perangkat lama tidak merusak tata letak.
-          final mq = MediaQuery.of(context);
-          final clampedScaler = mq.textScaler.clamp(
-            minScaleFactor: 0.85,
-            maxScaleFactor: 1.3,
-          );
-          return MediaQuery(
-            data: mq.copyWith(textScaler: clampedScaler),
-            child: GradientBackground(
-              child: _GlobalOverlay(
-                router: _router,
-                child: child ?? const SizedBox.shrink(),
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) => MaterialApp.router(
+          title: 'Ruang Tenang',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.forProfileTheme(
+            authState.user?.profileTheme ?? 'default',
+          ),
+          routerConfig: _router,
+          builder: (context, child) {
+            // Batasi skala teks sistem (0.85–1.3) agar pengaturan font ekstrem
+            // pada perangkat lama tidak merusak tata letak.
+            final mq = MediaQuery.of(context);
+            final clampedScaler = mq.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.3,
+            );
+            return MediaQuery(
+              data: mq.copyWith(textScaler: clampedScaler),
+              child: GradientBackground(
+                child: _GlobalOverlay(
+                  router: _router,
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -138,7 +133,8 @@ class _GlobalOverlayState extends State<_GlobalOverlay> {
   void _onRouteChanged() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final newLocation = widget.router.routerDelegate.currentConfiguration.uri.path;
+      final newLocation =
+          widget.router.routerDelegate.currentConfiguration.uri.path;
       if (_location != newLocation) {
         setState(() {
           _location = newLocation;
@@ -165,7 +161,8 @@ class _GlobalOverlayState extends State<_GlobalOverlay> {
     if (inShell) {
       content = widget.child;
     } else {
-      final fabBottom = safeBottom + (AppRouter.hasOwnFab(location) ? 76.0 : 16.0);
+      final fabBottom =
+          safeBottom + (AppRouter.hasOwnFab(location) ? 76.0 : 16.0);
       content = Stack(
         children: [
           widget.child,
@@ -175,9 +172,7 @@ class _GlobalOverlayState extends State<_GlobalOverlay> {
             bottom: safeBottom + 8,
             child: const GlobalMiniPlayer(),
           ),
-          Positioned.fill(
-            child: DailyTaskFab(bottomOffset: fabBottom),
-          ),
+          Positioned.fill(child: DailyTaskFab(bottomOffset: fabBottom)),
         ],
       );
     }
@@ -218,7 +213,11 @@ class _OfflineBanner extends StatelessWidget {
             color: const Color(0xFF374151),
             child: Row(
               children: [
-                const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -230,11 +229,17 @@ class _OfflineBanner extends StatelessWidget {
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.white.withValues(alpha: 0.18),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     minimumSize: const Size(0, 32),
                   ),
                   onPressed: () => router.push('/game'),
-                  child: const Text('Main', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Main',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),

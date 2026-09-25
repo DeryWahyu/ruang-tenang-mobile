@@ -1,9 +1,20 @@
 import '../entities/journal.dart';
+import '../entities/public_journal.dart';
 
 /// Abstract repository interface for journal entries (domain layer).
 ///
 /// Implemented by [JournalRepositoryImpl] in the data layer.
 abstract class JournalRepository {
+  Future<Map<String, dynamic>> getSettings();
+  Future<Map<String, dynamic>> updateSettings(String key, dynamic value);
+  Future<Map<String, dynamic>> getAnalytics();
+  Future<Map<String, dynamic>?> getWeeklySummary();
+  Future<Map<String, dynamic>> getAiContext();
+  Future<List<dynamic>> getAiAccessLogs();
+  Future<Map<String, dynamic>> exportJournals(String format);
+  Future<Map<String, dynamic>> getWritingPrompt();
+  Future<List<PublicJournal>> listPublic({int page, String? search});
+  Future<PublicJournal> getPublic(String uuid);
   Future<JournalListResult> list({
     int page,
     int limit,

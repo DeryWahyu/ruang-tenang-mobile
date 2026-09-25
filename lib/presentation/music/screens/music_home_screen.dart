@@ -13,6 +13,7 @@ import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
 import '../bloc/music_state.dart';
 import '../widgets/track_attribution.dart';
+import '../../common/widgets/mascot_hero.dart';
 
 class MusicHomeScreen extends StatelessWidget {
   const MusicHomeScreen({super.key});
@@ -33,7 +34,8 @@ class _MusicHomeView extends StatefulWidget {
   State<_MusicHomeView> createState() => _MusicHomeViewState();
 }
 
-class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProviderStateMixin {
+class _MusicHomeViewState extends State<_MusicHomeView>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _expandedSlug;
 
@@ -55,7 +57,10 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Musik Relaksasi', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Musik Relaksasi',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         bottom: TabBar(
@@ -79,7 +84,9 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
           if (state.status == MusicStatus.failure) {
             return AppErrorWidget(
               message: state.errorMessage ?? 'Gagal memuat musik',
-              onRetry: () => context.read<MusicBloc>().add(const MusicFetchInitialDataRequested()),
+              onRetry: () => context.read<MusicBloc>().add(
+                const MusicFetchInitialDataRequested(),
+              ),
             );
           }
 
@@ -103,24 +110,53 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
   }
 
   // ===== Browse tab: expandable categories =====
-  Widget _buildBrowseTab(BuildContext context, MusicState state, double bottomPad) {
+  Widget _buildBrowseTab(
+    BuildContext context,
+    MusicState state,
+    double bottomPad,
+  ) {
     return ListView(
-      padding: EdgeInsets.fromLTRB(AppDimensions.spacingBase, AppDimensions.spacingBase, AppDimensions.spacingBase, bottomPad),
+      padding: EdgeInsets.fromLTRB(
+        AppDimensions.spacingBase,
+        AppDimensions.spacingBase,
+        AppDimensions.spacingBase,
+        bottomPad,
+      ),
       children: [
-        const Text('Kategori Musik', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const MascotHero(
+          title: 'Musik yang menemani',
+          description: 'Pilih irama untuk fokus, bernapas, atau beristirahat.',
+          pose: 'music-headphones',
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Kategori Musik',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 16),
         if (state.categories.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 40),
-            child: Center(child: Text('Belum ada kategori', style: TextStyle(color: AppColors.mutedForeground))),
+            child: Center(
+              child: Text(
+                'Belum ada kategori',
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
+            ),
           )
         else
-          ...state.categories.map((category) => _categoryTile(context, category, state)),
+          ...state.categories.map(
+            (category) => _categoryTile(context, category, state),
+          ),
       ],
     );
   }
 
-  Widget _categoryTile(BuildContext context, SongCategory category, MusicState state) {
+  Widget _categoryTile(
+    BuildContext context,
+    SongCategory category,
+    MusicState state,
+  ) {
     final slug = category.slug ?? '';
     final isExpanded = _expandedSlug == slug && slug.isNotEmpty;
     final songs = isExpanded ? state.currentCategorySongs : const <Song>[];
@@ -154,16 +190,30 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(category.name,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text(
+                            category.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text('${category.songCount} lagu',
-                              style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                          Text(
+                            '${category.songCount} lagu',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    Icon(isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                        color: AppColors.mutedForeground),
+                    Icon(
+                      isExpanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: AppColors.mutedForeground,
+                    ),
                   ],
                 ),
               ),
@@ -176,10 +226,21 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       child: Center(
-                          child: SizedBox(
-                              width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))),
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
                     )
-                  : Column(children: songs.map((s) => _songRow(context, s, state)).toList()),
+                  : Column(
+                      children: songs
+                          .map((s) => _songRow(context, s, state))
+                          .toList(),
+                    ),
             ),
         ],
       ),
@@ -192,7 +253,8 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => context.read<MusicBloc>().add(MusicPlaySongRequested(song)),
+        onTap: () =>
+            context.read<MusicBloc>().add(MusicPlaySongRequested(song)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: Row(
@@ -203,18 +265,27 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(song.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: isPlaying ? AppColors.primary : AppColors.foreground)),
+                    Text(
+                      song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isPlaying
+                            ? AppColors.primary
+                            : AppColors.foreground,
+                      ),
+                    ),
                     TrackAttribution(song: song),
                   ],
                 ),
               ),
-              Icon(isPlaying && state.isPlaying ? Icons.pause_circle_filled : Icons.play_arrow_rounded,
-                  color: AppColors.primary),
+              Icon(
+                isPlaying && state.isPlaying
+                    ? Icons.pause_circle_filled
+                    : Icons.play_arrow_rounded,
+                color: AppColors.primary,
+              ),
             ],
           ),
         ),
@@ -223,16 +294,33 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
   }
 
   // ===== Explore tab: public playlists =====
-  Widget _buildExploreTab(BuildContext context, MusicState state, double bottomPad) {
+  Widget _buildExploreTab(
+    BuildContext context,
+    MusicState state,
+    double bottomPad,
+  ) {
     return ListView(
-      padding: EdgeInsets.fromLTRB(AppDimensions.spacingBase, AppDimensions.spacingBase, AppDimensions.spacingBase, bottomPad),
+      padding: EdgeInsets.fromLTRB(
+        AppDimensions.spacingBase,
+        AppDimensions.spacingBase,
+        AppDimensions.spacingBase,
+        bottomPad,
+      ),
       children: [
-        const Text('Playlist Publik', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text(
+          'Playlist Publik',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 16),
         if (state.publicPlaylists.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 40),
-            child: Center(child: Text('Belum ada playlist publik', style: TextStyle(color: AppColors.mutedForeground))),
+            child: Center(
+              child: Text(
+                'Belum ada playlist publik',
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
+            ),
           )
         else
           ...state.publicPlaylists.map((p) => _playlistCard(context, p)),
@@ -241,21 +329,36 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
   }
 
   // ===== Playlist tab: my playlists =====
-  Widget _buildPlaylistTab(BuildContext context, MusicState state, double bottomPad) {
+  Widget _buildPlaylistTab(
+    BuildContext context,
+    MusicState state,
+    double bottomPad,
+  ) {
     return ListView(
-      padding: EdgeInsets.fromLTRB(AppDimensions.spacingBase, AppDimensions.spacingBase, AppDimensions.spacingBase, bottomPad),
+      padding: EdgeInsets.fromLTRB(
+        AppDimensions.spacingBase,
+        AppDimensions.spacingBase,
+        AppDimensions.spacingBase,
+        bottomPad,
+      ),
       children: [
         Row(
           children: [
             const Expanded(
-              child: Text('Playlist Saya', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              child: Text(
+                'Playlist Saya',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(width: 8),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _showCreatePlaylistDialog(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(20),
@@ -265,7 +368,13 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
                   children: [
                     Icon(Icons.add, size: 18, color: Colors.white),
                     SizedBox(width: 4),
-                    Text('Buat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Buat',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -278,12 +387,25 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
             padding: const EdgeInsets.symmetric(vertical: 40),
             child: Column(
               children: [
-                const Icon(Icons.queue_music_rounded, size: 56, color: AppColors.mutedForeground),
+                const Icon(
+                  Icons.queue_music_rounded,
+                  size: 56,
+                  color: AppColors.mutedForeground,
+                ),
                 const SizedBox(height: 12),
-                const Text('Belum ada playlist', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Belum ada playlist',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 4),
-                const Text('Buat playlist pertamamu untuk menyimpan lagu favorit.',
-                    textAlign: TextAlign.center, style: TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
+                const Text(
+                  'Buat playlist pertamamu untuk menyimpan lagu favorit.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.mutedForeground,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           )
@@ -306,27 +428,58 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(playlist.name,
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(
+                  playlist.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
                 if ((playlist.description ?? '').isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(playlist.description!,
-                      maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                  Text(
+                    playlist.description!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.music_note, size: 14, color: AppColors.mutedForeground),
+                    const Icon(
+                      Icons.music_note,
+                      size: 14,
+                      color: AppColors.mutedForeground,
+                    ),
                     const SizedBox(width: 4),
-                    Text('${playlist.itemCount} lagu',
-                        style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                    Text(
+                      '${playlist.itemCount} lagu',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     if (playlist.isPublic) ...[
                       const SizedBox(width: 12),
-                      const Icon(Icons.public, size: 14, color: AppColors.mutedForeground),
+                      const Icon(
+                        Icons.public,
+                        size: 14,
+                        color: AppColors.mutedForeground,
+                      ),
                       const SizedBox(width: 4),
-                      const Text('Publik', style: TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                      const Text(
+                        'Publik',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -378,26 +531,37 @@ class _MusicHomeViewState extends State<_MusicHomeView> with SingleTickerProvide
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Nama Playlist', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Nama Playlist',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: descController,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Deskripsi', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Deskripsi',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (nameController.text.trim().isNotEmpty) {
-                  bloc.add(MusicCreatePlaylistRequested(
-                    name: nameController.text.trim(),
-                    description: descController.text.trim(),
-                    isPublic: false,
-                  ));
+                  bloc.add(
+                    MusicCreatePlaylistRequested(
+                      name: nameController.text.trim(),
+                      description: descController.text.trim(),
+                      isPublic: false,
+                    ),
+                  );
                   Navigator.pop(dialogContext);
                 }
               },

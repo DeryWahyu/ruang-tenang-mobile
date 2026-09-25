@@ -5,6 +5,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../common/widgets/app_network_image.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/music.dart';
+import '../../../domain/repositories/music_repository.dart';
+import '../../auth/bloc/auth_bloc.dart';
 import '../bloc/music_bloc.dart';
 import '../bloc/music_event.dart';
 import '../bloc/music_state.dart';
@@ -23,6 +25,7 @@ class PlaylistDetailScreen extends StatefulWidget {
 class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   late final PlaylistDetailCubit _cubit;
   late final MusicBloc _music;
+  final MusicRepository _repository = sl<MusicRepository>();
 
   @override
   void initState() {
@@ -64,7 +67,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             icon: const Icon(Icons.arrow_back, color: AppColors.foreground),
             onPressed: _back,
           ),
-          title: const Text('Detail Playlist', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Detail Playlist',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         body: BlocBuilder<PlaylistDetailCubit, PlaylistDetailState>(
           builder: (context, state) {
@@ -79,7 +85,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             if (state is PlaylistDetailLoaded) {
               return _content(state.playlist);
             }
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           },
         ),
       ),
@@ -87,28 +95,70 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   }
 
   Widget _content(Playlist playlist) {
-    final songs = playlist.items.where((i) => i.song != null).map((i) => i.song!).toList();
-    final songCount = playlist.totalSongs > 0 ? playlist.totalSongs : playlist.itemCount;
+    final songs = playlist.items
+        .where((i) => i.song != null)
+        .map((i) => i.song!)
+        .toList();
+    final songCount = playlist.totalSongs > 0
+        ? playlist.totalSongs
+        : playlist.itemCount;
+    final own =
+        playlist.userId == context.read<AuthBloc>().state.user?.id &&
+        !playlist.isAdminPlaylist;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Center(child: _cover(playlist.thumbnail)),
         const SizedBox(height: 20),
-        Text(playlist.name,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(
+          playlist.name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
         if ((playlist.description ?? '').isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(playlist.description!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.mutedForeground)),
+          Text(
+            playlist.description!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.mutedForeground),
+          ),
         ],
         const SizedBox(height: 12),
         Center(
-          child: Text('$songCount Lagu • ${playlist.isPublic ? "Publik" : "Privat"}',
-              style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground, fontWeight: FontWeight.bold)),
+          child: Text(
+            '$songCount Lagu • ${playlist.isPublic ? "Publik" : "Privat"}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
+        if (own) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _editPlaylist(playlist),
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Edit'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _addSong,
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah lagu'),
+              ),
+              TextButton.icon(
+                onPressed: () => _deletePlaylist(playlist),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Hapus'),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 20),
         if (songs.isNotEmpty)
           Row(
@@ -137,19 +187,22 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 40),
             child: Center(
-              child: Text('Playlist ini belum punya lagu',
-                  style: TextStyle(color: AppColors.mutedForeground)),
+              child: Text(
+                'Playlist ini belum punya lagu',
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
             ),
           )
         else
           BlocBuilder<MusicBloc, MusicState>(
             buildWhen: (p, c) =>
-                p.currentPlayingSong?.id != c.currentPlayingSong?.id || p.isPlaying != c.isPlaying,
+                p.currentPlayingSong?.id != c.currentPlayingSong?.id ||
+                p.isPlaying != c.isPlaying,
             builder: (context, ms) {
               return Column(
                 children: songs.map((song) {
                   final isCurrent = ms.currentPlayingSong?.id == song.id;
-                  return _songTile(song, isCurrent, ms.isPlaying);
+                  return _songTile(song, isCurrent, ms.isPlaying, own);
                 }).toList(),
               );
             },
@@ -159,12 +212,16 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     );
   }
 
-  Widget _songTile(Song song, bool isCurrent, bool isPlaying) {
+  Widget _songTile(Song song, bool isCurrent, bool isPlaying, bool own) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         if (isCurrent) {
-          _music.add(isPlaying ? const MusicPauseSongRequested() : const MusicResumeSongRequested());
+          _music.add(
+            isPlaying
+                ? const MusicPauseSongRequested()
+                : const MusicResumeSongRequested(),
+          );
         } else {
           _music.add(MusicPlaySongRequested(song));
         }
@@ -173,9 +230,15 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isCurrent ? AppColors.primary.withValues(alpha: 0.08) : AppColors.card,
+          color: isCurrent
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isCurrent ? AppColors.primary.withValues(alpha: 0.5) : AppColors.border),
+          border: Border.all(
+            color: isCurrent
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : AppColors.border,
+          ),
         ),
         child: Row(
           children: [
@@ -185,24 +248,222 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(song.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: isCurrent ? AppColors.primary : AppColors.foreground)),
+                  Text(
+                    song.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: isCurrent
+                          ? AppColors.primary
+                          : AppColors.foreground,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   TrackAttribution(song: song),
                 ],
               ),
             ),
-            Icon(isCurrent && isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                color: AppColors.primary, size: 30),
+            Icon(
+              isCurrent && isPlaying
+                  ? Icons.pause_circle_filled
+                  : Icons.play_circle_fill,
+              color: AppColors.primary,
+              size: 30,
+            ),
+            if (own)
+              IconButton(
+                tooltip: 'Hapus dari playlist',
+                icon: const Icon(Icons.remove_circle_outline),
+                onPressed: () => _removeSong(song),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _editPlaylist(Playlist playlist) async {
+    final name = TextEditingController(text: playlist.name);
+    final description = TextEditingController(text: playlist.description ?? '');
+    var isPublic = playlist.isPublic;
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, update) => AlertDialog(
+          title: const Text('Edit playlist'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: name,
+                decoration: const InputDecoration(labelText: 'Nama'),
+              ),
+              TextField(
+                controller: description,
+                decoration: const InputDecoration(labelText: 'Deskripsi'),
+              ),
+              SwitchListTile(
+                value: isPublic,
+                title: const Text('Publik'),
+                onChanged: (value) => update(() => isPublic = value),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (save == true && name.text.trim().isNotEmpty) {
+      try {
+        await _repository.updatePlaylist(
+          widget.uuid,
+          name: name.text.trim(),
+          description: description.text.trim(),
+          thumbnail: playlist.thumbnail ?? '',
+          isPublic: isPublic,
+        );
+        _cubit.fetchPlaylist(widget.uuid);
+      } catch (_) {
+        _showError('Playlist belum berhasil diubah.');
+      }
+    }
+    name.dispose();
+    description.dispose();
+  }
+
+  Future<void> _deletePlaylist(Playlist playlist) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus playlist?'),
+        content: Text(playlist.name),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _repository.deletePlaylist(widget.uuid);
+      if (mounted) context.pop();
+    } catch (_) {
+      _showError('Playlist belum berhasil dihapus.');
+    }
+  }
+
+  Future<void> _removeSong(Song song) async {
+    try {
+      await _repository.removeSong(widget.uuid, song.id);
+      _cubit.fetchPlaylist(widget.uuid);
+    } catch (_) {
+      _showError('Lagu belum berhasil dihapus.');
+    }
+  }
+
+  Future<void> _addSong() async {
+    try {
+      final categories = await _repository.getSongCategories();
+      if (categories.isEmpty || !mounted) return;
+      var selected = categories.first;
+      var songs = await _repository.getSongsByCategory(selected.slug ?? '');
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (sheetContext, update) => SafeArea(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Column(
+                children: [
+                  const ListTile(title: Text('Tambah lagu')),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: DropdownButtonFormField<int>(
+                      initialValue: selected.id,
+                      decoration: const InputDecoration(labelText: 'Kategori'),
+                      items: categories
+                          .map(
+                            (item) => DropdownMenuItem(
+                              value: item.id,
+                              child: Text(item.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (id) async {
+                        selected = categories.firstWhere(
+                          (item) => item.id == id,
+                        );
+                        final loaded = await _repository.getSongsByCategory(
+                          selected.slug ?? '',
+                        );
+                        update(() => songs = loaded);
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      children: songs
+                          .map(
+                            (song) => ListTile(
+                              title: Text(song.title),
+                              trailing: const Icon(Icons.add),
+                              onTap: () async {
+                                try {
+                                  await _repository.addSong(
+                                    widget.uuid,
+                                    song.id,
+                                  );
+                                  if (sheetContext.mounted) {
+                                    Navigator.pop(sheetContext);
+                                  }
+                                  _cubit.fetchPlaylist(widget.uuid);
+                                } catch (_) {
+                                  _showError(
+                                    'Lagu belum berhasil ditambahkan.',
+                                  );
+                                }
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } catch (_) {
+      _showError('Daftar lagu belum berhasil dimuat.');
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   Widget _pillButton({
@@ -224,11 +485,19 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: filled ? Colors.white : AppColors.primary),
+            Icon(
+              icon,
+              size: 18,
+              color: filled ? Colors.white : AppColors.primary,
+            ),
             const SizedBox(width: 6),
-            Text(label,
-                style: TextStyle(
-                    color: filled ? Colors.white : AppColors.primary, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: TextStyle(
+                color: filled ? Colors.white : AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -249,18 +518,37 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           children: [
             Icon(icon, size: 48, color: AppColors.mutedForeground),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.mutedForeground)),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.mutedForeground),
+            ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: onRetry,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(24)),
-                  child: const Text('Coba Lagi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Text(
+                    'Coba Lagi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],

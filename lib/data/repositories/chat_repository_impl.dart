@@ -9,8 +9,18 @@ class ChatRepositoryImpl implements ChatRepository {
   ChatRepositoryImpl({required ChatRemoteDataSource remote}) : _remote = remote;
 
   @override
-  Future<ChatSessionListResult> getSessions({int page = 1, int limit = 20}) async {
-    final result = await _remote.getSessions(page: page, limit: limit);
+  Future<ChatSessionListResult> getSessions({
+    int page = 1,
+    int limit = 20,
+    String? filter,
+    String? search,
+  }) async {
+    final result = await _remote.getSessions(
+      page: page,
+      limit: limit,
+      filter: filter,
+      search: search,
+    );
     return result.toEntity();
   }
 
@@ -33,8 +43,11 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<({ChatMessage userMessage, ChatMessage aiMessage})> sendMessage(
-      String uuid, String content) async {
-    final result = await _remote.sendMessage(uuid, content);
+    String uuid,
+    String content, {
+    String type = 'text',
+  }) async {
+    final result = await _remote.sendMessage(uuid, content, type: type);
     final userMessageModel = result['user_message'] as ChatMessageModel;
     final aiMessageModel = result['ai_message'] as ChatMessageModel;
 

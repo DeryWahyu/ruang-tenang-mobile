@@ -1,6 +1,7 @@
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
 import '../../models/journal_model.dart';
+import '../../models/public_journal_model.dart';
 
 /// Remote data source for Journal endpoints.
 ///
@@ -13,6 +14,89 @@ class JournalRemoteDataSource {
   final ApiClient _apiClient;
 
   JournalRemoteDataSource(this._apiClient);
+
+  Future<Map<String, dynamic>> _getData(String path) async {
+    final body = await _apiClient.fetchBody(
+      'GET',
+      '${ApiConstants.journals}/$path',
+    );
+    return Map<String, dynamic>.from(body['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> getSettings() => _getData('settings');
+
+  Future<Map<String, dynamic>> updateSettings(String key, dynamic value) async {
+    final body = await _apiClient.fetchBody(
+      'PUT',
+      '${ApiConstants.journals}/settings',
+      data: {key: value},
+    );
+    return Map<String, dynamic>.from(body['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> getAnalytics() => _getData('analytics');
+
+  Future<Map<String, dynamic>?> getWeeklySummary() async {
+    final body = await _apiClient.fetchBody(
+      'GET',
+      '${ApiConstants.journals}/weekly-summary',
+    );
+    final data = body['data'];
+    return data is Map ? Map<String, dynamic>.from(data) : null;
+  }
+
+  Future<Map<String, dynamic>> getAiContext() => _getData('ai-context');
+
+  Future<List<dynamic>> getAiAccessLogs() async {
+    final body = await _apiClient.fetchBody(
+      'GET',
+      '${ApiConstants.journals}/ai-access-logs',
+    );
+    return body['data'] as List<dynamic>? ?? [];
+  }
+
+  Future<Map<String, dynamic>> exportJournals(String format) async {
+    final body = await _apiClient.fetchBody(
+      'POST',
+      '${ApiConstants.journals}/export',
+      data: {'format': format},
+    );
+    return Map<String, dynamic>.from(body['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> getWritingPrompt() => _getData('prompt');
+
+  Future<List<PublicJournalModel>> listPublic({
+    int page = 1,
+    String? search,
+  }) async {
+    final body = await _apiClient.fetchBody(
+      'GET',
+      '${ApiConstants.journals}/public',
+      queryParameters: {
+        'page': page,
+        'limit': 10,
+        if (search != null && search.trim().isNotEmpty) 'q': search.trim(),
+      },
+    );
+    return (body['data'] as List<dynamic>? ?? const [])
+        .map(
+          (item) => PublicJournalModel.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList();
+  }
+
+  Future<PublicJournalModel> getPublic(String uuid) async {
+    final body = await _apiClient.fetchBody(
+      'GET',
+      '${ApiConstants.journals}/public/$uuid',
+    );
+    return PublicJournalModel.fromJson(
+      Map<String, dynamic>.from(body['data'] as Map),
+    );
+  }
 
   /// GET /journals?page=&limit=&tags=&start_date=&end_date=&mood=
   Future<JournalListResultModel> list({
@@ -55,7 +139,11 @@ class JournalRemoteDataSource {
     final data = body['data'];
     if (data is! List) return const [];
     return data
-        .map((e) => JournalListItemModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => JournalListItemModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
         .toList();
   }
 
@@ -65,7 +153,9 @@ class JournalRemoteDataSource {
       'GET',
       '${ApiConstants.journals}/$uuid',
     );
-    return JournalModel.fromJson(Map<String, dynamic>.from(body['data'] as Map));
+    return JournalModel.fromJson(
+      Map<String, dynamic>.from(body['data'] as Map),
+    );
   }
 
   /// POST /journals
@@ -89,7 +179,9 @@ class JournalRemoteDataSource {
         'share_with_ai': ?shareWithAI,
       },
     );
-    return JournalModel.fromJson(Map<String, dynamic>.from(body['data'] as Map));
+    return JournalModel.fromJson(
+      Map<String, dynamic>.from(body['data'] as Map),
+    );
   }
 
   /// PUT /journals/:uuid (partial update — only non-null fields sent)
@@ -114,7 +206,9 @@ class JournalRemoteDataSource {
         'share_with_ai': ?shareWithAI,
       },
     );
-    return JournalModel.fromJson(Map<String, dynamic>.from(body['data'] as Map));
+    return JournalModel.fromJson(
+      Map<String, dynamic>.from(body['data'] as Map),
+    );
   }
 
   /// DELETE /journals/:uuid (returns `{message}`)

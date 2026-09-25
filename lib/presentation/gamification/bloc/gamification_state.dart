@@ -17,6 +17,11 @@ class GamificationState extends Equatable {
   final List<HallOfFameEntry> leaderboard;
   final List<Reward> rewards;
   final int coinBalance;
+  final List<Map<String, dynamic>> rewardClaims;
+  final int rewardClaimsPage;
+  final int rewardClaimsTotalPages;
+  final List<String> ownedThemes;
+  final String activeTheme;
   final String errorMessage;
   final String successMessage;
 
@@ -34,6 +39,11 @@ class GamificationState extends Equatable {
     this.leaderboard = const [],
     this.rewards = const [],
     this.coinBalance = 0,
+    this.rewardClaims = const [],
+    this.rewardClaimsPage = 1,
+    this.rewardClaimsTotalPages = 1,
+    this.ownedThemes = const ['default'],
+    this.activeTheme = 'default',
     this.errorMessage = '',
     this.successMessage = '',
   });
@@ -56,6 +66,11 @@ class GamificationState extends Equatable {
     List<HallOfFameEntry>? leaderboard,
     List<Reward>? rewards,
     int? coinBalance,
+    List<Map<String, dynamic>>? rewardClaims,
+    int? rewardClaimsPage,
+    int? rewardClaimsTotalPages,
+    List<String>? ownedThemes,
+    String? activeTheme,
     String? errorMessage,
     String? successMessage,
     bool clearMessages = false,
@@ -67,23 +82,48 @@ class GamificationState extends Equatable {
       expHistory: expHistory ?? this.expHistory,
       expHistoryPage: expHistoryPage ?? this.expHistoryPage,
       expHistoryTotalPages: expHistoryTotalPages ?? this.expHistoryTotalPages,
-      expHistoryLoadingMore: expHistoryLoadingMore ?? this.expHistoryLoadingMore,
+      expHistoryLoadingMore:
+          expHistoryLoadingMore ?? this.expHistoryLoadingMore,
       badges: badges ?? this.badges,
       dailyTasks: dailyTasks ?? this.dailyTasks,
       progressMap: progressMap ?? this.progressMap,
       leaderboard: leaderboard ?? this.leaderboard,
       rewards: rewards ?? this.rewards,
       coinBalance: coinBalance ?? this.coinBalance,
+      rewardClaims: rewardClaims ?? this.rewardClaims,
+      rewardClaimsPage: rewardClaimsPage ?? this.rewardClaimsPage,
+      rewardClaimsTotalPages:
+          rewardClaimsTotalPages ?? this.rewardClaimsTotalPages,
+      ownedThemes: ownedThemes ?? this.ownedThemes,
+      activeTheme: activeTheme ?? this.activeTheme,
       errorMessage: clearMessages ? '' : (errorMessage ?? this.errorMessage),
-      successMessage: clearMessages ? '' : (successMessage ?? this.successMessage),
+      successMessage: clearMessages
+          ? ''
+          : (successMessage ?? this.successMessage),
     );
   }
 
   @override
   List<Object?> get props => [
-        status, levelInfo, journey, expHistory, expHistoryPage, expHistoryTotalPages,
-        expHistoryLoadingMore, badges, dailyTasks, progressMap,
-        leaderboard, rewards, coinBalance,
-        errorMessage, successMessage,
-      ];
+    status,
+    levelInfo,
+    journey,
+    expHistory,
+    expHistoryPage,
+    expHistoryTotalPages,
+    expHistoryLoadingMore,
+    badges,
+    dailyTasks,
+    progressMap,
+    leaderboard,
+    rewards,
+    coinBalance,
+    rewardClaims,
+    rewardClaimsPage,
+    rewardClaimsTotalPages,
+    ownedThemes,
+    activeTheme,
+    errorMessage,
+    successMessage,
+  ];
 }

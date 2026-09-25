@@ -20,6 +20,8 @@ class User extends Equatable {
   final String badgeName;
   final String badgeIcon;
   final String profileTheme;
+  final bool hasAcceptedAiDisclaimer;
+  final bool isForumBlocked;
   final String? createdAt;
 
   const User({
@@ -37,6 +39,8 @@ class User extends Equatable {
     this.badgeName = 'Pemula',
     this.badgeIcon = '\u{1F331}',
     this.profileTheme = 'default',
+    this.hasAcceptedAiDisclaimer = false,
+    this.isForumBlocked = false,
     this.createdAt,
   });
 
@@ -55,6 +59,8 @@ class User extends Equatable {
     String? badgeName,
     String? badgeIcon,
     String? profileTheme,
+    bool? hasAcceptedAiDisclaimer,
+    bool? isForumBlocked,
     String? createdAt,
   }) {
     return User(
@@ -72,6 +78,9 @@ class User extends Equatable {
       badgeName: badgeName ?? this.badgeName,
       badgeIcon: badgeIcon ?? this.badgeIcon,
       profileTheme: profileTheme ?? this.profileTheme,
+      hasAcceptedAiDisclaimer:
+          hasAcceptedAiDisclaimer ?? this.hasAcceptedAiDisclaimer,
+      isForumBlocked: isForumBlocked ?? this.isForumBlocked,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -85,11 +94,18 @@ class User extends Equatable {
     id,
     name,
     email,
+    avatar,
     whatsappNumber,
     role,
     exp,
     goldCoins,
     isPremium,
+    premiumUntil,
     level,
+    badgeName,
+    badgeIcon,
+    profileTheme,
+    hasAcceptedAiDisclaimer,
+    isForumBlocked,
   ];
 }

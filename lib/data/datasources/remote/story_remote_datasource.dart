@@ -7,6 +7,66 @@ class StoryRemoteDataSource {
 
   StoryRemoteDataSource(this._apiClient);
 
+  Future<List<StoryCategoryModel>> getCategories() async {
+    final response = await _apiClient.get<List<StoryCategoryModel>>(
+      '${ApiConstants.stories}/categories',
+      fromJson: (json) => (json as List)
+          .map(
+            (item) => StoryCategoryModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
+    );
+    return response.data ?? [];
+  }
+
+  Future<List<StoryCardModel>> getMyStories({
+    int page = 1,
+    String? status,
+  }) async {
+    final response = await _apiClient.getPaginated<StoryCardModel>(
+      '${ApiConstants.stories}/my-stories',
+      queryParameters: {
+        'page': page,
+        'limit': 10,
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+      fromJson: StoryCardModel.fromJson,
+    );
+    return response.data;
+  }
+
+  Future<StoryModel> saveStory({
+    String? id,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = id == null
+        ? await _apiClient.post<Map<String, dynamic>>(
+            ApiConstants.stories,
+            data: data,
+            fromJson: (json) => Map<String, dynamic>.from(json as Map),
+          )
+        : await _apiClient.put<Map<String, dynamic>>(
+            '${ApiConstants.stories}/$id',
+            data: data,
+            fromJson: (json) => Map<String, dynamic>.from(json as Map),
+          );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Kisah belum berhasil disimpan');
+    }
+    return StoryModel.fromJson(response.data!);
+  }
+
+  Future<void> deleteStory(String id) async {
+    final response = await _apiClient.delete<dynamic>(
+      '${ApiConstants.stories}/$id',
+    );
+    if (!response.success) {
+      throw Exception(response.error ?? 'Kisah belum berhasil dihapus');
+    }
+  }
+
   /// GET /stories
   Future<Map<String, dynamic>> getStories({
     int page = 1,
@@ -21,7 +81,8 @@ class StoryRemoteDataSource {
         'page': page,
         'limit': limit,
         'sort_by': sortBy,
-        if (categoryId != null && categoryId.isNotEmpty) 'category_id': categoryId,
+        if (categoryId != null && categoryId.isNotEmpty)
+          'category_id': categoryId,
         if (search != null && search.isNotEmpty) 'search': search,
       },
       fromJson: (json) => StoryCardModel.fromJson(json),
@@ -74,7 +135,10 @@ class StoryRemoteDataSource {
 
     final data = body['data'] as Map<String, dynamic>? ?? body;
     final commentsList = (data['comments'] as List<dynamic>? ?? [])
-        .map((e) => StoryCommentModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) =>
+              StoryCommentModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
 
     return {
@@ -86,7 +150,10 @@ class StoryRemoteDataSource {
   }
 
   /// POST /stories/:id/comments
-  Future<StoryCommentModel> createComment(String storyId, String content) async {
+  Future<StoryCommentModel> createComment(
+    String storyId,
+    String content,
+  ) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       '${ApiConstants.stories}/$storyId/comments',
       data: {'content': content},
@@ -101,9 +168,9 @@ class StoryRemoteDataSource {
   }
 
   /// POST /stories/comments/:id/heart
-  Future<void> toggleCommentHeart(String commentId) async {
+  Future<void> toggleCommentHeart(String storyId, String commentId) async {
     final response = await _apiClient.post<dynamic>(
-      '${ApiConstants.stories}/comments/$commentId/heart',
+      '${ApiConstants.stories}/$storyId/comments/$commentId/heart',
       data: {},
       fromJson: (json) => json,
     );

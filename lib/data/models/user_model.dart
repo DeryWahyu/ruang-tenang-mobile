@@ -19,6 +19,8 @@ class UserModel extends Equatable {
   final String badgeName;
   final String badgeIcon;
   final String profileTheme;
+  final bool hasAcceptedAiDisclaimer;
+  final bool isForumBlocked;
   final String? createdAt;
 
   const UserModel({
@@ -36,6 +38,8 @@ class UserModel extends Equatable {
     this.badgeName = 'Pemula',
     this.badgeIcon = '\u{1F331}',
     this.profileTheme = 'default',
+    this.hasAcceptedAiDisclaimer = false,
+    this.isForumBlocked = false,
     this.createdAt,
   });
 
@@ -55,6 +59,9 @@ class UserModel extends Equatable {
       badgeName: json['badge_name'] as String? ?? 'Pemula',
       badgeIcon: json['badge_icon'] as String? ?? '\u{1F331}',
       profileTheme: json['profile_theme'] as String? ?? 'default',
+      hasAcceptedAiDisclaimer:
+          json['has_accepted_ai_disclaimer'] as bool? ?? false,
+      isForumBlocked: json['is_forum_blocked'] as bool? ?? false,
       createdAt: json['created_at'] as String?,
     );
   }
@@ -75,6 +82,8 @@ class UserModel extends Equatable {
       'badge_name': badgeName,
       'badge_icon': badgeIcon,
       'profile_theme': profileTheme,
+      'has_accepted_ai_disclaimer': hasAcceptedAiDisclaimer,
+      'is_forum_blocked': isForumBlocked,
       'created_at': createdAt,
     };
   }
@@ -94,6 +103,8 @@ class UserModel extends Equatable {
     String? badgeName,
     String? badgeIcon,
     String? profileTheme,
+    bool? hasAcceptedAiDisclaimer,
+    bool? isForumBlocked,
     String? createdAt,
   }) {
     return UserModel(
@@ -111,6 +122,9 @@ class UserModel extends Equatable {
       badgeName: badgeName ?? this.badgeName,
       badgeIcon: badgeIcon ?? this.badgeIcon,
       profileTheme: profileTheme ?? this.profileTheme,
+      hasAcceptedAiDisclaimer:
+          hasAcceptedAiDisclaimer ?? this.hasAcceptedAiDisclaimer,
+      isForumBlocked: isForumBlocked ?? this.isForumBlocked,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -130,6 +144,8 @@ class UserModel extends Equatable {
     badgeName: badgeName,
     badgeIcon: badgeIcon,
     profileTheme: profileTheme,
+    hasAcceptedAiDisclaimer: hasAcceptedAiDisclaimer,
+    isForumBlocked: isForumBlocked,
     createdAt: createdAt,
   );
 
@@ -148,6 +164,8 @@ class UserModel extends Equatable {
     badgeName: user.badgeName,
     badgeIcon: user.badgeIcon,
     profileTheme: user.profileTheme,
+    hasAcceptedAiDisclaimer: user.hasAcceptedAiDisclaimer,
+    isForumBlocked: user.isForumBlocked,
     createdAt: user.createdAt,
   );
 
@@ -160,10 +178,18 @@ class UserModel extends Equatable {
     id,
     name,
     email,
+    avatar,
+    whatsappNumber,
     role,
     exp,
     goldCoins,
     isPremium,
+    premiumUntil,
     level,
+    badgeName,
+    badgeIcon,
+    profileTheme,
+    hasAcceptedAiDisclaimer,
+    isForumBlocked,
   ];
 }

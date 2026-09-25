@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/constants/storage_keys.dart';
+import '../../core/network/api_exceptions.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/remote/auth_remote_datasource.dart';
@@ -46,9 +47,13 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Response login tidak valid');
     }
 
-    await _secureStorage.write(key: StorageKeys.authToken, value: token);
-
     final user = UserModel.fromJson(userData);
+    if (!user.isUser) {
+      throw const ForbiddenException(
+        message: 'Aplikasi mobile hanya tersedia untuk akun mahasiswa.',
+      );
+    }
+    await _secureStorage.write(key: StorageKeys.authToken, value: token);
     await _secureStorage.write(
       key: StorageKeys.userData,
       value: jsonEncode(user.toJson()),
@@ -115,6 +120,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> getProfile() async {
     final user = await _remoteDataSource.getProfile();
+    if (!user.isUser) {
+      await logout();
+      throw const ForbiddenException(
+        message: 'Aplikasi mobile hanya tersedia untuk akun mahasiswa.',
+      );
+    }
     await _secureStorage.write(
       key: StorageKeys.userData,
       value: jsonEncode(user.toJson()),
@@ -176,7 +187,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final json = jsonDecode(userData) as Map<String, dynamic>;
-      return UserModel.fromJson(json).toEntity();
+      final user = UserModel.fromJson(json);
+      if (!user.isUser) {
+        await logout();
+        return null;
+      }
+      return user.toEntity();
     } catch (_) {
       return null;
     }

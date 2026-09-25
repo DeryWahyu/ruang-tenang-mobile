@@ -18,6 +18,7 @@ class ApiConstants {
 
   // Upload
   static const String uploadImage = '/upload/image';
+  static const String uploadAudio = '/upload/audio';
 
   // Articles
   static const String articles = '/articles';

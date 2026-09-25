@@ -6,6 +6,7 @@ abstract class ForumRepository {
     int limit = 10,
     String? search,
     int? categoryId,
+    String? circle,
   });
   Future<ForumThread> getForum(String slug);
   Future<ForumThread> createForum({

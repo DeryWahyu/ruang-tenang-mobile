@@ -9,9 +9,10 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
   final StoryRepository _repository;
 
   StoryBloc({required StoryRepository repository})
-      : _repository = repository,
-        super(const StoryState.initial()) {
+    : _repository = repository,
+      super(const StoryState.initial()) {
     on<StoryListRequested>(_onListRequested);
+    on<StoryLoadMoreRequested>(_onLoadMoreRequested);
     on<StoryDetailRequested>(_onDetailRequested);
     on<StoryHeartToggled>(_onHeartToggled);
     on<StoryCommentsRequested>(_onCommentsRequested);
@@ -20,33 +21,94 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     on<StorySearchRequested>(_onSearchRequested);
   }
 
-  Future<void> _onListRequested(StoryListRequested event, Emitter<StoryState> emit) async {
-    emit(state.copyWith(status: StoryStatus.loading, stories: event.refresh ? const [] : state.stories));
+  Future<void> _onListRequested(
+    StoryListRequested event,
+    Emitter<StoryState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: StoryStatus.loading,
+        stories: event.refresh ? const [] : state.stories,
+      ),
+    );
     try {
-      final stories = await _repository.getStories(sortBy: event.sortBy);
-      emit(state.copyWith(status: StoryStatus.listSuccess, stories: stories));
+      final stories = await _repository.getStories(
+        sortBy: event.sortBy,
+        categoryId: event.categoryId,
+        search: event.search,
+      );
+      emit(
+        state.copyWith(
+          status: StoryStatus.listSuccess,
+          stories: stories,
+          page: 1,
+          hasMore: stories.length == 10,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: StoryStatus.failure,
-        errorMessage: ErrorMessage.from(e, 'Gagal memuat cerita'),
-      ));
+      emit(
+        state.copyWith(
+          status: StoryStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal memuat cerita'),
+        ),
+      );
     }
   }
 
-  Future<void> _onDetailRequested(StoryDetailRequested event, Emitter<StoryState> emit) async {
+  Future<void> _onLoadMoreRequested(
+    StoryLoadMoreRequested event,
+    Emitter<StoryState> emit,
+  ) async {
+    if (!state.hasMore || state.status == StoryStatus.loading) return;
+    final page = state.page + 1;
+    emit(state.copyWith(status: StoryStatus.loading));
+    try {
+      final stories = await _repository.getStories(
+        page: page,
+        sortBy: event.sortBy,
+        categoryId: event.categoryId,
+        search: event.search,
+      );
+      emit(
+        state.copyWith(
+          status: StoryStatus.listSuccess,
+          stories: [...state.stories, ...stories],
+          page: page,
+          hasMore: stories.length == 10,
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          status: StoryStatus.listSuccess,
+          errorMessage: 'Kisah berikutnya belum berhasil dimuat.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _onDetailRequested(
+    StoryDetailRequested event,
+    Emitter<StoryState> emit,
+  ) async {
     emit(state.copyWith(status: StoryStatus.detailLoading));
     try {
       final story = await _repository.getStory(event.id);
       emit(state.copyWith(status: StoryStatus.detailSuccess, detail: story));
     } catch (e) {
-      emit(state.copyWith(
-        status: StoryStatus.failure,
-        errorMessage: ErrorMessage.from(e, 'Gagal memuat cerita'),
-      ));
+      emit(
+        state.copyWith(
+          status: StoryStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal memuat cerita'),
+        ),
+      );
     }
   }
 
-  Future<void> _onHeartToggled(StoryHeartToggled event, Emitter<StoryState> emit) async {
+  Future<void> _onHeartToggled(
+    StoryHeartToggled event,
+    Emitter<StoryState> emit,
+  ) async {
     try {
       await _repository.toggleHeart(event.id);
       if (state.detail != null && state.detail!.id == event.id) {
@@ -60,7 +122,9 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
           triggerWarningText: state.detail!.triggerWarningText,
           status: state.detail!.status,
           viewCount: state.detail!.viewCount,
-          heartCount: state.detail!.hasHearted ? state.detail!.heartCount - 1 : state.detail!.heartCount + 1,
+          heartCount: state.detail!.hasHearted
+              ? state.detail!.heartCount - 1
+              : state.detail!.heartCount + 1,
           commentCount: state.detail!.commentCount,
           isFeatured: state.detail!.isFeatured,
           author: state.detail!.author,
@@ -75,31 +139,47 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     } catch (_) {}
   }
 
-  Future<void> _onCommentsRequested(StoryCommentsRequested event, Emitter<StoryState> emit) async {
+  Future<void> _onCommentsRequested(
+    StoryCommentsRequested event,
+    Emitter<StoryState> emit,
+  ) async {
     try {
       final comments = await _repository.getComments(event.storyId);
       emit(state.copyWith(comments: comments));
     } catch (_) {}
   }
 
-  Future<void> _onCommentCreate(StoryCommentCreateRequested event, Emitter<StoryState> emit) async {
+  Future<void> _onCommentCreate(
+    StoryCommentCreateRequested event,
+    Emitter<StoryState> emit,
+  ) async {
     emit(state.copyWith(status: StoryStatus.submitting));
     try {
-      final comment = await _repository.createComment(event.storyId, event.content);
-      emit(state.copyWith(
-        status: StoryStatus.success,
-        comments: [...state.comments, comment],
-        successMessage: 'Komentar berhasil dikirim',
-      ));
+      final comment = await _repository.createComment(
+        event.storyId,
+        event.content,
+      );
+      emit(
+        state.copyWith(
+          status: StoryStatus.success,
+          comments: [...state.comments, comment],
+          successMessage: 'Komentar berhasil dikirim',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: StoryStatus.failure,
-        errorMessage: ErrorMessage.from(e, 'Gagal mengirim komentar'),
-      ));
+      emit(
+        state.copyWith(
+          status: StoryStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal mengirim komentar'),
+        ),
+      );
     }
   }
 
-  Future<void> _onCommentHeartToggled(StoryCommentHeartToggled event, Emitter<StoryState> emit) async {
+  Future<void> _onCommentHeartToggled(
+    StoryCommentHeartToggled event,
+    Emitter<StoryState> emit,
+  ) async {
     final oldComments = state.comments;
     final index = oldComments.indexWhere((c) => c.id == event.commentId);
     if (index == -1) return;
@@ -117,23 +197,28 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     emit(state.copyWith(comments: newComments));
 
     try {
-      await _repository.toggleCommentHeart(event.commentId);
+      await _repository.toggleCommentHeart(event.storyId, event.commentId);
     } catch (_) {
       // Revert on failure
       emit(state.copyWith(comments: oldComments));
     }
   }
 
-  Future<void> _onSearchRequested(StorySearchRequested event, Emitter<StoryState> emit) async {
+  Future<void> _onSearchRequested(
+    StorySearchRequested event,
+    Emitter<StoryState> emit,
+  ) async {
     emit(state.copyWith(status: StoryStatus.loading, stories: const []));
     try {
       final stories = await _repository.getStories(search: event.query);
       emit(state.copyWith(status: StoryStatus.listSuccess, stories: stories));
     } catch (e) {
-      emit(state.copyWith(
-        status: StoryStatus.failure,
-        errorMessage: ErrorMessage.from(e, 'Gagal mencari cerita'),
-      ));
+      emit(
+        state.copyWith(
+          status: StoryStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal mencari cerita'),
+        ),
+      );
     }
   }
 }

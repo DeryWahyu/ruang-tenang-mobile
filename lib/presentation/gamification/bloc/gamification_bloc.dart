@@ -9,8 +9,8 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
   final GamificationRepository _repository;
 
   GamificationBloc({required GamificationRepository repository})
-      : _repository = repository,
-        super(const GamificationState.initial()) {
+    : _repository = repository,
+      super(const GamificationState.initial()) {
     on<GamificationLevelRequested>(_onLevelRequested);
     on<GamificationJourneyRequested>(_onJourneyRequested);
     on<GamificationExpHistoryRequested>(_onExpHistoryRequested);
@@ -24,67 +24,107 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
     on<GamificationLeaderboardRequested>(_onLeaderboardRequested);
     on<GamificationRewardsRequested>(_onRewardsRequested);
     on<GamificationRewardClaimed>(_onRewardClaimed);
+    on<GamificationRewardClaimsMoreRequested>(_onRewardClaimsMoreRequested);
+    on<GamificationThemeActivated>(_onThemeActivated);
   }
 
-  Future<void> _onLevelRequested(GamificationLevelRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onLevelRequested(
+    GamificationLevelRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     try {
       final info = await _repository.getUserLevelInfo();
       emit(state.copyWith(levelInfo: info));
     } catch (_) {}
   }
 
-  Future<void> _onJourneyRequested(GamificationJourneyRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onJourneyRequested(
+    GamificationJourneyRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     try {
       final journey = await _repository.getPersonalJourney();
-      emit(state.copyWith(journey: journey, status: GamificationStatus.success));
+      emit(
+        state.copyWith(journey: journey, status: GamificationStatus.success),
+      );
     } catch (_) {
       // Journey is supplementary; keep existing level info if any.
     }
   }
 
-  Future<void> _onExpHistoryRequested(GamificationExpHistoryRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onExpHistoryRequested(
+    GamificationExpHistoryRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     try {
       final result = await _repository.getExpHistory(page: 1, limit: 20);
-      emit(state.copyWith(
-        status: GamificationStatus.success,
-        expHistory: List<ExpHistory>.from(result['items'] as List),
-        expHistoryPage: result['page'] as int? ?? 1,
-        expHistoryTotalPages: result['total_pages'] as int? ?? 1,
-      ));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          expHistory: List<ExpHistory>.from(result['items'] as List),
+          expHistoryPage: result['page'] as int? ?? 1,
+          expHistoryTotalPages: result['total_pages'] as int? ?? 1,
+        ),
+      );
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.success, expHistory: const []));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          expHistory: const [],
+        ),
+      );
     }
   }
 
-  Future<void> _onExpHistoryLoadMore(GamificationExpHistoryLoadMore event, Emitter<GamificationState> emit) async {
+  Future<void> _onExpHistoryLoadMore(
+    GamificationExpHistoryLoadMore event,
+    Emitter<GamificationState> emit,
+  ) async {
     if (!state.expHistoryHasMore || state.expHistoryLoadingMore) return;
     emit(state.copyWith(expHistoryLoadingMore: true));
     try {
       final nextPage = state.expHistoryPage + 1;
       final result = await _repository.getExpHistory(page: nextPage, limit: 20);
-      emit(state.copyWith(
-        expHistory: [...state.expHistory, ...List<ExpHistory>.from(result['items'] as List)],
-        expHistoryPage: result['page'] as int? ?? nextPage,
-        expHistoryTotalPages: result['total_pages'] as int? ?? state.expHistoryTotalPages,
-        expHistoryLoadingMore: false,
-      ));
+      emit(
+        state.copyWith(
+          expHistory: [
+            ...state.expHistory,
+            ...List<ExpHistory>.from(result['items'] as List),
+          ],
+          expHistoryPage: result['page'] as int? ?? nextPage,
+          expHistoryTotalPages:
+              result['total_pages'] as int? ?? state.expHistoryTotalPages,
+          expHistoryLoadingMore: false,
+        ),
+      );
     } catch (_) {
       emit(state.copyWith(expHistoryLoadingMore: false));
     }
   }
 
-  Future<void> _onBadgesRequested(GamificationBadgesRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onBadgesRequested(
+    GamificationBadgesRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     emit(state.copyWith(status: GamificationStatus.loading));
     try {
       final badges = await _repository.getBadges();
       emit(state.copyWith(status: GamificationStatus.success, badges: badges));
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat badge'));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: 'Gagal memuat badge',
+        ),
+      );
     }
   }
 
   // ===== Daily Tasks =====
-  Future<void> _onDailyTasksRequested(GamificationDailyTasksRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onDailyTasksRequested(
+    GamificationDailyTasksRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     emit(state.copyWith(status: GamificationStatus.loading));
     try {
       if (event.processLogin) {
@@ -94,70 +134,138 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
         } catch (_) {}
       }
       final summary = await _repository.getDailyTasks();
-      emit(state.copyWith(status: GamificationStatus.success, dailyTasks: summary));
+      emit(
+        state.copyWith(status: GamificationStatus.success, dailyTasks: summary),
+      );
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat tugas harian'));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: 'Gagal memuat tugas harian',
+        ),
+      );
     }
   }
 
-  Future<void> _onDailyTaskClaimed(GamificationDailyTaskClaimed event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.submitting, clearMessages: true));
+  Future<void> _onDailyTaskClaimed(
+    GamificationDailyTaskClaimed event,
+    Emitter<GamificationState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: GamificationStatus.submitting,
+        clearMessages: true,
+      ),
+    );
     try {
       final result = await _repository.claimDailyTask(event.taskId);
       final summary = await _repository.getDailyTasks();
-      emit(state.copyWith(
-        status: GamificationStatus.success,
-        dailyTasks: summary,
-        successMessage: (result['message'] as String?) ?? 'Reward berhasil diklaim',
-      ));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          dailyTasks: summary,
+          successMessage:
+              (result['message'] as String?) ?? 'Reward berhasil diklaim',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim reward')));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal mengklaim reward'),
+        ),
+      );
     }
   }
 
-  Future<void> _onAllTasksClaimed(GamificationAllTasksClaimed event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.submitting, clearMessages: true));
+  Future<void> _onAllTasksClaimed(
+    GamificationAllTasksClaimed event,
+    Emitter<GamificationState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: GamificationStatus.submitting,
+        clearMessages: true,
+      ),
+    );
     try {
       final result = await _repository.claimAllDailyTasks();
       final summary = await _repository.getDailyTasks();
-      emit(state.copyWith(
-        status: GamificationStatus.success,
-        dailyTasks: summary,
-        successMessage: (result['message'] as String?) ?? 'Semua reward berhasil diklaim',
-      ));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          dailyTasks: summary,
+          successMessage:
+              (result['message'] as String?) ?? 'Semua reward berhasil diklaim',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim reward')));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal mengklaim reward'),
+        ),
+      );
     }
   }
 
   // ===== Progress Map =====
-  Future<void> _onProgressMapRequested(GamificationProgressMapRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onProgressMapRequested(
+    GamificationProgressMapRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     emit(state.copyWith(status: GamificationStatus.loading));
     try {
       final map = await _repository.getProgressMap();
-      emit(state.copyWith(status: GamificationStatus.success, progressMap: map));
+      emit(
+        state.copyWith(status: GamificationStatus.success, progressMap: map),
+      );
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat peta progress'));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: 'Gagal memuat peta progress',
+        ),
+      );
     }
   }
 
-  Future<void> _onLandmarkClaimed(GamificationLandmarkClaimed event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.submitting, clearMessages: true));
+  Future<void> _onLandmarkClaimed(
+    GamificationLandmarkClaimed event,
+    Emitter<GamificationState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: GamificationStatus.submitting,
+        clearMessages: true,
+      ),
+    );
     try {
       final result = await _repository.claimLandmark(event.landmarkId);
       final map = await _repository.getProgressMap();
-      emit(state.copyWith(
-        status: GamificationStatus.success,
-        progressMap: map,
-        successMessage: (result['message'] as String?) ?? 'Hadiah berhasil diklaim',
-      ));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          progressMap: map,
+          successMessage:
+              (result['message'] as String?) ?? 'Hadiah berhasil diklaim',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim hadiah')));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal mengklaim hadiah'),
+        ),
+      );
     }
   }
 
   // ===== Leaderboard =====
-  Future<void> _onLeaderboardRequested(GamificationLeaderboardRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onLeaderboardRequested(
+    GamificationLeaderboardRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     emit(state.copyWith(status: GamificationStatus.loading));
     try {
       final List<HallOfFameEntry> entries;
@@ -165,16 +273,32 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
         entries = await _repository.getLevelHallOfFame(event.level!, limit: 50);
       } else {
         final now = DateTime.now();
-        entries = await _repository.getMonthlyHallOfFame(month: now.month, year: now.year);
+        entries = await _repository.getMonthlyHallOfFame(
+          month: now.month,
+          year: now.year,
+        );
       }
-      emit(state.copyWith(status: GamificationStatus.success, leaderboard: entries));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          leaderboard: entries,
+        ),
+      );
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat papan peringkat'));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: 'Gagal memuat papan peringkat',
+        ),
+      );
     }
   }
 
   // ===== Rewards =====
-  Future<void> _onRewardsRequested(GamificationRewardsRequested event, Emitter<GamificationState> emit) async {
+  Future<void> _onRewardsRequested(
+    GamificationRewardsRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
     emit(state.copyWith(status: GamificationStatus.loading));
     try {
       final rewards = await _repository.getRewards();
@@ -182,14 +306,56 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
       try {
         balance = await _repository.getCoinBalance();
       } catch (_) {}
-      emit(state.copyWith(status: GamificationStatus.success, rewards: rewards, coinBalance: balance));
+      List<Map<String, dynamic>> claims = [];
+      int totalPages = 1;
+      try {
+        final result = await _repository.getRewardClaims();
+        claims = (result['claims'] as List<dynamic>? ?? [])
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+        totalPages = (result['total_pages'] as num?)?.toInt() ?? 1;
+      } catch (_) {}
+      List<String> ownedThemes = const ['default'];
+      String activeTheme = 'default';
+      try {
+        final result = await _repository.getOwnedThemes();
+        ownedThemes = (result['owned_themes'] as List<dynamic>? ?? ['default'])
+            .map((item) => item.toString())
+            .toList();
+        activeTheme = result['active_theme']?.toString() ?? 'default';
+      } catch (_) {}
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          rewards: rewards,
+          coinBalance: balance,
+          rewardClaims: claims,
+          rewardClaimsPage: 1,
+          rewardClaimsTotalPages: totalPages,
+          ownedThemes: ownedThemes,
+          activeTheme: activeTheme,
+        ),
+      );
     } catch (_) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: 'Gagal memuat daftar hadiah'));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: 'Gagal memuat daftar hadiah',
+        ),
+      );
     }
   }
 
-  Future<void> _onRewardClaimed(GamificationRewardClaimed event, Emitter<GamificationState> emit) async {
-    emit(state.copyWith(status: GamificationStatus.submitting, clearMessages: true));
+  Future<void> _onRewardClaimed(
+    GamificationRewardClaimed event,
+    Emitter<GamificationState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: GamificationStatus.submitting,
+        clearMessages: true,
+      ),
+    );
     try {
       final result = await _repository.claimReward(event.rewardId);
       final rewards = await _repository.getRewards();
@@ -202,15 +368,87 @@ class GamificationBloc extends Bloc<GamificationEvent, GamificationState> {
           balance = await _repository.getCoinBalance();
         } catch (_) {}
       }
-      emit(state.copyWith(
-        status: GamificationStatus.success,
-        rewards: rewards,
-        coinBalance: balance,
-        successMessage: (result['message'] as String?) ?? 'Hadiah berhasil diklaim',
-      ));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          rewards: rewards,
+          coinBalance: balance,
+          successMessage:
+              (result['message'] as String?) ?? 'Hadiah berhasil diklaim',
+        ),
+      );
+      add(const GamificationRewardsRequested());
     } catch (e) {
-      emit(state.copyWith(status: GamificationStatus.failure, errorMessage: ErrorMessage.from(e, 'Gagal mengklaim hadiah')));
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: ErrorMessage.from(e, 'Gagal mengklaim hadiah'),
+        ),
+      );
     }
   }
 
+  Future<void> _onRewardClaimsMoreRequested(
+    GamificationRewardClaimsMoreRequested event,
+    Emitter<GamificationState> emit,
+  ) async {
+    if (state.status == GamificationStatus.loading ||
+        state.rewardClaimsPage >= state.rewardClaimsTotalPages) {
+      return;
+    }
+    emit(state.copyWith(status: GamificationStatus.loading));
+    try {
+      final nextPage = state.rewardClaimsPage + 1;
+      final result = await _repository.getRewardClaims(page: nextPage);
+      final nextClaims = (result['claims'] as List<dynamic>? ?? []).map(
+        (item) => Map<String, dynamic>.from(item as Map),
+      );
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          rewardClaims: [...state.rewardClaims, ...nextClaims],
+          rewardClaimsPage: nextPage,
+          rewardClaimsTotalPages:
+              (result['total_pages'] as num?)?.toInt() ?? nextPage,
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: ErrorMessage.from(error, 'Gagal memuat riwayat hadiah'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onThemeActivated(
+    GamificationThemeActivated event,
+    Emitter<GamificationState> emit,
+  ) async {
+    if (!state.ownedThemes.contains(event.theme)) return;
+    emit(
+      state.copyWith(
+        status: GamificationStatus.submitting,
+        clearMessages: true,
+      ),
+    );
+    try {
+      await _repository.activateTheme(event.theme);
+      emit(
+        state.copyWith(
+          status: GamificationStatus.success,
+          activeTheme: event.theme,
+          successMessage: 'Tema berhasil diaktifkan',
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: GamificationStatus.failure,
+          errorMessage: ErrorMessage.from(error, 'Gagal mengaktifkan tema'),
+        ),
+      );
+    }
+  }
 }

@@ -5,7 +5,34 @@ import '../datasources/remote/music_remote_datasource.dart';
 class MusicRepositoryImpl implements MusicRepository {
   final MusicRemoteDataSource _remote;
 
-  MusicRepositoryImpl({required MusicRemoteDataSource remote}) : _remote = remote;
+  MusicRepositoryImpl({required MusicRemoteDataSource remote})
+    : _remote = remote;
+
+  @override
+  Future<Playlist> updatePlaylist(
+    String uuid, {
+    required String name,
+    required String description,
+    required String thumbnail,
+    required bool isPublic,
+  }) async => (await _remote.updatePlaylist(
+    uuid,
+    name: name,
+    description: description,
+    thumbnail: thumbnail,
+    isPublic: isPublic,
+  )).toEntity();
+
+  @override
+  Future<void> deletePlaylist(String uuid) => _remote.deletePlaylist(uuid);
+
+  @override
+  Future<void> addSong(String uuid, int songId) =>
+      _remote.addSong(uuid, songId);
+
+  @override
+  Future<void> removeSong(String uuid, int songId) =>
+      _remote.removeSong(uuid, songId);
 
   @override
   Future<List<SongCategory>> getSongCategories() async {
@@ -52,5 +79,4 @@ class MusicRepositoryImpl implements MusicRepository {
     );
     return model.toEntity();
   }
-
 }

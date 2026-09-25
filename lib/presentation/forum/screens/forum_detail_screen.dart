@@ -8,6 +8,7 @@ import '../../common/widgets/app_avatar.dart';
 import '../bloc/forum_bloc.dart';
 import '../bloc/forum_event.dart';
 import '../bloc/forum_state.dart';
+import '../../auth/bloc/auth_bloc.dart';
 
 class ForumDetailScreen extends StatelessWidget {
   final String slug;
@@ -43,11 +44,15 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final blocked =
+        context.watch<AuthBloc>().state.user?.isForumBlocked == true;
     return BlocConsumer<ForumBloc, ForumState>(
       listener: (context, state) {
         if (state.status == ForumStatus.success) {
           _replyController.clear();
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.successMessage)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.successMessage)));
         }
       },
       builder: (context, state) {
@@ -55,12 +60,18 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(forum?.title ?? 'Diskusi', maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(
+              forum?.title ?? 'Diskusi',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             centerTitle: true,
             actions: [
               PopupMenuButton<String>(
                 onSelected: (value) {
-                  context.read<ForumBloc>().add(ForumPostsRequested(widget.slug, sortBy: value));
+                  context.read<ForumBloc>().add(
+                    ForumPostsRequested(widget.slug, sortBy: value),
+                  );
                 },
                 itemBuilder: (_) => [
                   const PopupMenuItem(value: 'newest', child: Text('Terbaru')),
@@ -74,47 +85,100 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
           body: state.status == ForumStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())
               : state.status == ForumStatus.failure
-                  ? AppErrorWidget(
-                      message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat diskusi',
-                      onRetry: () {
-                        context.read<ForumBloc>().add(ForumDetailRequested(widget.slug));
-                        context.read<ForumBloc>().add(ForumPostsRequested(widget.slug, sortBy: state.sortBy));
-                      },
-                    )
-                  : Column(
-                      children: [
-                        Expanded(
-                          child: RefreshIndicator(
-                            onRefresh: () async {
-                              context.read<ForumBloc>().add(ForumDetailRequested(widget.slug));
-                              context.read<ForumBloc>().add(ForumPostsRequested(widget.slug, sortBy: state.sortBy));
-                            },
-                            child: ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: [
-                                if (forum != null) _buildForumHeader(context, forum, state),
-                                const SizedBox(height: 16),
-                                Text('Balasan (${state.posts.length})', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 12),
-                                if (state.posts.isEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.all(24),
-                                    child: Center(child: Text('Belum ada balasan', style: TextStyle(color: AppColors.mutedForeground))),
-                                  ),
-                                ...state.posts.map((post) => _buildPostCard(context, post)),
-                              ],
+              ? AppErrorWidget(
+                  message: state.errorMessage.isNotEmpty
+                      ? state.errorMessage
+                      : 'Gagal memuat diskusi',
+                  onRetry: () {
+                    context.read<ForumBloc>().add(
+                      ForumDetailRequested(widget.slug),
+                    );
+                    context.read<ForumBloc>().add(
+                      ForumPostsRequested(widget.slug, sortBy: state.sortBy),
+                    );
+                  },
+                )
+              : Column(
+                  children: [
+                    if (blocked)
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Interaksi forum diblokir untuk akun ini.'),
+                      ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<ForumBloc>().add(
+                            ForumDetailRequested(widget.slug),
+                          );
+                          context.read<ForumBloc>().add(
+                            ForumPostsRequested(
+                              widget.slug,
+                              sortBy: state.sortBy,
                             ),
-                          ),
+                          );
+                        },
+                        child: ListView(
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            if (forum != null)
+                              _buildForumHeader(context, forum, state),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Balasan (${state.posts.length})',
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 12),
+                            if (state.posts.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Center(
+                                  child: Text(
+                                    'Belum ada balasan',
+                                    style: TextStyle(
+                                      color: AppColors.mutedForeground,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ...state.posts.map(
+                              (post) => _buildPostCard(context, post),
+                            ),
+                            if (state.postsHasMore)
+                              Center(
+                                child: OutlinedButton(
+                                  onPressed: state.postsLoadingMore
+                                      ? null
+                                      : () => context.read<ForumBloc>().add(
+                                          ForumPostsLoadMoreRequested(
+                                            widget.slug,
+                                          ),
+                                        ),
+                                  child: Text(
+                                    state.postsLoadingMore
+                                        ? 'Memuat...'
+                                        : 'Muat lebih banyak',
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                        _buildReplyBar(context, state),
-                      ],
+                      ),
                     ),
+                    if (!blocked) _buildReplyBar(context, state),
+                  ],
+                ),
         );
       },
     );
   }
 
-  Widget _buildForumHeader(BuildContext context, ForumThread forum, ForumState state) {
+  Widget _buildForumHeader(
+    BuildContext context,
+    ForumThread forum,
+    ForumState state,
+  ) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 0,
@@ -135,46 +199,102 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(forum.user?.name ?? 'Anonim', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text(_formatDate(forum.createdAt), style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
+                      Text(
+                        forum.user?.name ?? 'Anonim',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        _formatDate(forum.createdAt),
+                        style: const TextStyle(
+                          color: AppColors.mutedForeground,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(forum.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              forum.title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
             if (forum.content.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(forum.content, style: const TextStyle(fontSize: 14, height: 1.5)),
+              Text(
+                forum.content,
+                style: const TextStyle(fontSize: 14, height: 1.5),
+              ),
             ],
             const SizedBox(height: 12),
             Row(
               children: [
                 InkWell(
-                  onTap: () => context.read<ForumBloc>().add(ForumLikeToggled(forum.slug)),
+                  onTap:
+                      context.read<AuthBloc>().state.user?.isForumBlocked ==
+                          true
+                      ? null
+                      : () => context.read<ForumBloc>().add(
+                          ForumLikeToggled(forum.slug),
+                        ),
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: Row(
                       children: [
-                        Icon(forum.isLiked ? Icons.favorite : Icons.favorite_border, size: 20, color: forum.isLiked ? AppColors.primary : AppColors.mutedForeground),
+                        Icon(
+                          forum.isLiked
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          size: 20,
+                          color: forum.isLiked
+                              ? AppColors.primary
+                              : AppColors.mutedForeground,
+                        ),
                         const SizedBox(width: 4),
-                        Text('${forum.likesCount}', style: const TextStyle(fontSize: 13)),
+                        Text(
+                          '${forum.likesCount}',
+                          style: const TextStyle(fontSize: 13),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.chat_bubble_outline, size: 20, color: AppColors.mutedForeground),
+                Icon(
+                  Icons.chat_bubble_outline,
+                  size: 20,
+                  color: AppColors.mutedForeground,
+                ),
                 const SizedBox(width: 4),
-                Text('${forum.repliesCount}', style: const TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
+                Text(
+                  '${forum.repliesCount}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
                 if (forum.category != null) ...[
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: AppColors.red50, borderRadius: BorderRadius.circular(4)),
-                    child: Text(forum.category!.name, style: const TextStyle(fontSize: 11, color: AppColors.primary)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.red50,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      forum.category!.name,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ],
               ],
@@ -208,17 +328,36 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post.user?.name ?? 'Anonim', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      Text(_formatDate(post.createdAt), style: const TextStyle(color: AppColors.mutedForeground, fontSize: 11)),
+                      Text(
+                        post.user?.name ?? 'Anonim',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        _formatDate(post.createdAt),
+                        style: const TextStyle(
+                          color: AppColors.mutedForeground,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 if (post.isAcceptedAnswer)
-                  const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.success,
+                    size: 20,
+                  ),
               ],
             ),
             const SizedBox(height: 10),
-            Text(post.content, style: const TextStyle(fontSize: 14, height: 1.4)),
+            Text(
+              post.content,
+              style: const TextStyle(fontSize: 14, height: 1.4),
+            ),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -226,7 +365,9 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                   context,
                   icon: Icons.arrow_upward,
                   isActive: post.hasUserVoted && post.userVoteType == 'upvote',
-                  onTap: () => context.read<ForumBloc>().add(ForumPostVoteRequested(postId: post.id, voteType: 'upvote')),
+                  onTap: () => context.read<ForumBloc>().add(
+                    ForumPostVoteRequested(postId: post.id, voteType: 'upvote'),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -235,15 +376,25 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: post.netVotes > 0 ? AppColors.success : post.netVotes < 0 ? AppColors.destructive : AppColors.mutedForeground,
+                      color: post.netVotes > 0
+                          ? AppColors.success
+                          : post.netVotes < 0
+                          ? AppColors.destructive
+                          : AppColors.mutedForeground,
                     ),
                   ),
                 ),
                 _voteButton(
                   context,
                   icon: Icons.arrow_downward,
-                  isActive: post.hasUserVoted && post.userVoteType == 'downvote',
-                  onTap: () => context.read<ForumBloc>().add(ForumPostVoteRequested(postId: post.id, voteType: 'downvote')),
+                  isActive:
+                      post.hasUserVoted && post.userVoteType == 'downvote',
+                  onTap: () => context.read<ForumBloc>().add(
+                    ForumPostVoteRequested(
+                      postId: post.id,
+                      voteType: 'downvote',
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -253,17 +404,30 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
     );
   }
 
-  Widget _voteButton(BuildContext context, {required IconData icon, required bool isActive, required VoidCallback onTap}) {
+  Widget _voteButton(
+    BuildContext context, {
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
-      onTap: onTap,
+      onTap: context.read<AuthBloc>().state.user?.isForumBlocked == true
+          ? null
+          : onTap,
       borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Icon(icon, size: 20, color: isActive ? AppColors.primary : AppColors.mutedForeground),
+        child: Icon(
+          icon,
+          size: 20,
+          color: isActive ? AppColors.primary : AppColors.mutedForeground,
+        ),
       ),
     );
   }
@@ -283,8 +447,13 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                 controller: _replyController,
                 decoration: InputDecoration(
                   hintText: 'Tulis balasan...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   isDense: true,
                 ),
                 minLines: 1,
@@ -298,10 +467,19 @@ class _ForumDetailViewState extends State<_ForumDetailView> {
                   : () {
                       final text = _replyController.text.trim();
                       if (text.isEmpty) return;
-                      context.read<ForumBloc>().add(ForumPostCreateRequested(slug: widget.slug, content: text));
+                      context.read<ForumBloc>().add(
+                        ForumPostCreateRequested(
+                          slug: widget.slug,
+                          content: text,
+                        ),
+                      );
                     },
               icon: state.status == ForumStatus.submitting
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.send),
               color: AppColors.primary,
             ),

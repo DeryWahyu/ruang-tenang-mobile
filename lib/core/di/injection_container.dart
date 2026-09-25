@@ -85,6 +85,9 @@ import '../../domain/usecases/chat/chat_usecases.dart';
 import '../../presentation/auth/bloc/auth_bloc.dart';
 import '../../presentation/auth/bloc/auth_event.dart';
 import '../../presentation/journal/bloc/journal_bloc.dart';
+import '../../presentation/journal/screens/public_journals_screen.dart';
+import '../../presentation/home/widgets/home_overview_section.dart';
+import '../../presentation/article/screens/my_articles_screen.dart';
 import '../../presentation/mood/bloc/mood_bloc.dart';
 import '../../presentation/chat/bloc/chat_bloc.dart';
 import '../../presentation/article/bloc/article_bloc.dart';
@@ -163,69 +166,67 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<ChatRepository>(
-    () => ChatRepositoryImpl(
-      remote: sl<ChatRemoteDataSource>(),
-    ),
+    () => ChatRepositoryImpl(remote: sl<ChatRemoteDataSource>()),
   );
   sl.registerLazySingleton<ArticleRepository>(
-    () => ArticleRepositoryImpl(
-      remote: sl<ArticleRemoteDataSource>(),
-    ),
+    () => ArticleRepositoryImpl(remote: sl<ArticleRemoteDataSource>()),
   );
   sl.registerLazySingleton<ForumRepository>(
-    () => ForumRepositoryImpl(
-      remote: sl<ForumRemoteDataSource>(),
-    ),
+    () => ForumRepositoryImpl(remote: sl<ForumRemoteDataSource>()),
   );
   sl.registerLazySingleton<StoryRepository>(
-    () => StoryRepositoryImpl(
-      remote: sl<StoryRemoteDataSource>(),
-    ),
+    () => StoryRepositoryImpl(remote: sl<StoryRemoteDataSource>()),
   );
   sl.registerLazySingleton<MusicRepository>(
-    () => MusicRepositoryImpl(
-      remote: sl<MusicRemoteDataSource>(),
-    ),
+    () => MusicRepositoryImpl(remote: sl<MusicRemoteDataSource>()),
   );
 
   // Use Cases
-  sl.registerLazySingleton(() => AuthUseCases(
-        login: LoginUseCase(sl()),
-        register: RegisterUseCase(sl()),
-        forgotPassword: ForgotPasswordUseCase(sl()),
-        resetPassword: ResetPasswordUseCase(sl()),
-        getProfile: GetProfileUseCase(sl()),
-        logout: LogoutUseCase(sl()),
-        checkAuthStatus: CheckAuthStatusUseCase(sl()),
-        getCachedUser: GetCachedUserUseCase(sl()),
-      ));
+  sl.registerLazySingleton(
+    () => AuthUseCases(
+      login: LoginUseCase(sl()),
+      register: RegisterUseCase(sl()),
+      forgotPassword: ForgotPasswordUseCase(sl()),
+      resetPassword: ResetPasswordUseCase(sl()),
+      getProfile: GetProfileUseCase(sl()),
+      logout: LogoutUseCase(sl()),
+      checkAuthStatus: CheckAuthStatusUseCase(sl()),
+      getCachedUser: GetCachedUserUseCase(sl()),
+    ),
+  );
 
-  sl.registerLazySingleton(() => JournalUseCases(
-        getList: GetJournalListUseCase(sl()),
-        search: SearchJournalsUseCase(sl()),
-        getJournal: GetJournalUseCase(sl()),
-        create: CreateJournalUseCase(sl()),
-        update: UpdateJournalUseCase(sl()),
-        delete: DeleteJournalUseCase(sl()),
-      ));
+  sl.registerLazySingleton(
+    () => JournalUseCases(
+      getList: GetJournalListUseCase(sl()),
+      search: SearchJournalsUseCase(sl()),
+      getJournal: GetJournalUseCase(sl()),
+      create: CreateJournalUseCase(sl()),
+      update: UpdateJournalUseCase(sl()),
+      delete: DeleteJournalUseCase(sl()),
+    ),
+  );
 
-  sl.registerLazySingleton(() => MoodUseCases(
-        record: RecordMoodUseCase(sl()),
-        getToday: GetTodayMoodUseCase(sl()),
-        getLatest: GetLatestMoodUseCase(sl()),
-        getHistory: GetMoodHistoryUseCase(sl()),
-        getStats: GetMoodStatsUseCase(sl()),
-      ));
+  sl.registerLazySingleton(
+    () => MoodUseCases(
+      record: RecordMoodUseCase(sl()),
+      getToday: GetTodayMoodUseCase(sl()),
+      getLatest: GetLatestMoodUseCase(sl()),
+      getHistory: GetMoodHistoryUseCase(sl()),
+      getStats: GetMoodStatsUseCase(sl()),
+    ),
+  );
 
-  sl.registerLazySingleton(() => ChatUseCases(
-        getSessions: GetChatSessionsUseCase(sl()),
-        getSession: GetChatSessionUseCase(sl()),
-        createSession: CreateChatSessionUseCase(sl()),
-        deleteSession: DeleteChatSessionUseCase(sl()),
-        sendMessage: SendChatMessageUseCase(sl()),
-        toggleLikeMessage: ToggleLikeMessageUseCase(sl()),
-        toggleDislikeMessage: ToggleDislikeMessageUseCase(sl()),
-      ));
+  sl.registerLazySingleton(
+    () => ChatUseCases(
+      getSessions: GetChatSessionsUseCase(sl()),
+      getSession: GetChatSessionUseCase(sl()),
+      createSession: CreateChatSessionUseCase(sl()),
+      deleteSession: DeleteChatSessionUseCase(sl()),
+      sendMessage: SendChatMessageUseCase(sl()),
+      toggleLikeMessage: ToggleLikeMessageUseCase(sl()),
+      toggleDislikeMessage: ToggleDislikeMessageUseCase(sl()),
+    ),
+  );
 
   sl.registerLazySingleton(() => GetSongCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => GetSongsByCategoryUseCase(sl()));
@@ -242,6 +243,17 @@ Future<void> initDependencies() async {
   sl.registerFactory<JournalBloc>(
     () => JournalBloc(journalUseCases: sl<JournalUseCases>()),
   );
+  sl.registerFactory<PublicJournalCubit>(
+    () => PublicJournalCubit(sl<JournalRepository>()),
+  );
+  sl.registerFactory<HomeOverviewCubit>(
+    () => HomeOverviewCubit(
+      sl<MoodRepository>(),
+      sl<JournalRepository>(),
+      sl<ArticleRepository>(),
+      sl<MusicRepository>(),
+    ),
+  );
   sl.registerFactory<MoodBloc>(
     () => MoodBloc(moodUseCases: sl<MoodUseCases>()),
   );
@@ -250,6 +262,9 @@ Future<void> initDependencies() async {
   );
   sl.registerFactory<ArticleBloc>(
     () => ArticleBloc(repository: sl<ArticleRepository>()),
+  );
+  sl.registerFactory<MyArticlesCubit>(
+    () => MyArticlesCubit(sl<ArticleRepository>(), sl<UploadRepository>()),
   );
   sl.registerFactory<ForumBloc>(
     () => ForumBloc(repository: sl<ForumRepository>()),
@@ -267,7 +282,7 @@ Future<void> initDependencies() async {
       uploadRepository: sl<UploadRepository>(),
     ),
   );
-  
+
   sl.registerFactory<PlaylistDetailCubit>(
     () => PlaylistDetailCubit(sl<GetPlaylistUseCase>()),
   );
@@ -283,7 +298,8 @@ Future<void> initDependencies() async {
 
   // Repositories
   sl.registerLazySingleton<GamificationRepository>(
-    () => GamificationRepositoryImpl(remote: sl<GamificationRemoteDataSource>()),
+    () =>
+        GamificationRepositoryImpl(remote: sl<GamificationRemoteDataSource>()),
   );
   sl.registerLazySingleton<BillingRepository>(
     () => BillingRepositoryImpl(remote: sl<BillingRemoteDataSource>()),
@@ -302,9 +318,13 @@ Future<void> initDependencies() async {
     () => SecondaryGamificationRemoteDataSource(sl<ApiClient>()),
   );
   sl.registerLazySingleton<SecondaryGamificationRepository>(
-    () => SecondaryGamificationRepositoryImpl(remote: sl<SecondaryGamificationRemoteDataSource>()),
+    () => SecondaryGamificationRepositoryImpl(
+      remote: sl<SecondaryGamificationRemoteDataSource>(),
+    ),
   );
-  sl.registerFactory<XpBoostCubit>(() => XpBoostCubit(sl<SecondaryGamificationRepository>()));
+  sl.registerFactory<XpBoostCubit>(
+    () => XpBoostCubit(sl<SecondaryGamificationRepository>()),
+  );
 
   // === Community (Statistik Komunitas) ===
   sl.registerLazySingleton<CommunityRemoteDataSource>(
@@ -313,7 +333,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<CommunityRepository>(
     () => CommunityRepositoryImpl(remote: sl<CommunityRemoteDataSource>()),
   );
-  sl.registerFactory<CommunityCubit>(() => CommunityCubit(sl<CommunityRepository>()));
+  sl.registerFactory<CommunityCubit>(
+    () => CommunityCubit(sl<CommunityRepository>()),
+  );
 
   // === Phase 4: Polish & Advanced ===
   // Remote Data Sources

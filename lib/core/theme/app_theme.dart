@@ -7,6 +7,36 @@ import 'app_dimensions.dart';
 class AppTheme {
   AppTheme._();
 
+  static ThemeData forProfileTheme(String theme) {
+    final primary = switch (theme) {
+      'ocean_calm' => const Color(0xFF0EA5E9),
+      'forest_zen' => const Color(0xFF16A34A),
+      'sunset_warmth' => const Color(0xFFEA580C),
+      _ => AppColors.primary,
+    };
+    final base = lightTheme;
+    return base.copyWith(
+      colorScheme: base.colorScheme.copyWith(primary: primary),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(
+            double.infinity,
+            AppDimensions.buttonHeightMd,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: primary),
+      ),
+    );
+  }
+
   static ThemeData get lightTheme {
     final textTheme = AppTypography.textTheme;
 
@@ -60,7 +90,10 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.primaryForeground,
           elevation: AppDimensions.elevationSm,
-          minimumSize: const Size(double.infinity, AppDimensions.buttonHeightMd),
+          minimumSize: const Size(
+            double.infinity,
+            AppDimensions.buttonHeightMd,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
@@ -72,7 +105,10 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.foreground,
           side: const BorderSide(color: AppColors.border),
-          minimumSize: const Size(double.infinity, AppDimensions.buttonHeightMd),
+          minimumSize: const Size(
+            double.infinity,
+            AppDimensions.buttonHeightMd,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
@@ -89,7 +125,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.card,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           borderSide: const BorderSide(color: AppColors.input),
@@ -110,9 +149,13 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           borderSide: const BorderSide(color: AppColors.destructive, width: 2),
         ),
-        hintStyle: textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground),
+        hintStyle: textTheme.bodyMedium?.copyWith(
+          color: AppColors.mutedForeground,
+        ),
         errorStyle: textTheme.bodySmall?.copyWith(color: AppColors.destructive),
-        labelStyle: textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground),
+        labelStyle: textTheme.bodyMedium?.copyWith(
+          color: AppColors.mutedForeground,
+        ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
@@ -133,8 +176,12 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
         ),
-        titleTextStyle: textTheme.headlineMedium?.copyWith(color: AppColors.foreground),
-        contentTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.foreground),
+        titleTextStyle: textTheme.headlineMedium?.copyWith(
+          color: AppColors.foreground,
+        ),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: AppColors.foreground,
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.card,

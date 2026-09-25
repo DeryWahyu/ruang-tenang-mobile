@@ -8,3 +8,5 @@
 Mobile berbagi data dan contract dengan web melalui API yang sama. Perubahan API harus dicek pada datasource/model mobile, service/schema web, migration, dan docs/openapi.yaml.
 
 Mobile tidak memiliki feature admin/mitra. Jangan menambahkan credential atau endpoint privileged ke aplikasi hanya karena endpoint tersedia di backend. Perhatikan auth, ownership, journal/chat/mood privacy, pagination, upload URL, timezone, dan entitlement pada setiap perubahan.
+
+Menu member web menjadi acuan paritas mobile: Home, Jurnal, Chat, Musik, Mood Tracker, Komunitas, Artikel, Perjalanan, Paket & Koin, Mini Game, serta Profil. Redirect web yang tidak lagi memiliki halaman fitur sendiri tidak perlu menjadi layar mobile terpisah. Maskot RuNa dan Bulan Pulih memakai aset WebP yang sama agar pengenalan fitur dan identitas visual konsisten.

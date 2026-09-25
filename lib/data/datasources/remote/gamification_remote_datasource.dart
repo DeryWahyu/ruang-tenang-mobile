@@ -16,7 +16,9 @@ class GamificationRemoteDataSource {
     if (!response.success || response.data == null) {
       throw Exception(response.error ?? 'Gagal memuat level user');
     }
-    return UserLevelInfoModel.fromJson(response.data!['user'] ?? response.data!);
+    return UserLevelInfoModel.fromJson(
+      response.data!['user'] ?? response.data!,
+    );
   }
 
   /// Personal journey — sumber kebenaran untuk level, XP, progress, tier, streak.
@@ -33,7 +35,10 @@ class GamificationRemoteDataSource {
 
   /// EXP history. Backend mengembalikan envelope:
   /// { success, data: { data: [...], total, page, limit, total_pages } }
-  Future<Map<String, dynamic>> getExpHistory({int page = 1, int limit = 10}) async {
+  Future<Map<String, dynamic>> getExpHistory({
+    int page = 1,
+    int limit = 10,
+  }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       ApiConstants.expHistory,
       queryParameters: {'page': page, 'limit': limit},
@@ -43,8 +48,12 @@ class GamificationRemoteDataSource {
       throw Exception(response.error ?? 'Gagal memuat riwayat EXP');
     }
     final data = response.data!;
-    final items = (data['data'] as List<dynamic>?)
-            ?.map((e) => ExpHistoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
+    final items =
+        (data['data'] as List<dynamic>?)
+            ?.map(
+              (e) =>
+                  ExpHistoryModel.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList() ??
         [];
     return {
@@ -65,7 +74,10 @@ class GamificationRemoteDataSource {
       throw Exception(response.error ?? 'Gagal memuat badges');
     }
     return response.data!
-        .map((e) => BadgeProgressModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) =>
+              BadgeProgressModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
         .toList();
   }
 
@@ -89,7 +101,9 @@ class GamificationRemoteDataSource {
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success) {
-      throw Exception(response.error ?? response.message ?? 'Gagal mengklaim reward');
+      throw Exception(
+        response.error ?? response.message ?? 'Gagal mengklaim reward',
+      );
     }
     return {'message': response.message, ...?response.data};
   }
@@ -100,7 +114,9 @@ class GamificationRemoteDataSource {
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success) {
-      throw Exception(response.error ?? response.message ?? 'Gagal mengklaim reward');
+      throw Exception(
+        response.error ?? response.message ?? 'Gagal mengklaim reward',
+      );
     }
     return {'message': response.message, ...?response.data};
   }
@@ -111,7 +127,9 @@ class GamificationRemoteDataSource {
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success) {
-      throw Exception(response.error ?? response.message ?? 'Gagal memproses login harian');
+      throw Exception(
+        response.error ?? response.message ?? 'Gagal memproses login harian',
+      );
     }
     return {'message': response.message, ...?response.data};
   }
@@ -136,7 +154,9 @@ class GamificationRemoteDataSource {
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success) {
-      throw Exception(response.error ?? response.message ?? 'Gagal mengklaim hadiah landmark');
+      throw Exception(
+        response.error ?? response.message ?? 'Gagal mengklaim hadiah landmark',
+      );
     }
     return {'message': response.message, ...?response.data};
   }
@@ -144,7 +164,11 @@ class GamificationRemoteDataSource {
   // ==========================================
   // Hall of Fame / Leaderboard
   // ==========================================
-  Future<List<HallOfFameEntry>> getMonthlyHallOfFame({required int month, required int year, String? category}) async {
+  Future<List<HallOfFameEntry>> getMonthlyHallOfFame({
+    required int month,
+    required int year,
+    String? category,
+  }) async {
     final response = await _apiClient.get<List<dynamic>>(
       '${ApiConstants.community}/hall-of-fame/monthly',
       queryParameters: {
@@ -158,11 +182,18 @@ class GamificationRemoteDataSource {
       throw Exception(response.error ?? 'Gagal memuat papan peringkat');
     }
     return response.data!
-        .map((e) => HallOfFameEntryModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => HallOfFameEntryModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
         .toList();
   }
 
-  Future<List<HallOfFameEntry>> getLevelHallOfFame(int level, {int limit = 10}) async {
+  Future<List<HallOfFameEntry>> getLevelHallOfFame(
+    int level, {
+    int limit = 10,
+  }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '${ApiConstants.community}/hall-of-fame/level/$level',
       queryParameters: {'limit': limit},
@@ -173,7 +204,11 @@ class GamificationRemoteDataSource {
     }
     final featured = response.data!['featured_users'] as List<dynamic>? ?? [];
     return featured
-        .map((e) => HallOfFameEntryModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => HallOfFameEntryModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
         .toList();
   }
 
@@ -210,8 +245,46 @@ class GamificationRemoteDataSource {
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
     if (!response.success) {
-      throw Exception(response.error ?? response.message ?? 'Gagal mengklaim hadiah');
+      throw Exception(
+        response.error ?? response.message ?? 'Gagal mengklaim hadiah',
+      );
     }
     return {'message': response.message, ...?response.data};
+  }
+
+  Future<Map<String, dynamic>> getRewardClaims({int page = 1}) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '${ApiConstants.rewards}/my-claims',
+      queryParameters: {'page': page, 'page_size': 10},
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Gagal memuat riwayat hadiah');
+    }
+    return response.data!;
+  }
+
+  Future<Map<String, dynamic>> getOwnedThemes() async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '${ApiConstants.rewards}/themes',
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success || response.data == null) {
+      throw Exception(response.error ?? 'Gagal memuat tema');
+    }
+    return response.data!;
+  }
+
+  Future<void> activateTheme(String theme) async {
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '${ApiConstants.rewards}/themes/activate',
+      data: {'theme': theme},
+      fromJson: (json) => Map<String, dynamic>.from(json as Map),
+    );
+    if (!response.success) {
+      throw Exception(
+        response.error ?? response.message ?? 'Gagal mengaktifkan tema',
+      );
+    }
   }
 }

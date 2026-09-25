@@ -82,3 +82,14 @@ class GamificationRewardClaimed extends GamificationEvent {
   @override
   List<Object?> get props => [rewardId];
 }
+
+class GamificationRewardClaimsMoreRequested extends GamificationEvent {
+  const GamificationRewardClaimsMoreRequested();
+}
+
+class GamificationThemeActivated extends GamificationEvent {
+  final String theme;
+  const GamificationThemeActivated(this.theme);
+  @override
+  List<Object?> get props => [theme];
+}

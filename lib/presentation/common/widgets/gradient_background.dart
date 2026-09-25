@@ -15,24 +15,37 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFFFF1F2), // soft rose
-            Color(0xFFF9FAFB), // background
-            Color(0xFFFFF7ED), // soft warm accent
+            Color.lerp(const Color(0xFFF9FAFB), accent, 0.10)!,
+            const Color(0xFFF9FAFB),
+            Color.lerp(const Color(0xFFF9FAFB), accent, 0.04)!,
           ],
           stops: [0.0, 0.55, 1.0],
         ),
       ),
       child: Stack(
         children: [
-          Positioned(top: -90, right: -70, child: _blob(const Color(0xFFEF4444), 0.10 * intensity, 240)),
-          Positioned(top: 170, left: -80, child: _blob(const Color(0xFFF97316), 0.08 * intensity, 220)),
-          Positioned(bottom: -110, right: -50, child: _blob(const Color(0xFFEF4444), 0.06 * intensity, 260)),
+          Positioned(
+            top: -90,
+            right: -70,
+            child: _blob(accent, 0.10 * intensity, 240),
+          ),
+          Positioned(
+            top: 170,
+            left: -80,
+            child: _blob(accent, 0.08 * intensity, 220),
+          ),
+          Positioned(
+            bottom: -110,
+            right: -50,
+            child: _blob(accent, 0.06 * intensity, 260),
+          ),
           // Content (non-positioned → sizes the stack, painted on top).
           child,
         ],
@@ -48,7 +61,10 @@ class GradientBackground extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withValues(alpha: opacity), color.withValues(alpha: 0)],
+            colors: [
+              color.withValues(alpha: opacity),
+              color.withValues(alpha: 0),
+            ],
           ),
         ),
       ),

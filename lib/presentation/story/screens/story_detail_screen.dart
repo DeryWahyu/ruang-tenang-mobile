@@ -48,7 +48,9 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
       listener: (context, state) {
         if (state.status == StoryStatus.success) {
           _commentController.clear();
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.successMessage)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.successMessage)));
         }
       },
       builder: (context, state) {
@@ -56,150 +58,279 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(story?.title ?? 'Cerita', maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(
+              story?.title ?? 'Cerita',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             centerTitle: true,
           ),
           body: state.status == StoryStatus.detailLoading
               ? const Center(child: CircularProgressIndicator())
               : state.status == StoryStatus.failure
-                  ? AppErrorWidget(
-                      message: state.errorMessage.isNotEmpty ? state.errorMessage : 'Gagal memuat cerita',
-                      onRetry: () => context.read<StoryBloc>().add(StoryDetailRequested(widget.id)),
-                    )
-                  : story == null
-                      ? const Center(child: Text('Cerita tidak ditemukan'))
-                      : Column(
+              ? AppErrorWidget(
+                  message: state.errorMessage.isNotEmpty
+                      ? state.errorMessage
+                      : 'Gagal memuat cerita',
+                  onRetry: () => context.read<StoryBloc>().add(
+                    StoryDetailRequested(widget.id),
+                  ),
+                )
+              : story == null
+              ? const Center(child: Text('Cerita tidak ditemukan'))
+              : Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            if (story.coverImage.isNotEmpty)
+                              AppNetworkImage(
+                                url: story.coverImage,
+                                width: double.infinity,
+                                height: 200,
+                                borderRadius: BorderRadius.circular(12),
+                                backgroundColor: AppColors.storyFrom,
+                                fallbackIcon: Icons.image,
+                                fallbackColor: AppColors.storyIcon,
+                              ),
+                            const SizedBox(height: 16),
+                            if (story.hasTriggerWarning) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warningLight,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
                                   children: [
-                                    if (story.coverImage.isNotEmpty)
-                                      AppNetworkImage(
-                                        url: story.coverImage,
-                                        width: double.infinity,
-                                        height: 200,
-                                        borderRadius: BorderRadius.circular(12),
-                                        backgroundColor: AppColors.storyFrom,
-                                        fallbackIcon: Icons.image,
-                                        fallbackColor: AppColors.storyIcon,
-                                      ),
-                                    const SizedBox(height: 16),
-                                    if (story.hasTriggerWarning) ...[
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(color: AppColors.warningLight, borderRadius: BorderRadius.circular(8)),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
-                                            const SizedBox(width: 8),
-                                            Expanded(child: Text(story.triggerWarningText.isNotEmpty ? story.triggerWarningText : 'Konten ini mengandung trigger warning', style: const TextStyle(fontSize: 13, color: AppColors.warning))),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                    Text(story.title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      children: [
-                                        AppAvatar(
-                                          name: story.isAnonymous ? 'Anonim' : (story.author?.name ?? 'Anonim'),
-                                          imageUrl: story.isAnonymous ? null : story.author?.avatar,
-                                          size: 32,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(story.isAnonymous ? 'Anonim' : (story.author?.name ?? 'Anonim'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                                            if (story.publishedAt != null)
-                                              Text(_formatDate(story.publishedAt!), style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
-                                          ],
-                                        ),
-                                      ],
+                                    const Icon(
+                                      Icons.warning_amber,
+                                      color: AppColors.warning,
+                                      size: 20,
                                     ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      children: [
-                                        InkWell(
-                                          onTap: () => context.read<StoryBloc>().add(StoryHeartToggled(widget.id)),
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: story.hasHearted ? AppColors.red50 : AppColors.muted,
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(story.hasHearted ? Icons.favorite : Icons.favorite_border, size: 18, color: story.hasHearted ? AppColors.primary : AppColors.mutedForeground),
-                                                const SizedBox(width: 4),
-                                                Text('${story.heartCount}', style: TextStyle(fontSize: 13, color: story.hasHearted ? AppColors.primary : AppColors.mutedForeground)),
-                                              ],
-                                            ),
-                                          ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        story.triggerWarningText.isNotEmpty
+                                            ? story.triggerWarningText
+                                            : 'Konten ini mengandung trigger warning',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.warning,
                                         ),
-                                        const SizedBox(width: 12),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(20)),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.visibility_outlined, size: 18, color: AppColors.mutedForeground),
-                                              const SizedBox(width: 4),
-                                              Text('${story.viewCount}', style: const TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(20)),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.chat_bubble_outline, size: 18, color: AppColors.mutedForeground),
-                                              const SizedBox(width: 4),
-                                              Text('${story.commentCount}', style: const TextStyle(fontSize: 13, color: AppColors.mutedForeground)),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ),
-                                    if (story.categories.isNotEmpty) ...[
-                                      const SizedBox(height: 12),
-                                      Wrap(
-                                        spacing: 6,
-                                        children: story.categories.map((cat) => Chip(
-                                          label: Text(cat.name, style: const TextStyle(fontSize: 12, color: AppColors.storyIcon, fontWeight: FontWeight.w600)),
-                                          backgroundColor: AppColors.storyIconBg,
-                                          side: BorderSide.none,
-                                          padding: EdgeInsets.zero,
-                                          visualDensity: VisualDensity.compact,
-                                        )).toList(),
-                                      ),
-                                    ],
-                                    const Divider(height: 32),
-                                    SelectableText(story.content, style: const TextStyle(fontSize: 15, height: 1.7)),
-                                    const Divider(height: 32),
-                                    Text('Komentar (${state.comments.length})', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 12),
-                                    if (state.comments.isEmpty)
-                                      const Padding(
-                                        padding: EdgeInsets.all(16),
-                                        child: Center(child: Text('Belum ada komentar', style: TextStyle(color: AppColors.mutedForeground))),
-                                      ),
-                                    ...state.comments.map((c) => _buildComment(context, c)),
-                                    const SizedBox(height: 80),
                                   ],
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                            ],
+                            Text(
+                              story.title,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                            _buildCommentBar(context, state),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                AppAvatar(
+                                  name: story.isAnonymous
+                                      ? 'Anonim'
+                                      : (story.author?.name ?? 'Anonim'),
+                                  imageUrl: story.isAnonymous
+                                      ? null
+                                      : story.author?.avatar,
+                                  size: 32,
+                                ),
+                                const SizedBox(width: 10),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      story.isAnonymous
+                                          ? 'Anonim'
+                                          : (story.author?.name ?? 'Anonim'),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    if (story.publishedAt != null)
+                                      Text(
+                                        _formatDate(story.publishedAt!),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.mutedForeground,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                InkWell(
+                                  onTap: () => context.read<StoryBloc>().add(
+                                    StoryHeartToggled(widget.id),
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: story.hasHearted
+                                          ? AppColors.red50
+                                          : AppColors.muted,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          story.hasHearted
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          size: 18,
+                                          color: story.hasHearted
+                                              ? AppColors.primary
+                                              : AppColors.mutedForeground,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${story.heartCount}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: story.hasHearted
+                                                ? AppColors.primary
+                                                : AppColors.mutedForeground,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.muted,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.visibility_outlined,
+                                        size: 18,
+                                        color: AppColors.mutedForeground,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${story.viewCount}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.mutedForeground,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.muted,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.chat_bubble_outline,
+                                        size: 18,
+                                        color: AppColors.mutedForeground,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${story.commentCount}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.mutedForeground,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (story.categories.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 6,
+                                children: story.categories
+                                    .map(
+                                      (cat) => Chip(
+                                        label: Text(
+                                          cat.name,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.storyIcon,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        backgroundColor: AppColors.storyIconBg,
+                                        side: BorderSide.none,
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ],
+                            const Divider(height: 32),
+                            SelectableText(
+                              story.content,
+                              style: const TextStyle(fontSize: 15, height: 1.7),
+                            ),
+                            const Divider(height: 32),
+                            Text(
+                              'Komentar (${state.comments.length})',
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 12),
+                            if (state.comments.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(
+                                  child: Text(
+                                    'Belum ada komentar',
+                                    style: TextStyle(
+                                      color: AppColors.mutedForeground,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ...state.comments.map(
+                              (c) => _buildComment(context, c),
+                            ),
+                            const SizedBox(height: 80),
                           ],
                         ),
+                      ),
+                    ),
+                    _buildCommentBar(context, state),
+                  ],
+                ),
         );
       },
     );
@@ -223,27 +354,54 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
               children: [
                 Row(
                   children: [
-                    Text(comment.author?.name ?? 'Anonim', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(
+                      comment.author?.name ?? 'Anonim',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Text(_formatDate(comment.createdAt), style: const TextStyle(fontSize: 11, color: AppColors.mutedForeground)),
+                    Text(
+                      _formatDate(comment.createdAt),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(comment.content, style: const TextStyle(fontSize: 13, height: 1.4)),
+                Text(
+                  comment.content,
+                  style: const TextStyle(fontSize: 13, height: 1.4),
+                ),
                 const SizedBox(height: 4),
                 GestureDetector(
                   onTap: () {
-                    context.read<StoryBloc>().add(StoryCommentHeartToggled(comment.id));
+                    context.read<StoryBloc>().add(
+                      StoryCommentHeartToggled(widget.id, comment.id),
+                    );
                   },
                   child: Row(
                     children: [
                       Icon(
-                        comment.hasHearted ? Icons.favorite : Icons.favorite_border,
+                        comment.hasHearted
+                            ? Icons.favorite
+                            : Icons.favorite_border,
                         size: 14,
-                        color: comment.hasHearted ? AppColors.primary : AppColors.mutedForeground,
+                        color: comment.hasHearted
+                            ? AppColors.primary
+                            : AppColors.mutedForeground,
                       ),
                       const SizedBox(width: 4),
-                      Text('${comment.heartCount}', style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                      Text(
+                        '${comment.heartCount}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -270,8 +428,13 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
                 controller: _commentController,
                 decoration: InputDecoration(
                   hintText: 'Tulis komentar dukungan...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   isDense: true,
                 ),
                 maxLines: null,
@@ -284,10 +447,19 @@ class _StoryDetailViewState extends State<_StoryDetailView> {
                   : () {
                       final text = _commentController.text.trim();
                       if (text.isEmpty) return;
-                      context.read<StoryBloc>().add(StoryCommentCreateRequested(storyId: widget.id, content: text));
+                      context.read<StoryBloc>().add(
+                        StoryCommentCreateRequested(
+                          storyId: widget.id,
+                          content: text,
+                        ),
+                      );
                     },
               icon: state.status == StoryStatus.submitting
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.send),
               color: AppColors.primary,
             ),

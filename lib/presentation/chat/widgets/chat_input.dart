@@ -1,14 +1,18 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/platform/voice_input_service.dart';
 
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
+  final Future<void> Function(File)? onSendAudio;
   final bool isLoading;
   final String? initialText;
 
   const ChatInput({
     super.key,
     required this.onSend,
+    this.onSendAudio,
     this.isLoading = false,
     this.initialText,
   });
@@ -20,6 +24,9 @@ class ChatInput extends StatefulWidget {
 class _ChatInputState extends State<ChatInput> {
   late final TextEditingController _controller;
   bool _hasText = false;
+  bool _recording = false;
+  bool _voiceBusy = false;
+  final _voice = VoiceInputService();
 
   @override
   void initState() {
@@ -36,8 +43,56 @@ class _ChatInputState extends State<ChatInput> {
 
   @override
   void dispose() {
+    if (_recording) _voice.cancelRecording();
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _dictate() async {
+    setState(() => _voiceBusy = true);
+    try {
+      final words = await _voice.dictate();
+      if (mounted && words.isNotEmpty) {
+        _controller.text =
+            '${_controller.text}${_controller.text.isEmpty ? '' : ' '}$words';
+      }
+    } catch (_) {
+      _voiceError('Dikte suara belum tersedia. Periksa izin mikrofon.');
+    } finally {
+      if (mounted) setState(() => _voiceBusy = false);
+    }
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_recording) {
+      setState(() {
+        _recording = false;
+        _voiceBusy = true;
+      });
+      try {
+        final file = await _voice.stopRecording();
+        await widget.onSendAudio?.call(file);
+      } catch (_) {
+        _voiceError('Pesan suara belum berhasil dikirim.');
+      } finally {
+        if (mounted) setState(() => _voiceBusy = false);
+      }
+      return;
+    }
+    try {
+      await _voice.startRecording();
+      if (mounted) setState(() => _recording = true);
+    } catch (_) {
+      _voiceError('Rekaman belum bisa dimulai. Periksa izin mikrofon.');
+    }
+  }
+
+  void _voiceError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   void _handleSend() {
@@ -69,12 +124,32 @@ class _ChatInputState extends State<ChatInput> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          IconButton(
+            tooltip: 'Dikte suara',
+            onPressed: _voiceBusy || _recording || widget.isLoading
+                ? null
+                : _dictate,
+            icon: const Icon(Icons.keyboard_voice_outlined),
+          ),
+          if (widget.onSendAudio != null)
+            IconButton(
+              tooltip: _recording ? 'Kirim rekaman' : 'Rekam pesan suara',
+              onPressed: _voiceBusy || widget.isLoading
+                  ? null
+                  : _toggleRecording,
+              icon: Icon(
+                _recording ? Icons.stop_circle : Icons.mic_none,
+                color: _recording ? Colors.red : null,
+              ),
+            ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
               ),
               child: TextField(
                 controller: _controller,
@@ -85,7 +160,10 @@ class _ChatInputState extends State<ChatInput> {
                   hintText: 'Tulis pesan Anda...',
                   hintStyle: TextStyle(color: AppColors.mutedForeground),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
                 style: const TextStyle(fontSize: 15),
               ),
@@ -110,12 +188,16 @@ class _ChatInputState extends State<ChatInput> {
                         padding: EdgeInsets.all(14.0),
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Icon(
                         Icons.arrow_upward_rounded,
-                        color: _hasText ? Colors.white : AppColors.mutedForeground,
+                        color: _hasText
+                            ? Colors.white
+                            : AppColors.mutedForeground,
                       ),
               ),
             ),

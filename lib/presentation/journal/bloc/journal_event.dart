@@ -11,11 +11,20 @@ abstract class JournalEvent extends Equatable {
 class JournalListRequested extends JournalEvent {
   final bool refresh;
   final List<String>? tags;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final bool resetFilters;
 
-  const JournalListRequested({this.refresh = false, this.tags});
+  const JournalListRequested({
+    this.refresh = false,
+    this.tags,
+    this.startDate,
+    this.endDate,
+    this.resetFilters = false,
+  });
 
   @override
-  List<Object?> get props => [refresh, tags];
+  List<Object?> get props => [refresh, tags, startDate, endDate, resetFilters];
 }
 
 /// Load more (next page) — only valid if there is a next page.
@@ -55,6 +64,7 @@ class JournalCreateRequested extends JournalEvent {
   final List<String> tags;
   final int? moodId;
   final bool isPrivate;
+  final bool shareWithAI;
 
   const JournalCreateRequested({
     required this.title,
@@ -62,10 +72,18 @@ class JournalCreateRequested extends JournalEvent {
     this.tags = const [],
     this.moodId,
     this.isPrivate = true,
+    this.shareWithAI = false,
   });
 
   @override
-  List<Object?> get props => [title, content, tags, moodId, isPrivate];
+  List<Object?> get props => [
+    title,
+    content,
+    tags,
+    moodId,
+    isPrivate,
+    shareWithAI,
+  ];
 }
 
 /// Update an existing journal (partial).
@@ -76,6 +94,7 @@ class JournalUpdateRequested extends JournalEvent {
   final List<String>? tags;
   final int? moodId;
   final bool? isPrivate;
+  final bool? shareWithAI;
 
   const JournalUpdateRequested({
     required this.uuid,
@@ -84,10 +103,19 @@ class JournalUpdateRequested extends JournalEvent {
     this.tags,
     this.moodId,
     this.isPrivate,
+    this.shareWithAI,
   });
 
   @override
-  List<Object?> get props => [uuid, title, content, tags, moodId, isPrivate];
+  List<Object?> get props => [
+    uuid,
+    title,
+    content,
+    tags,
+    moodId,
+    isPrivate,
+    shareWithAI,
+  ];
 }
 
 /// Delete a journal.

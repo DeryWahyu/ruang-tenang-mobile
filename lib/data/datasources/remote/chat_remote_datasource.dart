@@ -11,12 +11,16 @@ class ChatRemoteDataSource {
   Future<ChatSessionListResultModel> getSessions({
     int page = 1,
     int limit = 20,
+    String? filter,
+    String? search,
   }) async {
     final response = await _apiClient.getPaginated<ChatSessionListItemModel>(
       ApiConstants.chatSessions,
       queryParameters: {
         'page': page,
         'limit': limit,
+        if (filter != null && filter != 'all') 'filter': filter,
+        if (search != null && search.isNotEmpty) 'search': search,
       },
       fromJson: (json) => ChatSessionListItemModel.fromJson(json),
     );
@@ -47,10 +51,7 @@ class ChatRemoteDataSource {
   Future<ChatSessionModel> createSession(String title, {int? folderId}) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       ApiConstants.chatSessions,
-      data: {
-        'title': title,
-        'folder_id': ?folderId,
-      },
+      data: {'title': title, 'folder_id': ?folderId},
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -73,13 +74,14 @@ class ChatRemoteDataSource {
   }
 
   /// POST /chat-sessions/:uuid/messages
-  Future<Map<String, dynamic>> sendMessage(String uuid, String content) async {
+  Future<Map<String, dynamic>> sendMessage(
+    String uuid,
+    String content, {
+    String type = 'text',
+  }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       '${ApiConstants.chatSessions}/$uuid/messages',
-      data: {
-        'content': content,
-        'type': 'text',
-      },
+      data: {'content': content, 'type': type},
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -89,9 +91,11 @@ class ChatRemoteDataSource {
 
     return {
       'user_message': ChatMessageModel.fromJson(
-          Map<String, dynamic>.from(response.data!['user_message'] as Map)),
+        Map<String, dynamic>.from(response.data!['user_message'] as Map),
+      ),
       'ai_message': ChatMessageModel.fromJson(
-          Map<String, dynamic>.from(response.data!['ai_message'] as Map)),
+        Map<String, dynamic>.from(response.data!['ai_message'] as Map),
+      ),
     };
   }
 

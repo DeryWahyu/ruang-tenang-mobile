@@ -1,7 +1,16 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/story.dart';
 
-enum StoryStatus { initial, loading, listSuccess, detailLoading, detailSuccess, submitting, success, failure }
+enum StoryStatus {
+  initial,
+  loading,
+  listSuccess,
+  detailLoading,
+  detailSuccess,
+  submitting,
+  success,
+  failure,
+}
 
 class StoryState extends Equatable {
   final StoryStatus status;
@@ -10,6 +19,8 @@ class StoryState extends Equatable {
   final List<StoryComment> comments;
   final String errorMessage;
   final String successMessage;
+  final int page;
+  final bool hasMore;
 
   const StoryState({
     this.status = StoryStatus.initial,
@@ -18,6 +29,8 @@ class StoryState extends Equatable {
     this.comments = const [],
     this.errorMessage = '',
     this.successMessage = '',
+    this.page = 0,
+    this.hasMore = true,
   });
 
   const StoryState.initial() : this();
@@ -29,6 +42,8 @@ class StoryState extends Equatable {
     List<StoryComment>? comments,
     String? errorMessage,
     String? successMessage,
+    int? page,
+    bool? hasMore,
   }) {
     return StoryState(
       status: status ?? this.status,
@@ -37,9 +52,20 @@ class StoryState extends Equatable {
       comments: comments ?? this.comments,
       errorMessage: errorMessage ?? this.errorMessage,
       successMessage: successMessage ?? this.successMessage,
+      page: page ?? this.page,
+      hasMore: hasMore ?? this.hasMore,
     );
   }
 
   @override
-  List<Object?> get props => [status, stories, detail, comments, errorMessage, successMessage];
+  List<Object?> get props => [
+    status,
+    stories,
+    detail,
+    comments,
+    errorMessage,
+    successMessage,
+    page,
+    hasMore,
+  ];
 }

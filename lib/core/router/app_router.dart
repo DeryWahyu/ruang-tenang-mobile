@@ -17,10 +17,12 @@ import '../../presentation/common/layouts/main_layout.dart';
 import '../../presentation/journal/screens/journal_list_screen.dart';
 import '../../presentation/journal/screens/journal_create_screen.dart';
 import '../../presentation/journal/screens/journal_detail_screen.dart';
+import '../../presentation/journal/screens/journal_insights_screen.dart';
 import '../../presentation/mood/screens/mood_tracker_screen.dart';
 import '../../presentation/mood/screens/mood_stats_screen.dart';
 import '../../presentation/chat/screens/chat_list_screen.dart';
 import '../../presentation/chat/screens/chat_detail_screen.dart';
+import '../../presentation/chat/widgets/chat_consent_gate.dart';
 import '../../presentation/music/screens/music_home_screen.dart';
 import '../../presentation/music/screens/playlist_detail_screen.dart';
 import '../../presentation/profile/screens/profile_screen.dart';
@@ -31,25 +33,19 @@ import '../../presentation/splash_screen.dart';
 
 import '../../presentation/forum/screens/forum_list_screen.dart';
 import '../../presentation/forum/screens/forum_detail_screen.dart';
-import '../../presentation/story/screens/story_list_screen.dart';
 import '../../presentation/story/screens/story_detail_screen.dart';
-import '../../presentation/article/screens/article_list_screen.dart';
+import '../../presentation/story/screens/story_list_screen.dart';
+import '../../presentation/story/screens/my_stories_screen.dart';
 import '../../presentation/article/screens/article_detail_screen.dart';
+import '../../presentation/article/screens/my_articles_screen.dart';
 
-import '../../presentation/gamification/screens/game_hub_screen.dart';
+import '../../presentation/gamification/screens/leaderboard_screen.dart';
 import '../../presentation/gamification/screens/badge_screen.dart';
 import '../../presentation/gamification/screens/daily_tasks_screen.dart';
 import '../../presentation/gamification/screens/exp_history_screen.dart';
-import '../../presentation/gamification/screens/leaderboard_screen.dart';
-import '../../presentation/gamification/screens/progress_map_screen.dart';
-import '../../presentation/gamification/screens/rewards_screen.dart';
-import '../../presentation/gamification/screens/xp_boost_screen.dart';
-import '../../presentation/billing/screens/premium_plans_screen.dart';
-import '../../presentation/billing/screens/billing_transactions_screen.dart';
-import '../../presentation/wellness/screens/wellness_onboarding_screen.dart';
-import '../../presentation/wellness/screens/wellness_plan_screen.dart';
 import '../../presentation/search/screens/global_search_screen.dart';
-import '../../presentation/community/screens/community_stats_screen.dart';
+import '../../presentation/common/screens/member_hubs.dart';
+import '../../presentation/journal/screens/public_journals_screen.dart';
 import '../../presentation/game/screens/mindful_runner_screen.dart';
 
 class AppRouter {
@@ -223,7 +219,19 @@ class AppRouter {
         GoRoute(
           path: '/stories',
           builder: (context, state) => const StoryListScreen(),
+          redirect: (context, state) => state.matchedLocation == '/stories'
+              ? '/community?tab=stories'
+              : null,
           routes: [
+            GoRoute(
+              path: 'new',
+              builder: (context, state) => const StoryEditorScreen(),
+            ),
+            GoRoute(
+              path: 'edit/:id',
+              builder: (context, state) =>
+                  StoryEditorScreen(id: state.pathParameters['id']!),
+            ),
             GoRoute(
               path: ':id',
               builder: (context, state) =>
@@ -235,8 +243,19 @@ class AppRouter {
         // Articles
         GoRoute(
           path: '/articles',
-          builder: (context, state) => const ArticleListScreen(),
+          builder: (context, state) => ArticleHubScreen(
+            tab: state.uri.queryParameters['tab'] ?? 'explore',
+          ),
           routes: [
+            GoRoute(
+              path: 'new',
+              builder: (context, state) => const ArticleEditorScreen(),
+            ),
+            GoRoute(
+              path: 'edit/:id',
+              builder: (context, state) =>
+                  ArticleEditorScreen(id: state.pathParameters['id']!),
+            ),
             GoRoute(
               path: ':slug',
               builder: (context, state) =>
@@ -248,7 +267,9 @@ class AppRouter {
         // Gamification & Premium
         GoRoute(
           path: '/gamification',
-          builder: (context, state) => const GameHubScreen(),
+          builder: (context, state) => const JourneyHubScreen(),
+          redirect: (context, state) =>
+              state.matchedLocation == '/gamification' ? '/journey' : null,
           routes: [
             GoRoute(
               path: 'badges',
@@ -268,15 +289,15 @@ class AppRouter {
             ),
             GoRoute(
               path: 'progress-map',
-              builder: (context, state) => const ProgressMapScreen(),
+              redirect: (context, state) => '/journey?tab=map',
             ),
             GoRoute(
               path: 'rewards',
-              builder: (context, state) => const RewardsScreen(),
+              redirect: (context, state) => '/journey?tab=rewards',
             ),
             GoRoute(
               path: 'xp-boost',
-              builder: (context, state) => const XpBoostScreen(),
+              redirect: (context, state) => '/journey?tab=rewards',
             ),
           ],
         ),
@@ -287,16 +308,22 @@ class AppRouter {
         ),
         GoRoute(
           path: '/billing/premium',
-          builder: (context, state) => const PremiumPlansScreen(),
+          redirect: (context, state) => '/billing',
         ),
         GoRoute(
           path: '/billing/transactions',
-          builder: (context, state) => const BillingTransactionsScreen(),
+          redirect: (context, state) => '/billing?tab=transactions',
+        ),
+        GoRoute(
+          path: '/billing',
+          builder: (context, state) => BillingHubScreen(
+            tab: state.uri.queryParameters['tab'] ?? 'packages',
+          ),
         ),
         // Wellness
         GoRoute(
           path: '/wellness/onboarding',
-          builder: (context, state) => const WellnessOnboardingScreen(),
+          redirect: (context, state) => '/home',
         ),
 
         // Search
@@ -306,7 +333,23 @@ class AppRouter {
         ),
         GoRoute(
           path: '/community',
-          builder: (context, state) => const CommunityStatsScreen(),
+          builder: (context, state) => CommunityHubScreen(
+            tab: state.uri.queryParameters['tab'] ?? 'forum',
+          ),
+          routes: [
+            GoRoute(
+              path: 'journals/:uuid',
+              builder: (context, state) => PublicJournalDetailScreen(
+                uuid: state.pathParameters['uuid']!,
+              ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/journey',
+          builder: (context, state) => JourneyHubScreen(
+            tab: state.uri.queryParameters['tab'] ?? 'summary',
+          ),
         ),
         GoRoute(
           path: '/game',
@@ -335,7 +378,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: 'wellness/plan',
-                  builder: (context, state) => const WellnessPlanScreen(),
+                  redirect: (context, state) => '/home',
                 ),
               ],
             ),
@@ -344,6 +387,10 @@ class AppRouter {
               pageBuilder: (context, state) =>
                   const NoTransitionPage(child: JournalListScreen()),
               routes: [
+                GoRoute(
+                  path: 'insights',
+                  builder: (context, state) => const JournalInsightsScreen(),
+                ),
                 GoRoute(
                   path: 'create',
                   builder: (context, state) {
@@ -363,18 +410,25 @@ class AppRouter {
             ),
             GoRoute(
               path: '/chat',
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: ChatListScreen()),
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: ChatConsentGate(child: ChatListScreen()),
+              ),
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (context, state) =>
-                      ChatDetailScreen(initialPrompt: state.extra as String?),
+                  builder: (context, state) => ChatConsentGate(
+                    child: ChatDetailScreen(
+                      initialPrompt: state.extra as String?,
+                    ),
+                  ),
                 ),
                 GoRoute(
                   path: ':uuid',
-                  builder: (context, state) =>
-                      ChatDetailScreen(uuid: state.pathParameters['uuid']!),
+                  builder: (context, state) => ChatConsentGate(
+                    child: ChatDetailScreen(
+                      uuid: state.pathParameters['uuid']!,
+                    ),
+                  ),
                 ),
               ],
             ),
