@@ -412,13 +412,10 @@ class _TransactionCard extends StatelessWidget {
     );
     final dateFmt = DateFormat('d MMM yyyy, HH:mm', 'id_ID');
 
-    final refundColor = tx.refundedAmount > 0
-        ? AppColors.success
-        : AppColors.warning;
     final canResumePayment =
         tx.status.toLowerCase() == 'pending' &&
-        tx.snapUrl != null &&
-        tx.snapUrl!.isNotEmpty;
+        tx.paymentUrl != null &&
+        tx.paymentUrl!.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -488,42 +485,6 @@ class _TransactionCard extends StatelessWidget {
               _StatusChip(status: tx.status),
             ],
           ),
-          if (tx.refundStatus != 'none') ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-              decoration: BoxDecoration(
-                color: refundColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tx.refundedAmount > 0
-                        ? 'Refund terkonfirmasi: ${currency.format(tx.refundedAmount)}'
-                        : 'Refund menunggu konfirmasi Midtrans',
-                    style: TextStyle(
-                      color: refundColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (tx.refundReconciliationStatus == 'pending') ...[
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Sedang ditinjau operator',
-                      style: TextStyle(
-                        color: AppColors.mutedForeground,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
           const SizedBox(height: 14),
           Divider(height: 1, color: AppColors.border.withValues(alpha: 0.8)),
           const SizedBox(height: 11),
@@ -542,7 +503,7 @@ class _TransactionCard extends StatelessWidget {
               if (canResumePayment) ...[
                 FilledButton.icon(
                   onPressed: () async {
-                    final uri = Uri.tryParse(tx.snapUrl!);
+                    final uri = Uri.tryParse(tx.paymentUrl!);
                     if (uri != null) {
                       await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
                     }

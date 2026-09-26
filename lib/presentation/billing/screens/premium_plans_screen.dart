@@ -45,19 +45,16 @@ class _PremiumPlansView extends StatelessWidget {
     decimalDigits: 0,
   );
 
-  /// Membuka halaman pembayaran (Midtrans) dari hasil checkout.
+  /// Membuka halaman pembayaran Duitku dari hasil checkout.
   ///
-  /// Backend mengembalikan `redirect_url`; kita buka di browser/aplikasi
+  /// Backend mengembalikan `payment_url`; kita buka di browser dalam aplikasi
   /// eksternal agar pengguna menyelesaikan pembayaran. Tanpa ini, alur
   /// pembayaran menjadi buntu (dead-end).
   Future<void> _openPaymentPage(
     BuildContext context,
     Map<String, dynamic> checkoutResult,
   ) async {
-    // Backend mengembalikan snap_url untuk Midtrans
-    final redirectUrl =
-        checkoutResult['snap_url'] as String? ??
-        checkoutResult['redirect_url'] as String?;
+    final redirectUrl = checkoutResult['payment_url'] as String?;
     final messenger = ScaffoldMessenger.of(context);
 
     if (redirectUrl == null || redirectUrl.isEmpty) {

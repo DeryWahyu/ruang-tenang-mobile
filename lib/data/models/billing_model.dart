@@ -182,18 +182,14 @@ class BillingTransactionModel {
         failureReason: (j['failure_reason'] as String?)?.isNotEmpty == true
             ? j['failure_reason'] as String
             : null,
-        snapUrl: j['snap_url'] != null && j['snap_url'].toString().isNotEmpty
-            ? j['snap_url'] as String
-            : (j['snap_token'] != null && j['snap_token'].toString().isNotEmpty
-                ? 'https://app.sandbox.midtrans.com/snap/v3/redirection/${j['snap_token']}'
-                : null),
+        providerReference: j['provider_reference'] != null && j['provider_reference'].toString().isNotEmpty
+            ? j['provider_reference'] as String
+            : null,
+        paymentUrl: j['payment_url'] != null && j['payment_url'].toString().isNotEmpty
+            ? j['payment_url'] as String
+            : null,
         paidAt: Json.date(j['paid_at']),
         createdAt: Json.date(j['created_at']) ?? DateTime.now(),
-        refundedAmount: Json.intValue(j['refunded_amount']),
-        refundRequestedAmount: Json.intValue(j['refund_requested_amount']),
-        providerRefundAmountReported: Json.intValue(j['provider_refund_amount_reported']),
-        refundStatus: Json.string(j['refund_status'], fallback: 'none'),
-        refundReconciliationStatus: Json.string(j['refund_reconciliation_status'], fallback: 'not_required'),
       );
 }
 
