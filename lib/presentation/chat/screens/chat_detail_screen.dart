@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../core/network/api_client.dart';
-import '../../../domain/repositories/upload_repository.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../common/widgets/app_error_widget.dart';
 import '../../common/widgets/app_loading.dart';
@@ -84,30 +83,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       context.read<ChatBloc>().add(
         ChatMessageSendRequested(uuid: sessionUuid, content: content),
       );
-    }
-  }
-
-  Future<void> _sendAudio(File file) async {
-    try {
-      final url = await sl<UploadRepository>().uploadAudio(file);
-      if (!mounted) return;
-      if (_isNewSession) {
-        context.read<ChatBloc>().add(
-          ChatFirstMessageSent(content: url, type: 'audio'),
-        );
-      } else {
-        final sessionUuid =
-            context.read<ChatBloc>().state.currentSession?.uuid ?? widget.uuid!;
-        context.read<ChatBloc>().add(
-          ChatMessageSendRequested(
-            uuid: sessionUuid,
-            content: url,
-            type: 'audio',
-          ),
-        );
-      }
-    } finally {
-      if (await file.exists()) await file.delete();
     }
   }
 
@@ -419,7 +394,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               Expanded(child: _buildMessageList(state)),
               ChatInput(
                 onSend: _sendMessage,
-                onSendAudio: _sendAudio,
                 isLoading:
                     state.isSendingMessage ||
                     (state.isLoading && _isNewSession),

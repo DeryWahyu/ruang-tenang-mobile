@@ -1,18 +1,15 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/platform/voice_input_service.dart';
 
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
-  final Future<void> Function(File)? onSendAudio;
   final bool isLoading;
   final String? initialText;
 
   const ChatInput({
     super.key,
     required this.onSend,
-    this.onSendAudio,
     this.isLoading = false,
     this.initialText,
   });
@@ -24,7 +21,6 @@ class ChatInput extends StatefulWidget {
 class _ChatInputState extends State<ChatInput> {
   late final TextEditingController _controller;
   bool _hasText = false;
-  bool _recording = false;
   bool _voiceBusy = false;
   final _voice = VoiceInputService();
 
@@ -43,7 +39,6 @@ class _ChatInputState extends State<ChatInput> {
 
   @override
   void dispose() {
-    if (_recording) _voice.cancelRecording();
     _controller.dispose();
     super.dispose();
   }
@@ -60,30 +55,6 @@ class _ChatInputState extends State<ChatInput> {
       _voiceError('Dikte suara belum tersedia. Periksa izin mikrofon.');
     } finally {
       if (mounted) setState(() => _voiceBusy = false);
-    }
-  }
-
-  Future<void> _toggleRecording() async {
-    if (_recording) {
-      setState(() {
-        _recording = false;
-        _voiceBusy = true;
-      });
-      try {
-        final file = await _voice.stopRecording();
-        await widget.onSendAudio?.call(file);
-      } catch (_) {
-        _voiceError('Pesan suara belum berhasil dikirim.');
-      } finally {
-        if (mounted) setState(() => _voiceBusy = false);
-      }
-      return;
-    }
-    try {
-      await _voice.startRecording();
-      if (mounted) setState(() => _recording = true);
-    } catch (_) {
-      _voiceError('Rekaman belum bisa dimulai. Periksa izin mikrofon.');
     }
   }
 
@@ -126,22 +97,11 @@ class _ChatInputState extends State<ChatInput> {
         children: [
           IconButton(
             tooltip: 'Dikte suara',
-            onPressed: _voiceBusy || _recording || widget.isLoading
+            onPressed: _voiceBusy || widget.isLoading
                 ? null
                 : _dictate,
             icon: const Icon(Icons.keyboard_voice_outlined),
           ),
-          if (widget.onSendAudio != null)
-            IconButton(
-              tooltip: _recording ? 'Kirim rekaman' : 'Rekam pesan suara',
-              onPressed: _voiceBusy || widget.isLoading
-                  ? null
-                  : _toggleRecording,
-              icon: Icon(
-                _recording ? Icons.stop_circle : Icons.mic_none,
-                color: _recording ? Colors.red : null,
-              ),
-            ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
