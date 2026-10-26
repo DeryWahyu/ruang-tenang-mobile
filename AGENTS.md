@@ -25,12 +25,12 @@ CLAUDE.md, GEMINI.md, dan .github/copilot-instructions.md adalah adapter tipis y
 
 ## Validasi
 
-- Perubahan Dart/UI/data: flutter analyze --no-fatal-infos --no-fatal-warnings dan flutter test.
-- Jangan menjalankan `flutter build`, Gradle, `xcodebuild`, atau membuat APK/IPA/artifact build secara otomatis setelah mengubah kode, aset, config, platform, maupun workflow. Tunggu permintaan build yang eksplisit dari pengguna.
-- Saat build tidak diminta, jangan menjalankannya hanya untuk validasi; sebutkan bahwa build belum dijalankan bila relevan.
-- Jika pengguna secara eksplisit meminta build, ikuti target/platform yang diminta. Jika toolchain tidak tersedia atau build gagal, laporkan error sebenarnya dan command yang belum terverifikasi.
-- Perubahan API mapping: cek OpenAPI API, web client, dan tests config/parser.
-- Sebelum selesai, jalankan git diff --check.
+- **Dilarang keras menjalankan testing atau validasi otomatis setelah selesai menyelesaikan tugas**.
+  AI Agent tidak boleh langsung mengeksekusi perintah testing (seperti `flutter test`, `flutter analyze`, atau build) begitu pengeditan kode selesai.
+- **Wajib meminta konfirmasi pengguna terlebih dahulu**: Setelah selesai melakukan perubahan kode, jelaskan perubahan yang dilakukan dan usulkan perintah pengujian yang relevan untuk dijalankan (misalnya `flutter analyze` atau target `flutter test` terkait), lalu tunggu konfirmasi eksplisit dari pengguna sebelum mengeksekusinya.
+- Jangan menjalankan `flutter build`, Gradle, `xcodebuild`, atau membuat APK/IPA/artifact build secara otomatis. Tunggu permintaan build yang eksplisit dari pengguna.
+- Sebelum selesai, gunakan pemeriksaan pasif seperti `git diff --check`.
+- Jika pengguna secara eksplisit meminta build/test, jalankan sesuai target yang diminta. Jika toolchain tidak tersedia atau verifikasi gagal, laporkan error sebenarnya dan command yang belum terverifikasi.
 
 ## Generated files dan release
 
