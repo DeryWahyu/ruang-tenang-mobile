@@ -35,13 +35,13 @@ class AppConstants {
 
   // Mood emojis
   static const List<String> moodLabels = [
-    'Happy',
-    'Calm',
-    'Neutral',
-    'Sad',
-    'Cry',
-    'Angry',
-    'Anxious',
-    'Stressed',
+    'Senang',
+    'Tenang',
+    'Netral',
+    'Sedih',
+    'Menangis',
+    'Marah',
+    'Cemas',
+    'Stres',
   ];
 }

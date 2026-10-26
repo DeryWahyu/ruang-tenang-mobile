@@ -84,11 +84,11 @@ class WellnessRemoteDataSource {
     );
     if (response.success && response.data != null) {
       if (response.data!['needs_onboarding'] == true || response.data!['plan'] == null) {
-        throw const ApiException(statusCode: 404, message: 'Plan not found or needs onboarding');
+        throw const ApiException(statusCode: 404, message: 'Rencana kesehatan tidak ditemukan atau perlu onboarding');
       }
       return WellnessPlanModel.fromJson(Map<String, dynamic>.from(response.data!['plan'] as Map));
     }
-    throw const ApiException(statusCode: 500, message: 'Failed to fetch plan');
+    throw const ApiException(statusCode: 500, message: 'Gagal memuat rencana kesehatan');
   }
 
   Future<void> completePlanItem(String itemId) async {

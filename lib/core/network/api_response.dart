@@ -1,3 +1,5 @@
+import 'api_error_translator.dart';
+
 class ApiResponse<T> {
   final bool success;
   final String? message;
@@ -21,11 +23,15 @@ class ApiResponse<T> {
   ) {
     return ApiResponse<T>(
       success: json['success'] as bool? ?? false,
-      message: json['message'] as String?,
+      message: json['message'] != null
+          ? ApiErrorTranslator.translate(json['message'] as String?)
+          : null,
       data: json['data'] != null && fromJsonT != null
           ? fromJsonT(json['data'])
           : json['data'] as T?,
-      error: json['error'] as String?,
+      error: json['error'] != null
+          ? ApiErrorTranslator.translate(json['error'] as String?)
+          : null,
       code: json['code'] as String?,
       details: (json['details'] as List<dynamic>?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))

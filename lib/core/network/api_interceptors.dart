@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/storage_keys.dart';
+import 'api_error_translator.dart';
 import 'api_exceptions.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -38,9 +39,13 @@ class ErrorInterceptor extends Interceptor {
     } else if (err.type == DioExceptionType.connectionError) {
       exception = const NetworkException();
     } else if (statusCode != null) {
-      final message = responseData is Map<String, dynamic>
-          ? (responseData['error'] as String? ?? 'Terjadi kesalahan')
-          : 'Terjadi kesalahan';
+      String rawMessage = 'Terjadi kesalahan';
+      if (responseData is Map<String, dynamic>) {
+        rawMessage = responseData['error'] as String? ??
+            responseData['message'] as String? ??
+            'Terjadi kesalahan';
+      }
+      final message = ApiErrorTranslator.translate(rawMessage);
 
       switch (statusCode) {
         case 401:
